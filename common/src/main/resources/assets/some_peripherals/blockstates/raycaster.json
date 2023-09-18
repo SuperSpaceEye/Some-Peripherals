@@ -1,7 +1,7 @@
 {
   "variants": {
     "facing=up":    {"model": "some_peripherals:block/raycaster", "x": 270,"y": 0},
-    "facing=down":  {"model": "some_peripherals:block/raycaster", "x": 90, "y": 0},
+    "facing=down":  {"model": "some_peripherals:block/raycaster", "x": 90, "y": 180},
     "facing=north": {"model": "some_peripherals:block/raycaster", "x": 0, "y": 0},
     "facing=west":  {"model": "some_peripherals:block/raycaster", "x": 0, "y": 270},
     "facing=east":  {"model": "some_peripherals:block/raycaster", "x": 0, "y": 90},

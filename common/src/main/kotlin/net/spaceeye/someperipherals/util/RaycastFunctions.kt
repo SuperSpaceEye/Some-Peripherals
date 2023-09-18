@@ -85,19 +85,27 @@ object RaycastFunctions {
         val dir_enum = be.blockState.getValue(BlockStateProperties.FACING)
         val dir: Vector3f = dir_enum.step()
 
-        val up    = Vector3f(0f, 1f, 0f)
-        val right = Vector3f(0f, 1f, 0f); right.cross(dir)
+        //thanks getitemfromblock for this
+//      dir = dir + posX*right + posY*updir = dir.Normalize();
 
-//        dir = dir + posX*right + posY*updir = dir.Normalize();
-        if (dir_enum == Direction.NORTH || dir_enum == Direction.SOUTH) {
-            right.mul(posX.toFloat(), 0f, 0f)
-            up.mul(0f, posY.toFloat(), 0f)
-        } else if (dir_enum == Direction.WEST || dir_enum == Direction.EAST) {
-            right.mul(0f, 0f, posX.toFloat())
-            up.mul(0f, posY.toFloat(), 0f)
+        val right: Vector3f; val up: Vector3f
+        if (dir_enum != Direction.UP && dir_enum != Direction.DOWN) {
+            up = Vector3f(0f, 1f, 0f)
+            right = Vector3f(0f, 1f, 0f); right.cross(dir)
+
+            if (dir_enum == Direction.NORTH || dir_enum == Direction.SOUTH) {
+                right.mul(posX.toFloat(), 0f, 0f)
+                up.mul(0f, posY.toFloat(), 0f)
+            } else if (dir_enum == Direction.WEST || dir_enum == Direction.EAST) {
+                right.mul(0f, 0f, posX.toFloat())
+                up.mul(0f, posY.toFloat(), 0f)
+            }
         } else {
+            up = Vector3f(0f, 0f, 1f)
+            right = Vector3f(0f, 0f, 1f); right.cross(dir)
+
             right.mul(posX.toFloat(), 0f, 0f)
-            up.mul(0f, 1f, posY.toFloat())
+            up.mul(0f, 0f, posY.toFloat())
         }
         dir.add(right)
         dir.add(up)
@@ -108,7 +116,7 @@ object RaycastFunctions {
     @JvmStatic
     fun castRay(level: Level, be: BlockEntity, pos: BlockPos,
                 distance: Double, var1:Double, var2: Double, var3:Double,
-                use_fisheye: Boolean = true, check_for_entities: Boolean = true): Pair<BlockPos, BlockState> {
+                use_fisheye: Boolean = true): Pair<BlockPos, BlockState> {
         val unit_d = if(use_fisheye) {fisheyeRotationCalc(be, var1, var2, var3)} else {orthogonalRotationCalc(be, var1, var2)}
 
         val start = Vector3d(pos.x.toDouble() + 0.5, pos.y.toDouble() + 0.5, pos.z.toDouble() + 0.5)
