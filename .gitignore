@@ -1,0 +1,7 @@
+# Project exclude paths
+/.gradle/
+/common/.gradle/
+/common/build/
+/fabric/.gradle/
+/forge/.gradle/
+/forge/build/

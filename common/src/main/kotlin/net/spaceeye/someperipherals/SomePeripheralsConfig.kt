@@ -19,14 +19,19 @@ object SomePeripheralsConfig {
             class RaycasterSettings {
                 @JsonSchema
                 val is_enabled = true
-                @JsonSchema
-                val max_block_distance = 100
+
+                @JsonSchema(description = "set to num <=0 for no limit")
+                val max_raycast_iterations = -1
                 @JsonSchema(description = "angle in radians")
                 val max_yaw_angle = Math.PI / 2
                 @JsonSchema(description = "angle in radians")
                 val max_pitch_angle = Math.PI / 2
+
                 @JsonSchema(description = "")
                 val check_block_model_ray_intersection = true
+                @JsonSchema(description = "")
+                val check_for_entities: Boolean = true
+
                 @JsonSchema(description = "")
                 val return_abs_pos = true
                 @JsonSchema(description = "")

@@ -39,25 +39,37 @@ object RaycastFunctions {
     }
 
     @JvmStatic
-    fun baseRaycast(level: Level, points_to_check: ArrayList<Vector3d>): Pair<BlockPos, BlockState> {
-        val iter = points_to_check.iterator()
-        val start= iter.next()
-        var prev = start
-        var bpos = BlockPos(start.x, start.y, start.z)
-        var res = level.getBlockState(bpos)
+    fun check_for_block_in_world(prev: Ref<Vector3d>,
+                                 start: Vector3d,
+                                 point: Vector3d,
+                                 bpos: Ref<BlockPos>,
+                                 res: Ref<BlockState>,
+                                 level: Level): Pair<BlockPos, BlockState>? {
+        if (point.x == start.x && point.y == start.y && point.z == start.z) {return null}
+        bpos.it = BlockPos(point.x, point.y, point.z)
+        res.it = level.getBlockState(bpos.it)
 
-        for (point in iter) {
-            if (point.x == start.x && point.y == start.y && point.z == start.z) {continue}
-            bpos = BlockPos(point.x, point.y, point.z)
-            res = level.getBlockState(bpos)
-            if (res.isAir) {prev=point; continue}
-            if (SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.check_block_model_ray_intersection
-                && !rayIsIntersecting(prev, point, bpos, res.getShape(level, bpos).toAabbs())) {continue}
+        if (res.it.isAir) {prev.it=point; return null}
+        if (SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.check_block_model_ray_intersection
+            && !rayIsIntersecting(prev.it, point, bpos.it, res.it.getShape(level, bpos.it).toAabbs())) {return null}
 
-            return Pair(bpos, res)
+        return Pair(bpos.it, res.it)
+    }
+    @JvmStatic
+    fun raycast(level: Level, pointsIter: IterateBetweenTwoPointsIter): Pair<BlockPos, BlockState> {
+        val start= pointsIter.next()
+        val prev = Ref(start)
+        val bpos = Ref(BlockPos(start.x, start.y, start.z))
+        val res = Ref(level.getBlockState(bpos.it))
+
+        for (point in pointsIter) {
+            val world_res = check_for_block_in_world(prev, start, point, bpos, res, level)
+
+            if (world_res != null) {return world_res}
+            if (SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.check_for_entities) {}
         }
 
-        return Pair(bpos, res)
+        return Pair(bpos.it, res.it)
     }
 
     @JvmStatic
@@ -99,16 +111,14 @@ object RaycastFunctions {
                 use_fisheye: Boolean = true, check_for_entities: Boolean = true): Pair<BlockPos, BlockState> {
         val unit_d = if(use_fisheye) {fisheyeRotationCalc(be, var1, var2, var3)} else {orthogonalRotationCalc(be, var1, var2)}
 
-        val start = Vector3d(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
+        val start = Vector3d(pos.x.toDouble() + 0.5, pos.y.toDouble() + 0.5, pos.z.toDouble() + 0.5)
         val stop = Vector3d(
             unit_d.x * distance + start.x,
             unit_d.y * distance + start.y,
             unit_d.z * distance + start.z
         )
 
-        val points_to_check = iterateBetweenTwoPoints(start, stop)
-
-        val result = baseRaycast(level, points_to_check)
+        val result = raycast(level, IterateBetweenTwoPointsIter(start, stop, SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.max_raycast_iterations))
 
         return result
     }
