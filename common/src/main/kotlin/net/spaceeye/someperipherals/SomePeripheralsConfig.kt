@@ -26,6 +26,8 @@ object SomePeripheralsConfig {
                 val max_yaw_angle = Math.PI / 2
                 @JsonSchema(description = "angle in radians")
                 val max_pitch_angle = Math.PI / 2
+                @JsonSchema(description = "should be a positive integer divisible by two or it will FUCKING CRASH, probably")
+                val entity_check_radius = 8
 
                 @JsonSchema(description = "")
                 val check_block_model_ray_intersection = true
@@ -38,6 +40,13 @@ object SomePeripheralsConfig {
                 val return_distance = true
                 @JsonSchema(description = "")
                 val return_block_id = true
+
+                @JsonSchema(description = "")
+                val return_entity_endodeId = true
+                @JsonSchema(description = "")
+                val return_entity_customName = true
+                @JsonSchema(description = "")
+                val return_entity_type_descriptionId = true
             }
         }
     }
