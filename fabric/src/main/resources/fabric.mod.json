@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "some_peripherals",
+  "version": "${version}",
+
+  "name": "Some Peripherals",
+  "description": "",
+  "authors": ["SpaceEye"],
+  "contact": {},
+
+  "license": "All Rights Reserved",
+  "icon": "icon.png",
+
+  "environment": "*",
+  "entrypoints": {},
+  "mixins": [
+    "some_peripherals.mixins.json",
+    "some_peripherals-common.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.14.22",
+    "minecraft": ">=1.18"
+  }
+}

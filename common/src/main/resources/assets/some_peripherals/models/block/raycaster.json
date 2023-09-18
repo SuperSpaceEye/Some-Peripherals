@@ -1,0 +1,25 @@
+{
+  "credit": "Made with Blockbench",
+  "textures": {
+    "0": "some_peripherals:block/raycaster/raycaster_back",
+    "1": "some_peripherals:block/raycaster/raycaster_down",
+    "2": "some_peripherals:block/raycaster/raycaster_front",
+    "3": "some_peripherals:block/raycaster/raycaster_left",
+    "4": "some_peripherals:block/raycaster/raycaster_right",
+    "5": "some_peripherals:block/raycaster/raycaster_up"
+  },
+  "elements": [
+    {
+      "from": [0, 0, 0],
+      "to": [16, 16, 16],
+      "faces": {
+        "north": {"uv": [0, 0, 16, 16], "texture": "#2"},
+        "east": {"uv": [0, 0, 16, 16], "texture": "#4"},
+        "south": {"uv": [0, 0, 16, 16], "texture": "#0"},
+        "west": {"uv": [0, 0, 16, 16], "texture": "#3"},
+        "up": {"uv": [0, 0, 16, 16], "texture": "#5"},
+        "down": {"uv": [0, 0, 16, 16], "texture": "#1"}
+      }
+    }
+  ]
+}
