@@ -17,32 +17,35 @@ object SomePeripheralsConfig {
             val RAYCASTER_SETTINGS = RaycasterSettings()
 
             class RaycasterSettings {
+                //TODO think of a better way
+                @JsonSchema(description = "disables functionality of the block")
+                var is_enabled = true
                 @JsonSchema
-                val is_enabled = true
+                var vector_rotation_enabled = true
 
                 @JsonSchema(description = "set to num <=0 for no limit")
-                val max_raycast_iterations = -1
+                var max_raycast_iterations = -1
                 @JsonSchema(description = "angle in radians")
-                val max_yaw_angle = Math.PI / 2
+                var max_yaw_angle = Math.PI / 2
                 @JsonSchema(description = "angle in radians")
-                val max_pitch_angle = Math.PI / 2
+                var max_pitch_angle = Math.PI / 2
                 @JsonSchema(description = "should be a positive integer divisible by two or it will FUCKING CRASH, probably")
-                val entity_check_radius = 8
+                var entity_check_radius = 8
 
                 @JsonSchema(description = "")
-                val check_block_model_ray_intersection = true
+                var check_block_model_ray_intersection = true
                 @JsonSchema(description = "")
-                val check_for_entities: Boolean = true
+                var check_for_entities: Boolean = true
 
                 @JsonSchema(description = "")
-                val return_abs_pos = true
+                var return_abs_pos = true
                 @JsonSchema(description = "")
-                val return_distance = true
+                var return_distance = true
                 @JsonSchema(description = "")
-                val return_block_id = true
+                var return_block_id = true
 
                 @JsonSchema(description = "")
-                val return_entity_type_descriptionId = true
+                var return_entity_type_descriptionId = true
             }
         }
     }

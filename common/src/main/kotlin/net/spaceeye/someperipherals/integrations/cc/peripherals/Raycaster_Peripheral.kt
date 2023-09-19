@@ -6,6 +6,7 @@ import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.spaceeye.someperipherals.SomePeripheralsCommonBlocks
 import net.spaceeye.someperipherals.SomePeripheralsConfig
 import net.spaceeye.someperipherals.blockentities.RaycasterBlockEntity
@@ -54,7 +55,7 @@ class Raycaster_Peripheral(private val level: Level, private val pos: BlockPos):
         )
         if (rcc.return_distance) {ret["distance"] = distance}
 
-        if (rcc.return_entity_type_descriptionId) {ret["desctiptionId"] = entity.type.descriptionId}
+        if (rcc.return_entity_type_descriptionId) {ret["descriptionId"] = entity.type.descriptionId}
     }
 
     private fun makeRaycastResponse(res: Any): MutableMap<Any, Any> {
@@ -64,6 +65,7 @@ class Raycaster_Peripheral(private val level: Level, private val pos: BlockPos):
         when (res) {
             is Pair<*, *> -> makeResponseBlock(res, ret, rcc)
             is Entity     -> makeResponseEntity(res, ret, rcc)
+            is String     -> {ret["error"] = res}
             else -> throw RuntimeException("i fucked up. ohno.")
         }
 
@@ -71,8 +73,15 @@ class Raycaster_Peripheral(private val level: Level, private val pos: BlockPos):
     }
 
     @LuaFunction
-    fun simpleRaycast(distance: Double, var1:Double, var2: Double, var3:Double, use_fisheye: Boolean = true): MutableMap<Any, Any> {
-        return makeRaycastResponse(castRay(level, be, pos, distance, var1, var2, var3, use_fisheye))
+    fun simpleRaycast(distance: Double, var1:Double, var2: Double, use_fisheye: Boolean = true): MutableMap<Any, Any> {
+        if(!SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.is_enabled) {return mutableMapOf()}
+        return makeRaycastResponse(castRay(level, be, pos, distance, var1, var2, use_fisheye))
+    }
+
+    @LuaFunction
+    fun addStickers(state: Boolean) {
+        //dont question it
+        level.setBlockAndUpdate(be.blockPos, be.blockState.setValue(BlockStateProperties.MOISTURE, if (state) {1} else {0}))
     }
 
     override fun equals(p0: IPeripheral?): Boolean = level.getBlockState(pos).`is`(SomePeripheralsCommonBlocks.RAYCASTER.get())

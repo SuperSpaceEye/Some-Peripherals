@@ -48,6 +48,10 @@ class IterateBetweenTwoPointsIter(pos1: Vector3d, pos2: Vector3d, val max_len:In
         cur_i++
         return ret
     }
+
+    fun nextNoStep(): Vector3d {
+        return Vector3d(cpos.x + x_step, cpos.y + y_step, cpos.z + z_step)
+    }
 }
 
 fun iterateBetweenTwoPoints(pos1: Vector3d, pos2: Vector3d): ArrayList<Vector3d> {

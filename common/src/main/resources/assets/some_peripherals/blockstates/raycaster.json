@@ -1,10 +1,17 @@
 {
   "variants": {
-    "facing=up":    {"model": "some_peripherals:block/raycaster", "x": 270,"y": 0},
-    "facing=down":  {"model": "some_peripherals:block/raycaster", "x": 90, "y": 180},
-    "facing=north": {"model": "some_peripherals:block/raycaster", "x": 0, "y": 0},
-    "facing=west":  {"model": "some_peripherals:block/raycaster", "x": 0, "y": 270},
-    "facing=east":  {"model": "some_peripherals:block/raycaster", "x": 0, "y": 90},
-    "facing=south": {"model": "some_peripherals:block/raycaster", "x": 0, "y": 180}
+      "moisture=1,facing=up":    {"model": "some_peripherals:block/raycaster", "x": 270,"y": 0},
+      "moisture=1,facing=down":  {"model": "some_peripherals:block/raycaster", "x": 90, "y": 180},
+      "moisture=1,facing=north": {"model": "some_peripherals:block/raycaster", "x": 0, "y": 0},
+      "moisture=1,facing=west":  {"model": "some_peripherals:block/raycaster", "x": 0, "y": 270},
+      "moisture=1,facing=east":  {"model": "some_peripherals:block/raycaster", "x": 0, "y": 90},
+      "moisture=1,facing=south": {"model": "some_peripherals:block/raycaster", "x": 0, "y": 180},
+
+      "moisture=0,facing=up":    {"model": "some_peripherals:block/raycaster_no_stickers", "x": 270,"y": 0},
+      "moisture=0,facing=down":  {"model": "some_peripherals:block/raycaster_no_stickers", "x": 90, "y": 180},
+      "moisture=0,facing=north": {"model": "some_peripherals:block/raycaster_no_stickers", "x": 0, "y": 0},
+      "moisture=0,facing=west":  {"model": "some_peripherals:block/raycaster_no_stickers", "x": 0, "y": 270},
+      "moisture=0,facing=east":  {"model": "some_peripherals:block/raycaster_no_stickers", "x": 0, "y": 90},
+      "moisture=0,facing=south": {"model": "some_peripherals:block/raycaster_no_stickers", "x": 0, "y": 180}
   }
 }

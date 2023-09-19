@@ -1,5 +1,6 @@
 package net.spaceeye.someperipherals.forge
 
+import dev.architectury.platform.Platform
 import dev.architectury.platform.forge.EventBuses
 import net.spaceeye.someperipherals.SomePeripherals
 import net.minecraftforge.fml.common.Mod
@@ -11,6 +12,6 @@ class SomePeripheralsForge {
     init {
         EventBuses.registerModEventBus(SomePeripherals.MOD_ID, FMLJavaModLoadingContext.get().modEventBus)
         SomePeripherals.init()
-        SomePeripheralsPeripheralProviders.registerPeripheralProviders()
+        if (Platform.isModLoaded("computercraft")) { SomePeripheralsPeripheralProviders.registerPeripheralProviders() }
     }
 }
