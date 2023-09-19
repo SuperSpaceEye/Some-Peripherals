@@ -37,15 +37,16 @@ class IterateBetweenTwoPointsIter(pos1: Vector3d, pos2: Vector3d, val max_len:In
     }
 
     override fun hasNext(): Boolean {
-        return (cur_i < max_len || max_len <= 0) && cur_i < up_to
+        return (cur_i < max_len || max_len <= 0) && cur_i <= up_to
     }
 
     override fun next(): Vector3d {
+        val ret = Vector3d(cpos.x, cpos.y, cpos.z)
         cpos.x += x_step
         cpos.y += y_step
         cpos.z += z_step
         cur_i++
-        return Vector3d(cpos.x, cpos.y, cpos.z)
+        return ret
     }
 }
 

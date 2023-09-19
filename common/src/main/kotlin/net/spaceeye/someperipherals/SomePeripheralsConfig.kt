@@ -42,10 +42,6 @@ object SomePeripheralsConfig {
                 val return_block_id = true
 
                 @JsonSchema(description = "")
-                val return_entity_endodeId = true
-                @JsonSchema(description = "")
-                val return_entity_customName = true
-                @JsonSchema(description = "")
                 val return_entity_type_descriptionId = true
             }
         }

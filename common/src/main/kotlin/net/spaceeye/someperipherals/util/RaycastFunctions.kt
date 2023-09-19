@@ -72,10 +72,10 @@ object RaycastFunctions {
             cur.x-er, cur.y-er, cur.z-er,
             cur.x+er, cur.y+er, cur.z+er))
 
+        val r = Vector3d(prev.x, prev.y, prev.z) //bounding box is in global coordinates
         val intersecting_entities = mutableListOf<Entity>()
         for (entity in entities) {
             if (entity == null) {continue}
-            val r = Vector3d(prev.x, prev.y, prev.z) //bounding box in in global coordinates
             if (!rayIntersects(entity.boundingBox, r, d).first) {continue}
             intersecting_entities.add(entity)
         }
@@ -88,9 +88,9 @@ object RaycastFunctions {
     // returns either Pair<BlockPos, BlockState> or Entity
     @JvmStatic
     fun raycast(level: Level, pointsIter: IterateBetweenTwoPointsIter): Any {
-        val start= pointsIter.next() // starting position
-        val prev = Ref(start) // previous position
-        val eprev = Ref(start) // previous position when entity check was made
+        val start = pointsIter.next() // starting position
+        val prev = Ref(Vector3d(start.x, start.y, start.z)) // previous position
+        val eprev = Ref(Vector3d(start.x, start.y, start.z)) // previous position when entity check was made
         val bpos = Ref(BlockPos(start.x, start.y, start.z))
         val res = Ref(level.getBlockState(bpos.it))
 
@@ -102,18 +102,16 @@ object RaycastFunctions {
         for (point in pointsIter) {
             val world_res = checkForBlockInWorld(prev, start, point, bpos, res, level)
 
-
             //if the block and intersected entity are both hit, then we need to find out actual intersection as
             // checkForIntersectedEntity checks "er" block radius
             if (world_res != null && intersected_entity != null) {
-                SomePeripherals.logger.warn("THERE IS BOTH BLOCK AND ENTITY HOLY FUCJK")
                 val eps = 1e-16
                 val d = Vector3d(1.0/(point.x - eprev.it.x + eps), 1.0/(point.y - eprev.it.y + eps), 1.0/(point.z - eprev.it.z + eps))
                 val rb = Vector3d(eprev.it.x - bpos.it.x, eprev.it.y - bpos.it.y, eprev.it.z - bpos.it.z)
-                val re = Vector3d(eprev.it.x - intersected_entity.x, eprev.it.y - intersected_entity.y, eprev.it.z - intersected_entity.z)
+                val re = Vector3d(eprev.it.x, eprev.it.y, eprev.it.z)
 
                 val (_, te) = rayIntersects(intersected_entity.boundingBox, re, d)
-                var tb: Double = 0.0
+                var tb = 0.0
                 for (box in res.it.getShape(level, bpos.it).toAabbs()) {
                     val (intersects, tb_) = rayIntersects(box, rb, d)
                     if (intersects) {tb = tb_; break}
@@ -125,18 +123,13 @@ object RaycastFunctions {
 
             //if ray hits entity and any block wasnt hit before another check, then previous intersected entity is the actual hit place
             if (check_for_entities && entity_step_counter % (er+1) == 0) {
-                SomePeripherals.logger.warn("CHECKING FOR INTERSECTING ENTITITES")
                 if (intersected_entity != null) {
                     return intersected_entity
                 }
 
-                intersected_entity = checkForIntersectedEntity(prev.it, point, level, er)
+                intersected_entity = checkForIntersectedEntity(eprev.it, point, level, er)
                 entity_step_counter = 0
-                eprev.it = prev.it
-
-                if (intersected_entity != null) {
-                    SomePeripherals.logger.warn("DETECTING INTERSECTING ENTITY HOLY SHIT OMG!!!! ${intersected_entity}")
-                }
+                eprev.it = point
             }
             entity_step_counter++
         }

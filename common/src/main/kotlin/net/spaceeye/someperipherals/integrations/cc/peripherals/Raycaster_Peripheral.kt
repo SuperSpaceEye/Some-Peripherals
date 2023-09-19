@@ -55,8 +55,6 @@ class Raycaster_Peripheral(private val level: Level, private val pos: BlockPos):
         if (rcc.return_distance) {ret["distance"] = distance}
 
         if (rcc.return_entity_type_descriptionId) {ret["desctiptionId"] = entity.type.descriptionId}
-        if (rcc.return_entity_endodeId) {ret["encodeId"] = entity.encodeId.orEmpty()}
-        if (rcc.return_entity_customName) {ret["customName"] = entity.customName.toString()}
     }
 
     private fun makeRaycastResponse(res: Any): MutableMap<Any, Any> {
