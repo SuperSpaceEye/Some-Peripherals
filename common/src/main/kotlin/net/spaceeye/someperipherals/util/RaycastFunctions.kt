@@ -11,6 +11,7 @@ import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.world.phys.AABB
+import net.spaceeye.someperipherals.SomePeripherals
 import net.spaceeye.someperipherals.SomePeripheralsConfig
 import java.lang.Math.*
 
@@ -24,16 +25,17 @@ object RaycastFunctions {
         val t5: Double = (box.minZ - r.z) * d.z
         val t6: Double = (box.maxZ - r.z) * d.z
 
-        val tmin = Math.max(Math.max(Math.min(t1, t2), Math.min(t3, t4)), Math.min(t5, t6))
-        val tmax = Math.min(Math.min(Math.max(t1, t2), Math.max(t3, t4)), Math.max(t5, t6))
+        val tmin = max(max(min(t1, t2), min(t3, t4)), min(t5, t6))
+        val tmax = min(min(max(t1, t2), max(t3, t4)), max(t5, t6))
         if (tmax < 0 || tmin > tmax) {return Pair(false, tmax)}
         return Pair(true, tmin)
     }
     //Will check block's model
     @JvmStatic
-    private fun rayIntersectsBlock(prev: Vector3d, at: BlockPos, d: Vector3d, boxes: List<AABB>): Pair<Boolean, Double> {
-        val r = Vector3d(prev.x - at.x, prev.y - at.y, prev.z - at.z)
+    private fun rayIntersectsBlock(start: Vector3d, at: BlockPos, d: Vector3d, boxes: List<AABB>): Pair<Boolean, Double> {
+        val r = Vector3d(-at.x + start.x, -at.y + start.y, -at.z + start.z)
 
+        //TODO
         for (box in boxes) {
             val (res, t) = rayIntersectsBox(box, r, d)
             if (res) {return Pair(true, t)}
@@ -43,7 +45,7 @@ object RaycastFunctions {
     }
 
     @JvmStatic
-    private fun checkForBlockInWorld(prev: Ref<Vector3d>,
+    private fun checkForBlockInWorld(
                              start: Vector3d,
                              point: Vector3d,
                              bpos: Ref<BlockPos>,
@@ -55,30 +57,29 @@ object RaycastFunctions {
         res.it = level.getBlockState(bpos.it)
         var t = 1.0
 
-        if (res.it.isAir) {prev.it=point; return null}
+        if (res.it.isAir) {return null}
         if (SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.check_block_model_ray_intersection) {
-            val (test_res, t_) = rayIntersectsBlock(prev.it, bpos.it, d, res.it.getShape(level, bpos.it).toAabbs())
+            val (test_res, t_) = rayIntersectsBlock(start, bpos.it, d, res.it.getShape(level, bpos.it).toAabbs())
             if (!test_res) {return null}
             t = t_
         }
         return Pair(Pair(bpos.it, res.it), t)
     }
     @JvmStatic
-    private fun checkForIntersectedEntity(prev: Vector3d,
-                                  cur: Vector3d,
-                                  level: Level,
-                                  d: Vector3d,
-                                  er: Int): Pair<Entity, Double>? {
+    private fun checkForIntersectedEntity(start: Vector3d,
+                                          cur: Vector3d,
+                                          level: Level,
+                                          d: Vector3d,
+                                          er: Int): Pair<Entity, Double>? {
         //null for any entity
         val entities = level.getEntities(null, AABB(
             cur.x-er, cur.y-er, cur.z-er,
             cur.x+er, cur.y+er, cur.z+er))
 
-        val r = Vector3d(prev.x, prev.y, prev.z) //bounding box is in global coordinates
         val intersecting_entities = mutableListOf<Pair<Entity, Double>>()
         for (entity in entities) {
             if (entity == null) {continue}
-            val (res, t) = rayIntersectsBox(entity.boundingBox, r, d)
+            val (res, t) = rayIntersectsBox(entity.boundingBox, start, d)
             if (!res) {continue}
             intersecting_entities.add(Pair(entity, t))
         }
@@ -91,9 +92,9 @@ object RaycastFunctions {
     // returns either Pair<BlockPos, BlockState> or Entity
     @JvmStatic
     fun raycast(level: Level, pointsIter: IterateBetweenTwoPointsIter): Any {
-        val start = pointsIter.next() // starting position
-        val prev = Ref(start) // previous position
-        val eprev = Ref(start) // previous position when entity check was made
+        val start = pointsIter.start // starting position
+
+//        SomePeripherals.logger.warn("START OF ITERATION ${start.x} ${start.y} ${start.z}")
 
         val bpos = Ref(BlockPos(start.x, start.y, start.z))
         val res = Ref(level.getBlockState(bpos.it))
@@ -101,7 +102,7 @@ object RaycastFunctions {
         val eps = 1e-16
         val next = pointsIter.nextNoStep()
         // unit vector of ray direction
-        val d = Vector3d(1.0/(next.x - prev.it.x + eps), 1.0/(next.y - prev.it.y + eps), 1.0/(next.z - prev.it.z + eps))
+        val d = Vector3d(1.0/(next.x - start.x + eps), 1.0/(next.y - start.y + eps), 1.0/(next.z - start.z + eps))
 
         val check_for_entities = SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.check_for_entities
         val er = SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.entity_check_radius
@@ -110,8 +111,9 @@ object RaycastFunctions {
         var entity_step_counter = 0
 
         for (point in pointsIter) {
+//            SomePeripherals.logger.warn("POINT ${point.x} ${point.y} ${point.z}")
             // Pair of (Pair of bpos, blockState), t
-            val world_res = checkForBlockInWorld(prev, start, point, bpos, res, d, level)
+            val world_res = checkForBlockInWorld(start, point, bpos, res, d, level)
 
             //if the block and intersected entity are both hit, then we need to find out actual intersection as
             // checkForIntersectedEntity checks "er" block radius
@@ -123,9 +125,8 @@ object RaycastFunctions {
                 if (intersected_entity != null) { return intersected_entity.first }
 
                 // Pair of Entity, t
-                intersected_entity = checkForIntersectedEntity(eprev.it, point, level, d, er)
+                intersected_entity = checkForIntersectedEntity(start, point, level, d, er)
                 entity_step_counter = 0
-                eprev.it = point
             }
             entity_step_counter++
         }
@@ -146,7 +147,7 @@ object RaycastFunctions {
     }
 
     @JvmStatic
-    fun vectorRotationCalc(be: BlockEntity, posX:Double, posY: Double): Vector3d {
+    fun vectorRotationCalc(be: BlockEntity, posY: Double, posX:Double,): Vector3d {
         val dir_enum = be.blockState.getValue(BlockStateProperties.FACING)
         val dir: Vector3f = dir_enum.step()
 
@@ -195,7 +196,13 @@ object RaycastFunctions {
             unit_d.z * distance + start.z
         )
 
-        val result = raycast(level, IterateBetweenTwoPointsIter(start, stop, SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.max_raycast_iterations))
+//        val iter = DDAIter(start, stop,
+//            if (SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.max_raycast_iterations > 0)
+//            {distance.coerceAtMost(SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.max_raycast_iterations.toDouble())}
+//            else {distance})
+
+        val iter = IterateBetweenTwoPointsIter(start, stop, SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.max_raycast_iterations)
+        val result = raycast(level, iter)
 
         return result
     }

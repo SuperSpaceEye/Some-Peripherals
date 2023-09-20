@@ -5,8 +5,8 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.round
 
-class IterateBetweenTwoPointsIter(pos1: Vector3d, pos2: Vector3d, val max_len:Int):Iterator<Vector3d> {
-    var cpos = pos1;
+class IterateBetweenTwoPointsIter(val start: Vector3d, pos2: Vector3d, val max_len:Int):Iterator<Vector3d> {
+    var cpos = start;
     var x_step: Double = 0.0
     var y_step: Double = 0.0
     var z_step: Double = 0.0
@@ -14,9 +14,9 @@ class IterateBetweenTwoPointsIter(pos1: Vector3d, pos2: Vector3d, val max_len:In
     var up_to = 0
 
     init {
-        val x_diff = pos1.x - pos2.x
-        val y_diff = pos1.y - pos2.y
-        val z_diff = pos1.z - pos2.z
+        val x_diff = start.x - pos2.x
+        val y_diff = start.y - pos2.y
+        val z_diff = start.z - pos2.z
 
         val x_modif = if (x_diff < 0) {1.0} else {-1.0}
         val y_modif = if (y_diff < 0) {1.0} else {-1.0}
@@ -32,7 +32,7 @@ class IterateBetweenTwoPointsIter(pos1: Vector3d, pos2: Vector3d, val max_len:In
         y_step = if(y_is_larger) {1.0} else {abs(y_diff) / longer_side_length} * y_modif
         z_step = if(z_is_larger) {1.0} else {abs(z_diff) / longer_side_length} * z_modif
 
-        cpos = Vector3d(pos1.x, pos1.y, pos1.z)
+        cpos = Vector3d(start.x, start.y, start.z)
         up_to = round(longer_side_length).toInt()
     }
 
@@ -41,12 +41,11 @@ class IterateBetweenTwoPointsIter(pos1: Vector3d, pos2: Vector3d, val max_len:In
     }
 
     override fun next(): Vector3d {
-        val ret = Vector3d(cpos.x, cpos.y, cpos.z)
         cpos.x += x_step
         cpos.y += y_step
         cpos.z += z_step
         cur_i++
-        return ret
+        return Vector3d(cpos.x, cpos.y, cpos.z)
     }
 
     fun nextNoStep(): Vector3d {
