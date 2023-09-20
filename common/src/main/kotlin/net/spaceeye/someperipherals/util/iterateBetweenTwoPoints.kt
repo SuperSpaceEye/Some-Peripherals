@@ -6,7 +6,7 @@ import kotlin.math.max
 import kotlin.math.round
 
 class IterateBetweenTwoPointsIter(val start: Vector3d, pos2: Vector3d, val max_len:Int):Iterator<Vector3d> {
-    var cpos = start;
+    var cpos = start
     var x_step: Double = 0.0
     var y_step: Double = 0.0
     var z_step: Double = 0.0

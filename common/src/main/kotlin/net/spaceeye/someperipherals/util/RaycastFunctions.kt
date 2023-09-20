@@ -94,8 +94,6 @@ object RaycastFunctions {
     fun raycast(level: Level, pointsIter: IterateBetweenTwoPointsIter): Any {
         val start = pointsIter.start // starting position
 
-//        SomePeripherals.logger.warn("START OF ITERATION ${start.x} ${start.y} ${start.z}")
-
         val bpos = Ref(BlockPos(start.x, start.y, start.z))
         val res = Ref(level.getBlockState(bpos.it))
 
@@ -111,7 +109,6 @@ object RaycastFunctions {
         var entity_step_counter = 0
 
         for (point in pointsIter) {
-//            SomePeripherals.logger.warn("POINT ${point.x} ${point.y} ${point.z}")
             // Pair of (Pair of bpos, blockState), t
             val world_res = checkForBlockInWorld(start, point, bpos, res, d, level)
 
@@ -189,6 +186,11 @@ object RaycastFunctions {
         val unit_d = if(use_fisheye || !SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.vector_rotation_enabled)
         {fisheyeRotationCalc(be, var1, var2)} else {vectorRotationCalc(be, var1, var2)}
 
+        //TODO why
+//        val start = Vector3d(
+//            pos.x.toDouble() + if (pos.x >= 0) {0.5} else {-0.5},
+//            pos.y.toDouble() + if (pos.y >= 0) {0.5} else {-0.5},
+//            pos.z.toDouble() + if (pos.z >= 0) {0.5} else {-0.5})
         val start = Vector3d(pos.x.toDouble() + 0.5, pos.y.toDouble() + 0.5, pos.z.toDouble() + 0.5)
         val stop = Vector3d(
             unit_d.x * distance + start.x,
