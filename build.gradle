@@ -61,6 +61,12 @@ allprojects {
         // Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
         // See https://docs.gradle.org/current/userguide/declaring_repositories.html
         // for more information about repositories.
+        mavenLocal()
+        maven {
+            name = "Valkyrien Skies Internal"
+            url = 'https://maven.valkyrienskies.org'
+        }
+        mavenCentral()
     }
 
     tasks.withType(JavaCompile) {
@@ -71,4 +77,9 @@ allprojects {
     java {
         withSourcesJar()
     }
+}
+
+dependencies {
+    api 'org.joml:joml-primitives:1.10.0'
+    api 'org.joml:joml:1.10.5'
 }

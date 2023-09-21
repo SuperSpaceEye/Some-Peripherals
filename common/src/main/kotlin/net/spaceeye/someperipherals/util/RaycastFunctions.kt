@@ -13,11 +13,15 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.world.phys.AABB
 import net.spaceeye.someperipherals.SomePeripherals
 import net.spaceeye.someperipherals.SomePeripheralsConfig
+import net.spaceeye.someperipherals.util.VSRaycastFunctions.vsRaycast
 import java.lang.Math.*
+
+typealias ray_iter_type = IterateBetweenTwoPointsIter
 
 object RaycastFunctions {
     //https://gamedev.stackexchange.com/questions/18436/most-efficient-aabb-vs-ray-collision-algorithms
-    private fun rayIntersectsBox(box: AABB, r: Vector3d, d: Vector3d): Pair<Boolean, Double> {
+    @JvmStatic
+    fun rayIntersectsBox(box: AABB, r: Vector3d, d: Vector3d): Pair<Boolean, Double> {
         val t1: Double = (box.minX - r.x) * d.x
         val t2: Double = (box.maxX - r.x) * d.x
         val t3: Double = (box.minY - r.y) * d.y
@@ -32,7 +36,7 @@ object RaycastFunctions {
     }
     //Will check block's model
     @JvmStatic
-    private fun rayIntersectsBlock(start: Vector3d, at: BlockPos, d: Vector3d, boxes: List<AABB>): Pair<Boolean, Double> {
+    fun rayIntersectsBlock(start: Vector3d, at: BlockPos, d: Vector3d, boxes: List<AABB>): Pair<Boolean, Double> {
         val r = Vector3d(-at.x + start.x, -at.y + start.y, -at.z + start.z)
 
         //TODO
@@ -45,7 +49,7 @@ object RaycastFunctions {
     }
 
     @JvmStatic
-    private fun checkForBlockInWorld(
+    fun checkForBlockInWorld(
                              start: Vector3d,
                              point: Vector3d,
                              bpos: Ref<BlockPos>,
@@ -66,7 +70,7 @@ object RaycastFunctions {
         return Pair(Pair(bpos.it, res.it), t)
     }
     @JvmStatic
-    private fun checkForIntersectedEntity(start: Vector3d,
+    fun checkForIntersectedEntity(start: Vector3d,
                                           cur: Vector3d,
                                           level: Level,
                                           d: Vector3d,
@@ -91,7 +95,7 @@ object RaycastFunctions {
 
     // returns either Pair<BlockPos, BlockState> or Entity
     @JvmStatic
-    fun raycast(level: Level, pointsIter: IterateBetweenTwoPointsIter): Any {
+    fun normalRaycast(level: Level, pointsIter: ray_iter_type): Any {
         val start = pointsIter.start // starting position
 
         val bpos = Ref(BlockPos(start.x, start.y, start.z))
@@ -118,7 +122,7 @@ object RaycastFunctions {
             if (world_res != null) {return world_res.first}
 
             //if ray hits entity and any block wasn't hit before another check, then previous intersected entity is the actual hit place
-            if (check_for_entities && entity_step_counter % (er+1) == 0) {
+            if (check_for_entities && entity_step_counter % er == 0) {
                 if (intersected_entity != null) { return intersected_entity.first }
 
                 // Pair of Entity, t
@@ -129,6 +133,13 @@ object RaycastFunctions {
         }
 
         return Pair(bpos.it, res.it)
+    }
+
+    fun raycast(level: Level, pointsIter: ray_iter_type): Any {
+        return when (SomePeripherals.has_vs) {
+            false -> normalRaycast(level, pointsIter)
+            true  -> vsRaycast(level, pointsIter)
+        }
     }
 
     @JvmStatic
@@ -144,7 +155,7 @@ object RaycastFunctions {
     }
 
     @JvmStatic
-    fun vectorRotationCalc(be: BlockEntity, posY: Double, posX:Double,): Vector3d {
+    fun vectorRotationCalc(be: BlockEntity, posY: Double, posX:Double): Vector3d {
         val dir_enum = be.blockState.getValue(BlockStateProperties.FACING)
         val dir: Vector3f = dir_enum.step()
 

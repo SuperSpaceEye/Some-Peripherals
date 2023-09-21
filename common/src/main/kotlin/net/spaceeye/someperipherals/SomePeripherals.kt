@@ -1,5 +1,6 @@
 package net.spaceeye.someperipherals
 
+import dev.architectury.platform.Platform
 import net.minecraft.resources.ResourceLocation
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
@@ -8,8 +9,11 @@ object SomePeripherals {
     const val MOD_ID = "some_peripherals"
     val logger: Logger = LogManager.getLogger(MOD_ID)
 
+    var has_vs: Boolean = false
+
     @JvmStatic
     fun init() {
+        if (Platform.isModLoaded("valkyrienskies")) { has_vs = true}
         SomePeripheralsBlocks.register()
         SomePeripheralsBlockEntities.register()
         SomePeripheralsItems.register()
