@@ -10,7 +10,8 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.spaceeye.someperipherals.SomePeripheralsCommonBlocks
 import net.spaceeye.someperipherals.SomePeripheralsConfig
 import net.spaceeye.someperipherals.blockentities.RaycasterBlockEntity
-import net.spaceeye.someperipherals.util.RaycastFunctions.castRay
+import net.spaceeye.someperipherals.raycasting.*
+import net.spaceeye.someperipherals.raycasting.RaycastFunctions.castRay
 import java.lang.Math.pow
 import java.lang.RuntimeException
 import kotlin.math.sqrt
@@ -19,54 +20,58 @@ class Raycaster_Peripheral(private val level: Level, private val pos: BlockPos):
     private var be = level.getBlockEntity(pos) as RaycasterBlockEntity
 
     private fun makeResponseBlock(
-        res: Pair<*, *>,
+        res: RaycastBlockReturn,
         ret: MutableMap<Any, Any>,
         rcc: SomePeripheralsConfig.Server.Common.RaycasterSettings
     ) {
-        val pos = res.first as BlockPos
-        val bs = res.second as BlockState
-        val rc_pos = be.blockPos
+        val pos = res.result.first
+        val bs  = res.result.second
 
         ret["is_block"] = true
-        if (rcc.return_abs_pos) {ret["abs_pos"] = mutableListOf(pos.x, pos.y, pos.z)}
-        val distance: Double = sqrt(
-            pow((pos.x-rc_pos.x).toDouble(), 2.0)
-             + pow((pos.y-rc_pos.y).toDouble(), 2.0)
-             + pow((pos.z-rc_pos.z).toDouble(), 2.0)
-        )
-        if (rcc.return_distance) {ret["distance"] = distance}
+        if (rcc.return_abs_pos)  {ret["abs_pos"] = mutableListOf(pos.x, pos.y, pos.z)}
+        if (rcc.return_distance) {ret["distance"] = res.distance_to}
         if (rcc.return_block_id) {ret["block_type"] = bs.block.descriptionId.toString()}
     }
 
     private fun makeResponseEntity(
-        res: Entity,
+        res: RaycastEntityReturn,
         ret: MutableMap<Any, Any>,
         rcc: SomePeripheralsConfig.Server.Common.RaycasterSettings
     ) {
-        val entity: Entity = res
-        val rc_pos = be.blockPos
+        val entity: Entity = res.result
 
         ret["is_entity"] = true
-        if (rcc.return_abs_pos) {ret["abs_pos"] = mutableListOf(entity.x, entity.y, entity.z)}
-        val distance: Double = sqrt(
-            pow((entity.x-rc_pos.x), 2.0)
-                    + pow((entity.y-rc_pos.y), 2.0)
-                    + pow((entity.z-rc_pos.z), 2.0)
-        )
-        if (rcc.return_distance) {ret["distance"] = distance}
+        if (rcc.return_abs_pos)  {ret["abs_pos"] = mutableListOf(entity.x, entity.y, entity.z)}
+        if (rcc.return_distance) {ret["distance"] = res.distance_to}
 
         if (rcc.return_entity_type_descriptionId) {ret["descriptionId"] = entity.type.descriptionId}
     }
 
-    private fun makeRaycastResponse(res: Any): MutableMap<Any, Any> {
+    private fun makeResponseVSBlock(
+        res: RaycastVSShipBlockReturn,
+        ret: MutableMap<Any, Any>,
+        rcc: SomePeripheralsConfig.Server.Common.RaycasterSettings
+    ) {
+        val pos = res.block.first
+        val bs  = res.block.second
+
+        ret["is_block"] = true
+        if (rcc.return_abs_pos)  {ret["abs_pos"] = mutableListOf(pos.x, pos.y, pos.z)}
+        if (rcc.return_distance) {ret["distance"] = res.distance_to}
+        if (rcc.return_block_id) {ret["block_type"] = bs.block.descriptionId.toString()}
+        if (rcc.return_ship_id)  {ret["ship_id"] = res.ship.id}
+    }
+
+    private fun makeRaycastResponse(res: RaycastReturn): MutableMap<Any, Any> {
         val ret = mutableMapOf<Any, Any>()
         val rcc = SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS
 
         when (res) {
-            is Pair<*, *> -> makeResponseBlock(res, ret, rcc)
-            is Entity     -> makeResponseEntity(res, ret, rcc)
-            is String     -> {ret["error"] = res}
-            else -> throw RuntimeException("i fucked up. ohno.")
+            is RaycastBlockReturn -> makeResponseBlock(res, ret, rcc)
+            is RaycastEntityReturn-> makeResponseEntity(res, ret, rcc)
+            is RaycastVSShipBlockReturn -> makeResponseVSBlock(res, ret, rcc)
+            is RaycastERROR -> {ret["error"] = res.error_str}
+            else -> throw RuntimeException("i fucked up somehow.")
         }
 
         return ret

@@ -32,9 +32,7 @@ object SomePeripheralsConfig {
                 @JsonSchema(description = "should be a positive integer divisible by two or it will FUCKING CRASH, probably")
                 var entity_check_radius = 8
 
-                @JsonSchema(description = "")
-                var check_block_model_ray_intersection = true
-                @JsonSchema(description = "")
+                @JsonSchema(description = "Includes VS ships if VS exists")
                 var check_for_entities: Boolean = true
 
                 @JsonSchema(description = "")
@@ -43,6 +41,8 @@ object SomePeripheralsConfig {
                 var return_distance = true
                 @JsonSchema(description = "")
                 var return_block_id = true
+                @JsonSchema(description = "only with VS existing")
+                var return_ship_id = true
 
                 @JsonSchema(description = "")
                 var return_entity_type_descriptionId = true
