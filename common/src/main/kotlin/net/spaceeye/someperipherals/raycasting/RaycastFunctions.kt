@@ -14,7 +14,6 @@ import net.minecraft.world.phys.AABB
 import net.spaceeye.someperipherals.SomePeripherals
 import net.spaceeye.someperipherals.SomePeripheralsConfig
 import net.spaceeye.someperipherals.util.IterateBetweenTwoPointsIter
-import net.spaceeye.someperipherals.util.Ref
 import net.spaceeye.someperipherals.util.directionToQuat
 import net.spaceeye.someperipherals.util.quatToUnit
 import net.spaceeye.someperipherals.raycasting.VSRaycastFunctions.vsRaycast
@@ -23,52 +22,55 @@ import java.lang.Math.*
 typealias ray_iter_type = IterateBetweenTwoPointsIter
 
 object RaycastFunctions {
+    private val logger = SomePeripherals.slogger
+    val eps  = 1e-30
+    val heps = 1/eps
+
     //https://gamedev.stackexchange.com/questions/18436/most-efficient-aabb-vs-ray-collision-algorithms
     @JvmStatic
-    fun rayIntersectsBox(box: AABB, r: Vector3d, d: Vector3d): Pair<Boolean, Double> {
-        val t1: Double = (box.minX - r.x) * d.x
-        val t2: Double = (box.maxX - r.x) * d.x
-        val t3: Double = (box.minY - r.y) * d.y
-        val t4: Double = (box.maxY - r.y) * d.y
-        val t5: Double = (box.minZ - r.z) * d.z
-        val t6: Double = (box.maxZ - r.z) * d.z
+    fun rayIntersectsBox(box: AABB, or: Vector3d, d: Vector3d): Pair<Boolean, Double> {
+        val t1: Double = (box.minX - or.x) * d.x
+        val t2: Double = (box.maxX - or.x) * d.x
+        val t3: Double = (box.minY - or.y) * d.y
+        val t4: Double = (box.maxY - or.y) * d.y
+        val t5: Double = (box.minZ - or.z) * d.z
+        val t6: Double = (box.maxZ - or.z) * d.z
 
         val tmin = max(max(min(t1, t2), min(t3, t4)), min(t5, t6))
         val tmax = min(min(max(t1, t2), max(t3, t4)), max(t5, t6))
         if (tmax < 0 || tmin > tmax) {return Pair(false, tmax)}
         return Pair(true, tmin)
     }
-    //Will check block's model
+    //Will check block hitbox
     @JvmStatic
     fun rayIntersectsBlock(start: Vector3d, at: BlockPos, d: Vector3d, boxes: List<AABB>): Pair<Boolean, Double> {
         val r = Vector3d(-at.x + start.x, -at.y + start.y, -at.z + start.z)
 
-        //TODO
+        val intersecting = mutableListOf<Double>()
         for (box in boxes) {
             val (res, t) = rayIntersectsBox(box, r, d)
-            if (res) {return Pair(true, t)}
+            if (res) {intersecting.add(t)}
         }
-
-        return Pair(false, 1e16)
+        if (intersecting.isEmpty()) {return Pair(false, heps)}
+        return Pair(true, intersecting.min())
     }
 
     @JvmStatic
     fun checkForBlockInWorld(
         start: Vector3d,
         point: Vector3d,
-        bpos: Ref<BlockPos>,
-        res: Ref<BlockState>,
         d: Vector3d,
         ray_distance: Double,
         level: Level): Pair<Pair<BlockPos, BlockState>, Double>? {
+        //TODO do i need to do this? idk
         if (point.x == start.x && point.y == start.y && point.z == start.z) {return null}
-        bpos.it = BlockPos(point.x, point.y, point.z)
-        res.it = level.getBlockState(bpos.it)
+        val bpos = BlockPos(point.x, point.y, point.z)
+        val res = level.getBlockState(bpos)
 
-        if (res.it.isAir) {return null}
-        val (test_res, t) = rayIntersectsBlock(start, bpos.it, d, res.it.getShape(level, bpos.it).toAabbs())
+        if (res.isAir) {return null}
+        val (test_res, t) = rayIntersectsBlock(start, bpos, d, res.getShape(level, bpos).toAabbs())
         if (!test_res) {return null}
-        return Pair(Pair(bpos.it, res.it), t * ray_distance)
+        return Pair(Pair(bpos, res), t * ray_distance)
     }
     @JvmStatic
     fun checkForIntersectedEntity(start: Vector3d,
@@ -100,12 +102,7 @@ object RaycastFunctions {
     fun normalRaycast(level: Level, pointsIter: ray_iter_type): RaycastReturn {
         val start = pointsIter.start // starting position
 
-        val bpos = Ref(BlockPos(start.x, start.y, start.z))
-        val res = Ref(level.getBlockState(bpos.it))
-
-        val eps = 1e-16
         val next = pointsIter.nextNoStep()
-        // unit vector of ray direction
         val rd = Vector3d(next.x - start.x, next.y - start.y, next.z - start.z)
         val d = Vector3d(1.0/(rd.x + eps), 1.0/(rd.y + eps), 1.0/(rd.z + eps))
         val ray_distance = kotlin.math.sqrt(rd.x * rd.x + rd.y * rd.y + rd.z * rd.z)
@@ -118,7 +115,7 @@ object RaycastFunctions {
 
         for (point in pointsIter) {
             // Pair of (Pair of bpos, blockState), t
-            val world_res = checkForBlockInWorld(start, point, bpos, res, d, ray_distance, level)
+            val world_res = checkForBlockInWorld(start, point, d, ray_distance, level)
 
             //if the block and intersected entity are both hit, then we need to find out actual intersection as
             // checkForIntersectedEntity checks "er" block radius
@@ -138,7 +135,7 @@ object RaycastFunctions {
             entity_step_counter++
         }
 
-        return RaycastBlockReturn(Pair(bpos.it, res.it), pointsIter.max_len.toDouble())
+        return RaycastNoResultReturn(pointsIter.max_len.toDouble())
     }
 
     fun raycast(level: Level, pointsIter: ray_iter_type): RaycastReturn {
@@ -147,6 +144,8 @@ object RaycastFunctions {
             true  -> vsRaycast(level, pointsIter)
         }
     }
+
+
 
     @JvmStatic
     fun fisheyeRotationCalc(be: BlockEntity, pitch_: Double, yaw_: Double): Vector3d {
@@ -193,7 +192,6 @@ object RaycastFunctions {
         return Vector3d(dir.x().toDouble(), dir.y().toDouble(), dir.z().toDouble())
     }
 
-    // returns either Pair<BlockPos, BlockState> or Entity
     @JvmStatic
     fun castRay(level: Level, be: BlockEntity, pos: BlockPos,
                 distance: Double, var1:Double, var2: Double,

@@ -6,7 +6,7 @@ import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 
 class LogWrapper(val logger: Logger) {
-    var is_enabled = true
+    var is_enabled = false
 
     fun warn(msg: String) { if(is_enabled) { logger.warn(msg)} }
 }

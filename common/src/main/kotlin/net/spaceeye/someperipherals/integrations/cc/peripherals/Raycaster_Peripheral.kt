@@ -62,14 +62,25 @@ class Raycaster_Peripheral(private val level: Level, private val pos: BlockPos):
         if (rcc.return_ship_id)  {ret["ship_id"] = res.ship.id}
     }
 
+    private fun makeResponseNoResult(
+        res: RaycastNoResultReturn,
+        ret: MutableMap<Any, Any>,
+        rcc: SomePeripheralsConfig.Server.Common.RaycasterSettings
+    ) {
+        ret["is_block"] = true
+        ret["distance"] = res.distance_to
+        ret["block_type"] = "block.minecraft.air"
+    }
+
     private fun makeRaycastResponse(res: RaycastReturn): MutableMap<Any, Any> {
         val ret = mutableMapOf<Any, Any>()
         val rcc = SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS
 
         when (res) {
-            is RaycastBlockReturn -> makeResponseBlock(res, ret, rcc)
-            is RaycastEntityReturn-> makeResponseEntity(res, ret, rcc)
-            is RaycastVSShipBlockReturn -> makeResponseVSBlock(res, ret, rcc)
+            is RaycastBlockReturn       -> makeResponseBlock   (res, ret, rcc)
+            is RaycastEntityReturn      -> makeResponseEntity  (res, ret, rcc)
+            is RaycastVSShipBlockReturn -> makeResponseVSBlock (res, ret, rcc)
+            is RaycastNoResultReturn    -> makeResponseNoResult(res, ret, rcc)
             is RaycastERROR -> {ret["error"] = res.error_str}
             else -> throw RuntimeException("i fucked up somehow.")
         }
