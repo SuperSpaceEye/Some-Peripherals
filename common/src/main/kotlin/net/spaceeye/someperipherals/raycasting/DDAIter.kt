@@ -20,15 +20,15 @@ import java.lang.Math.pow
 import kotlin.math.abs
 import kotlin.math.sqrt
 
-class DDAIter(val start: Vector3d, val stop: Vector3d, val up_to: Int):Iterator<Vector3d> {
+class DDAIter(var start: Vector3d, val stop: Vector3d, val up_to: Int):Iterator<Vector3d> {
     private var cpos = Vector3d(start.x, start.y, start.z)
 
     var cur_i = 0
 
-    private var rd: Vector3d
-    private var tMax : Vector3d
-    private var tDelta : Vector3d
-    private var step : Vector3d
+    var rd: Vector3d
+    var tMax : Vector3d
+    var tDelta : Vector3d
+    var step : Vector3d
 
     private fun hypot(vec: Vector3d): Double {
         return sqrt(pow(vec.x, 2.0) + pow(vec.y, 2.0) + pow(vec.z, 2.0))

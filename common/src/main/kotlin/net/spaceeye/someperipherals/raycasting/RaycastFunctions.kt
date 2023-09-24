@@ -17,6 +17,8 @@ import net.spaceeye.someperipherals.util.directionToQuat
 import net.spaceeye.someperipherals.util.quatToUnit
 import net.spaceeye.someperipherals.raycasting.VSRaycastFunctions.vsRaycast
 import net.spaceeye.someperipherals.util.DDAIter
+//import net.spaceeye.someperipherals.util.DDAIter
+import net.spaceeye.someperipherals.util.IterateBetweenTwoPointsIter
 import java.lang.Math.*
 
 typealias ray_iter_type = DDAIter
@@ -215,7 +217,7 @@ object RaycastFunctions {
 
         val max_dist = SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.max_raycast_iterations
         val max_iter = if (max_dist <= 0) {distance.toInt()} else {min(distance.toInt(), max_dist)}
-        val iter = DDAIter(start, stop, max_iter)
+        val iter = ray_iter_type(start, stop, max_iter)
 
         val result = raycast(level, iter)
 

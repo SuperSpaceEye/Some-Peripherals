@@ -5,7 +5,7 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.round
 
-class IterateBetweenTwoPointsIter(val start: Vector3d, pos2: Vector3d, val max_len:Int):Iterator<Vector3d> {
+class IterateBetweenTwoPointsIter(var start: Vector3d, val stop: Vector3d, val max_len:Int):Iterator<Vector3d> {
     var cpos = start
     var x_step: Double = 0.0
     var y_step: Double = 0.0
@@ -14,9 +14,9 @@ class IterateBetweenTwoPointsIter(val start: Vector3d, pos2: Vector3d, val max_l
     var up_to = 0
 
     init {
-        val x_diff = start.x - pos2.x
-        val y_diff = start.y - pos2.y
-        val z_diff = start.z - pos2.z
+        val x_diff = start.x - stop.x
+        val y_diff = start.y - stop.y
+        val z_diff = start.z - stop.z
 
         val x_modif = if (x_diff < 0) {1.0} else {-1.0}
         val y_modif = if (y_diff < 0) {1.0} else {-1.0}
