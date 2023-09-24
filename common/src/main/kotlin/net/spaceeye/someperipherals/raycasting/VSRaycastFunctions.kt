@@ -8,7 +8,6 @@ import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.state.BlockState
 import net.spaceeye.someperipherals.SomePeripherals
 import net.spaceeye.someperipherals.SomePeripheralsConfig
-import net.spaceeye.someperipherals.util.IterateBetweenTwoPointsIter
 import net.spaceeye.someperipherals.raycasting.RaycastFunctions.checkForBlockInWorld
 import net.spaceeye.someperipherals.raycasting.RaycastFunctions.checkForIntersectedEntity
 import net.spaceeye.someperipherals.raycasting.RaycastFunctions.rayIntersectsBox
@@ -101,7 +100,7 @@ object VSRaycastFunctions {
 
         val ray_max_len = max_iter_num - current_iter_i
         val ray = Ray(
-            IterateBetweenTwoPointsIter(
+            ray_iter_type(
                 Vector3d(sp_start.x, sp_start.y, sp_start.z),
                 Vector3d(sp_end  .x, sp_end  .y, sp_end  .z),
                 ray_max_len),
@@ -186,11 +185,10 @@ object VSRaycastFunctions {
     @JvmStatic
     fun vsRaycast(level: Level, pointsIter: ray_iter_type): RaycastReturn {
         val start = pointsIter.start // starting position
+        val stop = pointsIter.stop
 
         val eps = RaycastFunctions.eps
-        val next = pointsIter.nextNoStep()
-        // unit vector of ray direction
-        val rd = Vector3d(next.x - start.x, next.y - start.y, next.z - start.z)
+        val rd = Vector3d(stop.x - start.x, stop.y - start.y, stop.z - start.z)
         val d = Vector3d(1.0/(rd.x + eps), 1.0/(rd.y + eps), 1.0/(rd.z + eps))
         val ray_distance = sqrt(rd.x*rd.x + rd.y*rd.y + rd.z*rd.z)
 
@@ -205,7 +203,7 @@ object VSRaycastFunctions {
         val shipyard_rays = mutableListOf<Ray>()
 
         for (point in pointsIter) {
-            checkForShipIntersections(start, point, ray_distance, d, pointsIter.cur_i, pointsIter.max_len, future_ship_intersections, shipyard_rays)
+            checkForShipIntersections(start, point, ray_distance, d, pointsIter.cur_i, pointsIter.up_to, future_ship_intersections, shipyard_rays)
 
             val ship_hit_res = iterateShipRays(level, shipyard_rays, ships_already_intersected)
             val world_res = checkForBlockInWorld(start, point, d, ray_distance, level)
@@ -226,6 +224,6 @@ object VSRaycastFunctions {
             entity_step_counter++
         }
 
-        return RaycastNoResultReturn(pointsIter.max_len.toDouble())
+        return RaycastNoResultReturn(pointsIter.up_to.toDouble())
     }
 }

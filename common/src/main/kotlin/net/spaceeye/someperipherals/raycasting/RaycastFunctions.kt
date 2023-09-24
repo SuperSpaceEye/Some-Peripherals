@@ -13,13 +13,13 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.world.phys.AABB
 import net.spaceeye.someperipherals.SomePeripherals
 import net.spaceeye.someperipherals.SomePeripheralsConfig
-import net.spaceeye.someperipherals.util.IterateBetweenTwoPointsIter
 import net.spaceeye.someperipherals.util.directionToQuat
 import net.spaceeye.someperipherals.util.quatToUnit
 import net.spaceeye.someperipherals.raycasting.VSRaycastFunctions.vsRaycast
+import net.spaceeye.someperipherals.util.DDAIter
 import java.lang.Math.*
 
-typealias ray_iter_type = IterateBetweenTwoPointsIter
+typealias ray_iter_type = DDAIter
 
 object RaycastFunctions {
     private val logger = SomePeripherals.slogger
@@ -100,10 +100,10 @@ object RaycastFunctions {
     // returns either Pair<BlockPos, BlockState> or Entity
     @JvmStatic
     fun normalRaycast(level: Level, pointsIter: ray_iter_type): RaycastReturn {
-        val start = pointsIter.start // starting position
+        val start = pointsIter.start
+        val stop  = pointsIter.stop
 
-        val next = pointsIter.nextNoStep()
-        val rd = Vector3d(next.x - start.x, next.y - start.y, next.z - start.z)
+        val rd = Vector3d(stop.x - start.x, stop.y - start.y, stop.z - start.z)
         val d = Vector3d(1.0/(rd.x + eps), 1.0/(rd.y + eps), 1.0/(rd.z + eps))
         val ray_distance = kotlin.math.sqrt(rd.x * rd.x + rd.y * rd.y + rd.z * rd.z)
 
@@ -135,7 +135,7 @@ object RaycastFunctions {
             entity_step_counter++
         }
 
-        return RaycastNoResultReturn(pointsIter.max_len.toDouble())
+        return RaycastNoResultReturn(pointsIter.up_to.toDouble())
     }
 
     fun raycast(level: Level, pointsIter: ray_iter_type): RaycastReturn {
@@ -199,11 +199,7 @@ object RaycastFunctions {
         if (level.isClientSide) {return RaycastERROR("Level is clientside. how.")}
 
         val unit_d = if(use_fisheye || !SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.vector_rotation_enabled)
-        {
-            fisheyeRotationCalc(be, var1, var2)
-        } else {
-            vectorRotationCalc(be, var1, var2)
-        }
+        { fisheyeRotationCalc(be, var1, var2) } else { vectorRotationCalc(be, var1, var2) }
 
         //TODO why
 //        val start = Vector3d(
@@ -217,14 +213,10 @@ object RaycastFunctions {
             unit_d.z * distance + start.z
         )
 
-//        val iter = DDAIter(start, stop,
-//            if (SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.max_raycast_iterations > 0)
-//            {distance.coerceAtMost(SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.max_raycast_iterations.toDouble())}
-//            else {distance})
         val max_dist = SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.max_raycast_iterations
         val max_iter = if (max_dist <= 0) {distance.toInt()} else {min(distance.toInt(), max_dist)}
+        val iter = DDAIter(start, stop, max_iter)
 
-        val iter = IterateBetweenTwoPointsIter(start, stop, max_iter)
         val result = raycast(level, iter)
 
         return result
