@@ -16,12 +16,12 @@ import net.spaceeye.someperipherals.SomePeripheralsConfig
 import net.spaceeye.someperipherals.util.directionToQuat
 import net.spaceeye.someperipherals.util.quatToUnit
 import net.spaceeye.someperipherals.raycasting.VSRaycastFunctions.vsRaycast
-import net.spaceeye.someperipherals.util.DDAIter
-//import net.spaceeye.someperipherals.util.DDAIter
-import net.spaceeye.someperipherals.util.IterateBetweenTwoPointsIter
+import net.spaceeye.someperipherals.util.BresenhamIter
+import org.valkyrienskies.mod.common.getShipManagingPos
+import org.valkyrienskies.mod.common.toWorldCoordinates
 import java.lang.Math.*
 
-typealias ray_iter_type = DDAIter
+typealias ray_iter_type = RayIter
 
 object RaycastFunctions {
     private val logger = SomePeripherals.slogger
@@ -41,6 +41,7 @@ object RaycastFunctions {
         val tmin = max(max(min(t1, t2), min(t3, t4)), min(t5, t6))
         val tmax = min(min(max(t1, t2), max(t3, t4)), max(t5, t6))
         if (tmax < 0 || tmin > tmax) {return Pair(false, tmax)}
+        if (tmin <= 0) {return Pair(true, 0.0)} // already inside an object so no t
         return Pair(true, tmin)
     }
     //Will check block hitbox
@@ -147,6 +148,16 @@ object RaycastFunctions {
         }
     }
 
+    fun getStartingPosition(level: Level, pos: BlockPos): BlockPos {
+        return when (SomePeripherals.has_vs) {
+            false -> pos
+            true -> {
+                val test = level.getShipManagingPos(pos) ?: return pos
+                val new_pos = test.toWorldCoordinates(pos)
+                return BlockPos(new_pos.x, new_pos.y, new_pos.z)
+            }
+        }
+    }
 
 
     @JvmStatic
@@ -198,17 +209,15 @@ object RaycastFunctions {
     fun castRay(level: Level, be: BlockEntity, pos: BlockPos,
                 distance: Double, var1:Double, var2: Double,
                 use_fisheye: Boolean = true): RaycastReturn {
+        //TODO make separation between normal and VS compat versions at castRay instead of raycast, as i will need
+        // a lot of logic for ship -> world translation
         if (level.isClientSide) {return RaycastERROR("Level is clientside. how.")}
 
         val unit_d = if(use_fisheye || !SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.vector_rotation_enabled)
         { fisheyeRotationCalc(be, var1, var2) } else { vectorRotationCalc(be, var1, var2) }
 
-        //TODO why
-//        val start = Vector3d(
-//            pos.x.toDouble() + if (pos.x >= 0) {0.5} else {-0.5},
-//            pos.y.toDouble() + if (pos.y >= 0) {0.5} else {-0.5},
-//            pos.z.toDouble() + if (pos.z >= 0) {0.5} else {-0.5})
-        val start = Vector3d(pos.x.toDouble() + 0.5, pos.y.toDouble() + 0.5, pos.z.toDouble() + 0.5)
+        val spos = getStartingPosition(level, pos)
+        val start = Vector3d(spos.x.toDouble() + 0.5, spos.y.toDouble() + 0.5, spos.z.toDouble() + 0.5)
         val stop = Vector3d(
             unit_d.x * distance + start.x,
             unit_d.y * distance + start.y,
@@ -217,7 +226,7 @@ object RaycastFunctions {
 
         val max_dist = SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.max_raycast_iterations
         val max_iter = if (max_dist <= 0) {distance.toInt()} else {min(distance.toInt(), max_dist)}
-        val iter = ray_iter_type(start, stop, max_iter)
+        val iter = BresenhamIter(start, stop, max_iter)
 
         val result = raycast(level, iter)
 

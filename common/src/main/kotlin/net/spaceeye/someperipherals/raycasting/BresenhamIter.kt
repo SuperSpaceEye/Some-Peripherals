@@ -9,26 +9,31 @@
 //https://www.youtube.com/watch?v=PC1RaETIx3Y
 //https://www.youtube.com/watch?v=w0Bm4IA-Ii8
 //https://lodev.org/cgtutor/raycasting.html
-//https://github.com/OneLoneCoder/Javidx9/blob/master/PixelGameEngine/SmallerProjects/OneLoneCoder_PGE_RayCastDDA.cpp
 
 //https://stackoverflow.com/questions/55263298/draw-all-voxels-that-pass-through-a-3d-line-in-3d-voxel-space
 
+//https://www.flipcode.com/archives/Raytracing_Topics_Techniques-Part_4_Spatial_Subdivisions.shtml
+//https://gamedev.stackexchange.com/questions/81267/how-do-i-generalise-bresenhams-line-algorithm-to-floating-point-endpoints/81332#81332
+//https://arxiv.org/pdf/1609.00958.pdf
+//https://stackoverflow.com/questions/24679963/precise-subpixel-line-drawing-algorithm-rasterization-algorithm
+
+
+//https://stackoverflow.com/questions/24679963/precise-subpixel-line-drawing-algorithm-rasterization-algorithm/24682318#24682318
 package net.spaceeye.someperipherals.util
 
 import com.mojang.math.Vector3d
+import net.spaceeye.someperipherals.raycasting.RayIter
 import java.lang.Math.pow
 import kotlin.math.abs
 import kotlin.math.sqrt
 
-class DDAIter(var start: Vector3d, val stop: Vector3d, val up_to: Int):Iterator<Vector3d> {
+class BresenhamIter(start: Vector3d, stop: Vector3d, up_to: Int):RayIter(start, stop, up_to) {
     private var cpos = Vector3d(start.x, start.y, start.z)
 
-    var cur_i = 0
-
-    var rd: Vector3d
-    var tMax : Vector3d
-    var tDelta : Vector3d
-    var step : Vector3d
+    private var rd: Vector3d
+    private var tMax : Vector3d
+    private var tDelta : Vector3d
+    private var step : Vector3d
 
     private fun hypot(vec: Vector3d): Double {
         return sqrt(pow(vec.x, 2.0) + pow(vec.y, 2.0) + pow(vec.z, 2.0))
@@ -119,15 +124,5 @@ class DDAIter(var start: Vector3d, val stop: Vector3d, val up_to: Int):Iterator<
         cur_i++
         calcNextPos()
         return Vector3d(cpos.x, cpos.y, cpos.z)
-    }
-
-    fun nextNoStep(): Vector3d {
-        val temp_tmax = Vector3d(tMax.x, tMax.y, tMax.z)
-        val temp_cpos = Vector3d(cpos.x, cpos.y, cpos.z)
-        calcNextPos()
-        val res = Vector3d(cpos.x, cpos.y, cpos.z)
-        cpos = temp_cpos
-        tMax = temp_tmax
-        return res
     }
 }

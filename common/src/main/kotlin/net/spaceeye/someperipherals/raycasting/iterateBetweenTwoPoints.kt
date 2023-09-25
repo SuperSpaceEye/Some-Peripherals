@@ -1,17 +1,15 @@
-package net.spaceeye.someperipherals.util
+package net.spaceeye.someperipherals.raycasting
 
 import com.mojang.math.Vector3d
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.round
 
-class IterateBetweenTwoPointsIter(var start: Vector3d, val stop: Vector3d, val max_len:Int):Iterator<Vector3d> {
+class IterateBetweenTwoPointsIter(start: Vector3d, stop: Vector3d, up_to:Int):RayIter(start, stop, up_to) {
     var cpos = start
     var x_step: Double = 0.0
     var y_step: Double = 0.0
     var z_step: Double = 0.0
-    var cur_i = 0
-    var up_to = 0
 
     init {
         val x_diff = start.x - stop.x
@@ -33,11 +31,11 @@ class IterateBetweenTwoPointsIter(var start: Vector3d, val stop: Vector3d, val m
         z_step = if(z_is_larger) {1.0} else {abs(z_diff) / longer_side_length} * z_modif
 
         cpos = Vector3d(start.x, start.y, start.z)
-        up_to = round(longer_side_length).toInt()
+        this.up_to = round(longer_side_length).toInt()
     }
 
     override fun hasNext(): Boolean {
-        return (cur_i < max_len || max_len <= 0) && cur_i <= up_to
+        return cur_i <= up_to
     }
 
     override fun next(): Vector3d {
