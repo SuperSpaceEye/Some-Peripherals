@@ -89,9 +89,9 @@ class Raycaster_Peripheral(private val level: Level, private val pos: BlockPos):
     }
 
     @LuaFunction
-    fun simpleRaycast(distance: Double, var1:Double, var2: Double, use_fisheye: Boolean = true): MutableMap<Any, Any> {
+    fun simpleRaycast(distance: Double, use_fisheye: Boolean = true, var1:Double, var2: Double, var3:Double): MutableMap<Any, Any> {
         if(!SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.is_enabled) {return mutableMapOf()}
-        return makeRaycastResponse(castRay(level, be, pos, distance, var1, var2, use_fisheye))
+        return makeRaycastResponse(castRay(level, be, pos, distance, use_fisheye, var1, var2, var3))
     }
 
     @LuaFunction

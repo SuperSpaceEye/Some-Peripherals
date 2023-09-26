@@ -24,6 +24,8 @@ object SomePeripherals {
         SomePeripheralsBlocks.register()
         SomePeripheralsBlockEntities.register()
         SomePeripheralsItems.register()
+
+
     }
 
     @JvmStatic

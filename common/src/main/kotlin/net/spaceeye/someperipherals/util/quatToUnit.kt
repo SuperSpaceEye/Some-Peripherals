@@ -1,7 +1,7 @@
 package net.spaceeye.someperipherals.util
 
 import com.mojang.math.Quaternion
-import com.mojang.math.Vector3d
+import org.joml.Vector3d
 
 fun quatToUnit(rot: Quaternion): Vector3d {
     val quint = Quaternion(0f, 1f, 0f, 0f)

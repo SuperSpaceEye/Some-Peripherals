@@ -11,6 +11,7 @@ import net.spaceeye.someperipherals.SomePeripheralsConfig
 import net.spaceeye.someperipherals.raycasting.RaycastFunctions.checkForBlockInWorld
 import net.spaceeye.someperipherals.raycasting.RaycastFunctions.checkForIntersectedEntity
 import net.spaceeye.someperipherals.raycasting.RaycastFunctions.rayIntersectsBox
+import net.spaceeye.someperipherals.util.BresenhamIter
 import org.valkyrienskies.core.api.ships.ServerShip
 import org.valkyrienskies.mod.common.getShipManagingPos
 import org.valkyrienskies.mod.common.transformToNearbyShipsAndWorld
@@ -96,11 +97,9 @@ object VSRaycastFunctions {
         logger.warn("STOP ${sp_end.x.toInt()} ${sp_end.y.toInt()} ${sp_end.z.toInt()} | ${sp_end.x} ${sp_end.y} ${sp_end.z}")
         logger.warn("LENGTH ${length}")
 
-        //TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
-        // actually find out why shit doesn't work instead of using IterateBetweenTwoPointsIter
         val ray = Ray(
-            IterateBetweenTwoPointsIter(
-                Vector3d(sp_start.x - s_dir.x, sp_start.y - s_dir.y, sp_start.z - s_dir.z),
+            BresenhamIter(
+                Vector3d(sp_start.x, sp_start.y, sp_start.z),
                 Vector3d(sp_end.x, sp_end.y, sp_end.z),
                 max_iter_num),
             ship,
@@ -182,7 +181,7 @@ object VSRaycastFunctions {
         world_res: Pair<Pair<BlockPos, BlockState>, Double>?,
         entity_res: Pair<Entity, Double>?,
         ships_res: MutableList<Pair<RaycastReturn, Double>>,
-        ): RaycastReturn {
+    ): RaycastReturn {
 
         val results = ships_res
         if (world_res != null)  {results.add(Pair(RaycastBlockReturn (world_res.first,  world_res.second),  world_res.second))}

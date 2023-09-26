@@ -23,9 +23,8 @@ package net.spaceeye.someperipherals.util
 
 import com.mojang.math.Vector3d
 import net.spaceeye.someperipherals.raycasting.RayIter
-import java.lang.Math.pow
 import kotlin.math.abs
-import kotlin.math.sqrt
+import kotlin.math.floor
 
 class BresenhamIter(start: Vector3d, stop: Vector3d, up_to: Int):RayIter(start, stop, up_to) {
     private var cpos = Vector3d(start.x, start.y, start.z)
@@ -34,10 +33,6 @@ class BresenhamIter(start: Vector3d, stop: Vector3d, up_to: Int):RayIter(start, 
     private var tMax : Vector3d
     private var tDelta : Vector3d
     private var step : Vector3d
-
-    private fun hypot(vec: Vector3d): Double {
-        return sqrt(pow(vec.x, 2.0) + pow(vec.y, 2.0) + pow(vec.z, 2.0))
-    }
 
     init{
         rd = Vector3d(abs(stop.x - start.x), abs(stop.y - start.y), abs(stop.z - start.z))
@@ -48,18 +43,15 @@ class BresenhamIter(start: Vector3d, stop: Vector3d, up_to: Int):RayIter(start, 
             if (stop.z < start.z) {-1.0} else {1.0}
         )
 
-        val hypotenuse = hypot(rd)
+        tDelta = Vector3d(
+            abs(1.0/(rd.x + 1e-60)),
+            abs(1.0/(rd.y + 1e-60)),
+            abs(1.0/(rd.z + 1e-60)))
 
         tMax = Vector3d(
-            hypotenuse * 0.5 / rd.x,
-            hypotenuse * 0.5 / rd.y,
-            hypotenuse * 0.5 / rd.z,
-        )
-
-        tDelta = Vector3d(
-            hypotenuse / rd.x,
-            hypotenuse / rd.y,
-            hypotenuse / rd.z,
+            if (stop.x < start.x) {(cpos.x - floor(cpos.x)) * tDelta.x} else {(floor(cpos.x) + 1.0 - cpos.x) * tDelta.x},
+            if (stop.y < start.y) {(cpos.y - floor(cpos.y)) * tDelta.y} else {(floor(cpos.y) + 1.0 - cpos.y) * tDelta.y},
+            if (stop.z < start.z) {(cpos.z - floor(cpos.z)) * tDelta.z} else {(floor(cpos.z) + 1.0 - cpos.z) * tDelta.z},
         )
     }
 

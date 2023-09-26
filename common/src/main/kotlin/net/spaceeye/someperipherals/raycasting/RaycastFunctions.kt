@@ -22,6 +22,7 @@ import org.valkyrienskies.mod.common.toWorldCoordinates
 import java.lang.Math.*
 
 typealias ray_iter_type = RayIter
+typealias jVector3d = org.joml.Vector3d
 
 object RaycastFunctions {
     private val logger = SomePeripherals.slogger
@@ -148,20 +149,9 @@ object RaycastFunctions {
         }
     }
 
-    fun getStartingPosition(level: Level, pos: BlockPos): BlockPos {
-        return when (SomePeripherals.has_vs) {
-            false -> pos
-            true -> {
-                val test = level.getShipManagingPos(pos) ?: return pos
-                val new_pos = test.toWorldCoordinates(pos)
-                return BlockPos(new_pos.x, new_pos.y, new_pos.z)
-            }
-        }
-    }
-
 
     @JvmStatic
-    fun fisheyeRotationCalc(be: BlockEntity, pitch_: Double, yaw_: Double): Vector3d {
+    fun fisheyeRotationCalc(be: BlockEntity, pitch_: Double, yaw_: Double): org.joml.Vector3d {
         val pitch = (if (pitch_ < 0) { pitch_.coerceAtLeast(-SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.max_pitch_angle) } else { pitch_.coerceAtMost(SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.max_pitch_angle) })
         val yaw   = (if (yaw_ < 0)   { yaw_  .coerceAtLeast(-SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.max_yaw_angle  ) } else { yaw_  .coerceAtMost(SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.max_yaw_angle  ) })
 
@@ -173,51 +163,68 @@ object RaycastFunctions {
     }
 
     @JvmStatic
-    fun vectorRotationCalc(be: BlockEntity, posY: Double, posX:Double): Vector3d {
+    fun vectorRotationCalc(be: BlockEntity, posY: Double, posX:Double, length: Double): org.joml.Vector3d {
         val dir_enum = be.blockState.getValue(BlockStateProperties.FACING)
-        val dir: Vector3f = dir_enum.step()
+        val fdir = dir_enum.step()
+        val dir = jVector3d(fdir.x().toDouble(), fdir.y().toDouble(), fdir.z().toDouble())
+        val l = max(length, 0.01)
 
         //thanks getitemfromblock for this
 //      dir = dir + posX*right + posY*updir = dir.Normalize();
 
-        val right: Vector3f; val up: Vector3f
+        val right: jVector3d; val up: jVector3d
         if (dir_enum != Direction.UP && dir_enum != Direction.DOWN) {
-            up = Vector3f(0f, 1f, 0f)
-            right = Vector3f(0f, 1f, 0f); right.cross(dir)
+            up = jVector3d(0.0, l, 0.0)
+            right = jVector3d(0.0, l, 0.0); right.cross(dir)
 
             if (dir_enum == Direction.NORTH || dir_enum == Direction.SOUTH) {
-                right.mul(posX.toFloat(), 0f, 0f)
-                up.mul(0f, posY.toFloat(), 0f)
+                right.mul(posX, 0.0, 0.0)
+                up.mul(0.0, posY, 0.0)
             } else if (dir_enum == Direction.WEST || dir_enum == Direction.EAST) {
-                right.mul(0f, 0f, posX.toFloat())
-                up.mul(0f, posY.toFloat(), 0f)
+                right.mul(0.0, 0.0, posX)
+                up.mul(0.0, posY, 0.0)
             }
         } else {
-            up = Vector3f(0f, 0f, 1f)
-            right = Vector3f(0f, 0f, 1f); right.cross(dir)
+            up = jVector3d(0.0, 0.0, l)
+            right = jVector3d(0.0, 0.0, l); right.cross(dir)
 
-            right.mul(posX.toFloat(), 0f, 0f)
-            up.mul(0f, 0f, posY.toFloat())
+            right.mul(posX, 0.0, 0.0)
+            up.mul(0.0, 0.0, posY)
         }
         dir.add(right)
         dir.add(up)
         dir.normalize()
-        return Vector3d(dir.x().toDouble(), dir.y().toDouble(), dir.z().toDouble())
+        return org.joml.Vector3d(dir.x().toDouble(), dir.y().toDouble(), dir.z().toDouble())
     }
 
     @JvmStatic
     fun castRay(level: Level, be: BlockEntity, pos: BlockPos,
-                distance: Double, var1:Double, var2: Double,
-                use_fisheye: Boolean = true): RaycastReturn {
-        //TODO make separation between normal and VS compat versions at castRay instead of raycast, as i will need
-        // a lot of logic for ship -> world translation
-        if (level.isClientSide) {return RaycastERROR("Level is clientside. how.")}
+                distance: Double, use_fisheye: Boolean = true, var1:Double, var2: Double,
+                var3: Double): RaycastReturn {
+        if (level.isClientSide) { return RaycastERROR("Level is clientside. how.") }
 
-        val unit_d = if(use_fisheye || !SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.vector_rotation_enabled)
-        { fisheyeRotationCalc(be, var1, var2) } else { vectorRotationCalc(be, var1, var2) }
+        var unit_d = if (use_fisheye || !SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.vector_rotation_enabled)
+        { fisheyeRotationCalc(be, var1, var2) } else { vectorRotationCalc(be, var1, var2, var3) }
 
-        val spos = getStartingPosition(level, pos)
-        val start = Vector3d(spos.x.toDouble() + 0.5, spos.y.toDouble() + 0.5, spos.z.toDouble() + 0.5)
+        val dpos = if (SomePeripherals.has_vs) {
+            val test = level.getShipManagingPos(pos)
+            if (test != null) {
+                val new_pos = test.toWorldCoordinates(pos)
+                unit_d = test.transform.transformDirectionNoScalingFromShipToWorld(unit_d, unit_d)
+
+                Vector3d(new_pos.x, new_pos.y, new_pos.z)
+            } else {
+                Vector3d(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
+            }
+        } else {
+            Vector3d(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
+        }
+
+//        val start = Vector3d(dpos.x + 0.5, dpos.y + 0.5, dpos.z + 0.5)
+        val start = Vector3d(
+            dpos.x + SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.debug_x_displacement,
+            dpos.y + SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.debug_y_displacement,
+            dpos.z + SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.debug_z_displacement)
         val stop = Vector3d(
             unit_d.x * distance + start.x,
             unit_d.y * distance + start.y,
@@ -225,7 +232,7 @@ object RaycastFunctions {
         )
 
         val max_dist = SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.max_raycast_iterations
-        val max_iter = if (max_dist <= 0) {distance.toInt()} else {min(distance.toInt(), max_dist)}
+        val max_iter = if (max_dist <= 0) { distance.toInt() } else { min(distance.toInt(), max_dist) }
         val iter = BresenhamIter(start, stop, max_iter)
 
         val result = raycast(level, iter)

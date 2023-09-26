@@ -17,7 +17,6 @@ object SomePeripheralsConfig {
             val RAYCASTER_SETTINGS = RaycasterSettings()
 
             class RaycasterSettings {
-                //TODO think of a better way
                 @JsonSchema(description = "disables functionality of the block")
                 var is_enabled = true
                 @JsonSchema
@@ -46,6 +45,11 @@ object SomePeripheralsConfig {
 
                 @JsonSchema(description = "")
                 var return_entity_type_descriptionId = true
+
+
+                var debug_x_displacement = 0.5
+                var debug_y_displacement = 0.5
+                var debug_z_displacement = 0.5
             }
         }
     }
