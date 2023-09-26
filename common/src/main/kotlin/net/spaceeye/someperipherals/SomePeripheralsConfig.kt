@@ -34,11 +34,8 @@ object SomePeripheralsConfig {
                 @JsonSchema(description = "Includes VS ships if VS exists")
                 var check_for_entities: Boolean = true
 
-                @JsonSchema(description = "")
                 var return_abs_pos = true
-                @JsonSchema(description = "")
                 var return_distance = true
-                @JsonSchema(description = "")
                 var return_block_id = true
                 @JsonSchema(description = "only with VS existing")
                 var return_ship_id = true

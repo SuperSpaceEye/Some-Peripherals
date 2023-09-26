@@ -169,6 +169,8 @@ object RaycastFunctions {
         val dir = jVector3d(fdir.x().toDouble(), fdir.y().toDouble(), fdir.z().toDouble())
         val l = max(length, 0.01)
 
+        val posX = -posX // x is iverted, idk why
+
         //thanks getitemfromblock for this
 //      dir = dir + posX*right + posY*updir = dir.Normalize();
 
@@ -194,7 +196,7 @@ object RaycastFunctions {
         dir.add(right)
         dir.add(up)
         dir.normalize()
-        return org.joml.Vector3d(dir.x().toDouble(), dir.y().toDouble(), dir.z().toDouble())
+        return org.joml.Vector3d(dir.x, dir.y, dir.z)
     }
 
     @JvmStatic
