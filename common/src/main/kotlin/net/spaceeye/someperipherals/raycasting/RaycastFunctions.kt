@@ -2,7 +2,6 @@ package net.spaceeye.someperipherals.raycasting
 
 import com.mojang.math.Quaternion
 import com.mojang.math.Vector3d
-import com.mojang.math.Vector3f
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.entity.Entity
@@ -16,7 +15,6 @@ import net.spaceeye.someperipherals.SomePeripheralsConfig
 import net.spaceeye.someperipherals.util.directionToQuat
 import net.spaceeye.someperipherals.util.quatToUnit
 import net.spaceeye.someperipherals.raycasting.VSRaycastFunctions.vsRaycast
-import net.spaceeye.someperipherals.util.BresenhamIter
 import org.valkyrienskies.mod.common.getShipManagingPos
 import org.valkyrienskies.mod.common.toWorldCoordinates
 import java.lang.Math.*

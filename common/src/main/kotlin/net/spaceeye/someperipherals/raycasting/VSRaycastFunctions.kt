@@ -11,7 +11,6 @@ import net.spaceeye.someperipherals.SomePeripheralsConfig
 import net.spaceeye.someperipherals.raycasting.RaycastFunctions.checkForBlockInWorld
 import net.spaceeye.someperipherals.raycasting.RaycastFunctions.checkForIntersectedEntity
 import net.spaceeye.someperipherals.raycasting.RaycastFunctions.rayIntersectsBox
-import net.spaceeye.someperipherals.util.BresenhamIter
 import org.valkyrienskies.core.api.ships.ServerShip
 import org.valkyrienskies.mod.common.getShipManagingPos
 import org.valkyrienskies.mod.common.transformToNearbyShipsAndWorld

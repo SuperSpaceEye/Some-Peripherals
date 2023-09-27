@@ -1,17 +1,17 @@
 {
   "variants": {
-      "moisture=1,facing=up":    {"model": "some_peripherals:block/raycaster", "x": 270,"y": 0},
-      "moisture=1,facing=down":  {"model": "some_peripherals:block/raycaster", "x": 90, "y": 180},
-      "moisture=1,facing=north": {"model": "some_peripherals:block/raycaster", "x": 0, "y": 0},
-      "moisture=1,facing=west":  {"model": "some_peripherals:block/raycaster", "x": 0, "y": 270},
-      "moisture=1,facing=east":  {"model": "some_peripherals:block/raycaster", "x": 0, "y": 90},
-      "moisture=1,facing=south": {"model": "some_peripherals:block/raycaster", "x": 0, "y": 180},
+      "powered=true,facing=up":    {"model": "some_peripherals:block/raycaster", "x": 270,"y": 0},
+      "powered=true,facing=down":  {"model": "some_peripherals:block/raycaster", "x": 90, "y": 180},
+      "powered=true,facing=north": {"model": "some_peripherals:block/raycaster", "x": 0, "y": 0},
+      "powered=true,facing=west":  {"model": "some_peripherals:block/raycaster", "x": 0, "y": 270},
+      "powered=true,facing=east":  {"model": "some_peripherals:block/raycaster", "x": 0, "y": 90},
+      "powered=true,facing=south": {"model": "some_peripherals:block/raycaster", "x": 0, "y": 180},
 
-      "moisture=0,facing=up":    {"model": "some_peripherals:block/raycaster_no_stickers", "x": 270,"y": 0},
-      "moisture=0,facing=down":  {"model": "some_peripherals:block/raycaster_no_stickers", "x": 90, "y": 180},
-      "moisture=0,facing=north": {"model": "some_peripherals:block/raycaster_no_stickers", "x": 0, "y": 0},
-      "moisture=0,facing=west":  {"model": "some_peripherals:block/raycaster_no_stickers", "x": 0, "y": 270},
-      "moisture=0,facing=east":  {"model": "some_peripherals:block/raycaster_no_stickers", "x": 0, "y": 90},
-      "moisture=0,facing=south": {"model": "some_peripherals:block/raycaster_no_stickers", "x": 0, "y": 180}
+      "powered=false,facing=up":    {"model": "some_peripherals:block/raycaster_no_stickers", "x": 270,"y": 0},
+      "powered=false,facing=down":  {"model": "some_peripherals:block/raycaster_no_stickers", "x": 90, "y": 180},
+      "powered=false,facing=north": {"model": "some_peripherals:block/raycaster_no_stickers", "x": 0, "y": 0},
+      "powered=false,facing=west":  {"model": "some_peripherals:block/raycaster_no_stickers", "x": 0, "y": 270},
+      "powered=false,facing=east":  {"model": "some_peripherals:block/raycaster_no_stickers", "x": 0, "y": 90},
+      "powered=false,facing=south": {"model": "some_peripherals:block/raycaster_no_stickers", "x": 0, "y": 180}
   }
 }

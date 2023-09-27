@@ -17,13 +17,13 @@ class RaycasterBaseBlock(properties: Properties): BaseEntityBlock(properties) {
         //TODO learn how to make a new blockstate property instead of whatever this is
         registerDefaultState(defaultBlockState()
             .setValue(BlockStateProperties.FACING, Direction.SOUTH)
-            .setValue(BlockStateProperties.MOISTURE, 0) // Yeah im not sure how to make a new block state lol
+            .setValue(BlockStateProperties.POWERED, false) // Yeah im not sure how to make a new block state lol
         )
     }
 
     override fun createBlockStateDefinition(builder: StateDefinition.Builder<Block, BlockState>) {
         builder.add(BlockStateProperties.FACING)
-        builder.add(BlockStateProperties.MOISTURE)
+               .add(BlockStateProperties.POWERED)
     }
 
     override fun getStateForPlacement(ctx: BlockPlaceContext): BlockState? {

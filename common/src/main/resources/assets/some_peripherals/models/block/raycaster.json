@@ -1,5 +1,6 @@
 {
   "credit": "Made with Blockbench",
+  "parent": "minecraft:block/cube_all",
   "textures": {
     "0": "some_peripherals:block/raycaster/camera",
     "particle": "some_peripherals:block/raycaster/camera"

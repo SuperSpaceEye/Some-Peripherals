@@ -1,5 +1,6 @@
 package net.spaceeye.someperipherals.integrations.cc.peripherals
 
+import dan200.computercraft.api.lua.IArguments
 import dan200.computercraft.api.lua.LuaFunction
 import dan200.computercraft.api.peripheral.IPeripheral
 import net.minecraft.core.BlockPos
@@ -89,15 +90,21 @@ class Raycaster_Peripheral(private val level: Level, private val pos: BlockPos):
     }
 
     @LuaFunction
-    fun raycast(distance: Double, use_fisheye: Boolean = true, var1:Double, var2: Double, var3:Double): MutableMap<Any, Any> {
+    fun raycast(args: IArguments): MutableMap<Any, Any> {
         if(!SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.is_enabled) {return mutableMapOf()}
+        val distance    = args.getDouble(0)
+        val use_fisheye = args.getBoolean(1)
+        val var1        = args.getDouble(2) // Pitch or Y
+        val var2        = args.getDouble(3) // Yaw or X
+        val var3        = args.optDouble(4).orElse(0.0) // palanar distance or nil
+
         return makeRaycastResponse(castRay(level, be, pos, distance, use_fisheye, var1, var2, var3))
     }
 
     @LuaFunction
     fun addStickers(state: Boolean) {
         //dont question it
-        level.setBlockAndUpdate(be.blockPos, be.blockState.setValue(BlockStateProperties.MOISTURE, if (state) {1} else {0}))
+        level.setBlockAndUpdate(be.blockPos, be.blockState.setValue(BlockStateProperties.POWERED, state))
     }
 
     override fun equals(p0: IPeripheral?): Boolean = level.getBlockState(pos).`is`(SomePeripheralsCommonBlocks.RAYCASTER.get())
