@@ -6,16 +6,13 @@ import dan200.computercraft.api.peripheral.IPeripheral
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.level.Level
-import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.spaceeye.someperipherals.SomePeripheralsCommonBlocks
 import net.spaceeye.someperipherals.SomePeripheralsConfig
 import net.spaceeye.someperipherals.blockentities.RaycasterBlockEntity
 import net.spaceeye.someperipherals.raycasting.*
 import net.spaceeye.someperipherals.raycasting.RaycastFunctions.castRay
-import java.lang.Math.pow
 import java.lang.RuntimeException
-import kotlin.math.sqrt
 
 class Raycaster_Peripheral(private val level: Level, private val pos: BlockPos): IPeripheral {
     private var be = level.getBlockEntity(pos) as RaycasterBlockEntity

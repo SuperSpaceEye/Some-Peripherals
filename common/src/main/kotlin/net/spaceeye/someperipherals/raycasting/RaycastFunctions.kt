@@ -65,7 +65,9 @@ object RaycastFunctions {
         ray_distance: Double,
         level: Level): Pair<Pair<BlockPos, BlockState>, Double>? {
         //TODO do i need to do this? idk
-        if (point.x == start.x && point.y == start.y && point.z == start.z) {return null}
+        if (   point.x.toInt() == start.x.toInt()
+            && point.y.toInt() == start.y.toInt()
+            && point.z.toInt() == start.z.toInt()) {return null}
         val bpos = BlockPos(point.x, point.y, point.z)
         val res = level.getBlockState(bpos)
 
@@ -140,10 +142,10 @@ object RaycastFunctions {
         return RaycastNoResultReturn(pointsIter.up_to.toDouble())
     }
 
-    fun raycast(level: Level, pointsIter: ray_iter_type): RaycastReturn {
+    fun raycast(level: Level, pointsIter: ray_iter_type, pos: BlockPos): RaycastReturn {
         return when (SomePeripherals.has_vs) {
             false -> normalRaycast(level, pointsIter)
-            true  -> vsRaycast(level, pointsIter)
+            true  -> vsRaycast(level, pointsIter, pos)
         }
     }
 
@@ -220,11 +222,11 @@ object RaycastFunctions {
             Vector3d(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
         }
 
-//        val start = Vector3d(dpos.x + 0.5, dpos.y + 0.5, dpos.z + 0.5)
-        val start = Vector3d(
-            dpos.x + SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.debug_x_displacement,
-            dpos.y + SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.debug_y_displacement,
-            dpos.z + SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.debug_z_displacement)
+        val start = Vector3d(dpos.x + 0.5, dpos.y + 0.5, dpos.z + 0.5)
+//        val start = Vector3d(
+//            dpos.x + SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.debug_x_displacement,
+//            dpos.y + SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.debug_y_displacement,
+//            dpos.z + SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.debug_z_displacement)
         val stop = Vector3d(
             unit_d.x * distance + start.x,
             unit_d.y * distance + start.y,
@@ -235,7 +237,7 @@ object RaycastFunctions {
         val max_iter = if (max_dist <= 0) { distance.toInt() } else { min(distance.toInt(), max_dist) }
         val iter = BresenhamIter(start, stop, max_iter)
 
-        val result = raycast(level, iter)
+        val result = raycast(level, iter, pos)
 
         return result
     }

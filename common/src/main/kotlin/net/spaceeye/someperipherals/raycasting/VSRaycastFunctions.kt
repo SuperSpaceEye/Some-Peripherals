@@ -23,6 +23,7 @@ class Ray(
     var d: Vector3d,
     var ray_distance: Double,
     var dist_to_ray_start: Double,
+    var started_from_shipyard: Boolean
 )
 
 object VSRaycastFunctions {
@@ -36,7 +37,7 @@ object VSRaycastFunctions {
             val data = (level as ServerLevel).getShipManagingPos(spos) ?: continue
             val (res, t) = rayIntersectsBox(data.worldAABB.toMinecraft(), start, d)
             if (!res) {continue}
-            logger.warn("FOUND INTERSECTING SHIP ${t}")
+//            logger.warn("FOUND INTERSECTING SHIP ${t}")
             ret.add(Pair(data, t))
         }
         return ret
@@ -89,12 +90,11 @@ object VSRaycastFunctions {
         val length = sqrt(ss.x*ss.x + ss.y*ss.y + ss.z*ss.z)
         val sp_end = sp_start.add(s_dir.mul(length, org.joml.Vector3d()), org.joml.Vector3d())
 
-        logger.warn("SHIP D ${sd.x} ${sd.y} ${sd.z}")
-        logger.warn("S DIR ${s_dir.x} ${s_dir.y} ${s_dir.z}")
-//        logger.warn("UNIT RAY DIR ${s_unit_d.x} ${s_unit_d.y} ${s_unit_d.z}")
-        logger.warn("START ${sp_start.x.toInt()} ${sp_start.y.toInt()} ${sp_start.z.toInt()} | ${sp_start.x} ${sp_start.y} ${sp_start.z}")
-        logger.warn("STOP ${sp_end.x.toInt()} ${sp_end.y.toInt()} ${sp_end.z.toInt()} | ${sp_end.x} ${sp_end.y} ${sp_end.z}")
-        logger.warn("LENGTH ${length}")
+//        logger.warn("SHIP D ${sd.x} ${sd.y} ${sd.z}")
+//        logger.warn("S DIR ${s_dir.x} ${s_dir.y} ${s_dir.z}")
+//        logger.warn("START ${sp_start.x.toInt()} ${sp_start.y.toInt()} ${sp_start.z.toInt()} | ${sp_start.x} ${sp_start.y} ${sp_start.z}")
+//        logger.warn("STOP ${sp_end.x.toInt()} ${sp_end.y.toInt()} ${sp_end.z.toInt()} | ${sp_end.x} ${sp_end.y} ${sp_end.z}")
+//        logger.warn("LENGTH ${length}")
 
         val ray = Ray(
             BresenhamIter(
@@ -104,7 +104,8 @@ object VSRaycastFunctions {
             ship,
             Vector3d(sd.x, sd.y, sd.z),
             sqrt(s_dir.x*s_dir.x + s_dir.y*s_dir.y + s_dir.z*s_dir.z),
-            initial_t * initial_ray_distance
+            initial_t * initial_ray_distance,
+            initial_t < 1e-60 // if ray started from shipyard, t to intersection will be 0
         )
         //im doing this so that on the first step it'll check the beginning pos in shipyard for block
         ray.iter.start = Vector3d(sp_start.x, sp_start.y, sp_start.z)
@@ -120,7 +121,7 @@ object VSRaycastFunctions {
         val pd = Vector3d(point.x - start.x, point.y - start.y, point.z - start.z)
         val point_dist = sqrt(pd.x*pd.x + pd.y*pd.y + pd.z*pd.z)
 
-        logger.warn("SHIP INTERSECTION CHECK ${ship.second} ${ship.second * ray_distance} ${point_dist}")
+//        logger.warn("SHIP INTERSECTION CHECK ${ship.second} ${ship.second * ray_distance} ${point_dist}")
 
         val ship_dist = ship.second * ray_distance
         return ship_dist <= point_dist
@@ -157,15 +158,24 @@ object VSRaycastFunctions {
     }
 
     @JvmStatic
-    fun iterateShipRays(level: Level, rays: MutableList<Ray>, ships_already_intersected: MutableList<ServerShip>): MutableList<Pair<RaycastReturn, Double>> {
+    fun iterateShipRays(level: Level,
+                        rays: MutableList<Ray>,
+                        ships_already_intersected: MutableList<ServerShip>,
+                        second_start: Vector3d): MutableList<Pair<RaycastReturn, Double>> {
         val hits = mutableListOf<Pair<RaycastReturn, Double>>()
         val to_remove = mutableListOf<Ray>()
         for (ray in rays) {
             if (!ray.iter.hasNext()) {
-                logger.warn("REMOVING SHIP")
+//                logger.warn("REMOVING SHIP")
                 to_remove.add(ray); continue}
             val point = ray.iter.next()
-            logger.warn("SHIP POINT ${point.x} ${point.y} ${point.z}")
+//            logger.warn("SHIP POINT ${point.x} ${point.y} ${point.z}")
+
+            // if ray has started from shipyard, then don't check starting pos (ray can clip into raycaster)
+            if (ray.started_from_shipyard
+                && point.x.toInt() == second_start.x.toInt()
+                && point.y.toInt() == second_start.y.toInt()
+                && point.z.toInt() == second_start.z.toInt()) {continue}
             val world_res = checkForBlockInWorld(ray.iter.start, point, ray.d, ray.ray_distance, level) ?: continue
             val distance_to = world_res.second + ray.dist_to_ray_start
             hits.add(Pair(RaycastVSShipBlockReturn(ray.ship, world_res.first, distance_to), distance_to))
@@ -181,7 +191,6 @@ object VSRaycastFunctions {
         entity_res: Pair<Entity, Double>?,
         ships_res: MutableList<Pair<RaycastReturn, Double>>,
     ): RaycastReturn {
-
         val results = ships_res
         if (world_res != null)  {results.add(Pair(RaycastBlockReturn (world_res.first,  world_res.second),  world_res.second))}
         if (entity_res != null) {results.add(Pair(RaycastEntityReturn(entity_res.first, entity_res.second), entity_res.second))}
@@ -190,9 +199,11 @@ object VSRaycastFunctions {
     }
 
     @JvmStatic
-    fun vsRaycast(level: Level, pointsIter: ray_iter_type): RaycastReturn {
+    fun vsRaycast(level: Level, pointsIter: ray_iter_type, pos: BlockPos): RaycastReturn {
         val start = pointsIter.start // starting position
         val stop = pointsIter.stop
+
+        val second_start = if (level.getShipManagingPos(pos) != null) { Vector3d(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble()) } else { start }
 
         val eps = RaycastFunctions.eps
         val rd = Vector3d(stop.x - start.x, stop.y - start.y, stop.z - start.z)
@@ -210,10 +221,10 @@ object VSRaycastFunctions {
         val shipyard_rays = mutableListOf<Ray>()
 
         for (point in pointsIter) {
-            logger.warn("WORLD POINT ${point.x} ${point.y} ${point.z}")
+//            logger.warn("WORLD POINT ${point.x} ${point.y} ${point.z}")
             checkForShipIntersections(start, point, ray_distance, d, rd, pointsIter.up_to, future_ship_intersections, shipyard_rays)
 
-            val ship_hit_res = iterateShipRays(level, shipyard_rays, ships_already_intersected)
+            val ship_hit_res = iterateShipRays(level, shipyard_rays, ships_already_intersected, second_start)
             val world_res = checkForBlockInWorld(start, point, d, ray_distance, level)
 
             if ((world_res != null || !ship_hit_res.isEmpty()) && intersected_entity != null) { return calculateReturn(world_res, intersected_entity, ship_hit_res) }
