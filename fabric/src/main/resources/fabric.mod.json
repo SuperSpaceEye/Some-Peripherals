@@ -6,19 +6,26 @@
   "name": "Some Peripherals",
   "description": "",
   "authors": ["SpaceEye"],
+  "contributors": ["Illuc"],
   "contact": {},
 
-  "license": "All Rights Reserved",
-  "icon": "icon.png",
+  "license": "MIT",
 
   "environment": "*",
-  "entrypoints": {},
+  "entrypoints": {
+    "main": [
+      {
+        "adapter": "kotlin",
+        "value": "net.spaceeye.someperipherals.fabric.SomePeripheralsFabric"
+      }
+    ]
+  },
   "mixins": [
-    "some_peripherals.mixins.json",
-    "some_peripherals-common.mixins.json"
+    "some_peripherals.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=0.14.22",
-    "minecraft": ">=1.18"
+    "minecraft": ">=1.18",
+    "fabric-language-kotlin": ">=1.10.10+kotlin.1.9.10"
   }
 }

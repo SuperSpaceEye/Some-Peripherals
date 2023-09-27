@@ -10,7 +10,6 @@ import net.spaceeye.someperipherals.fabric.integrations.cc.SomePeripheralsPeriph
 class SomePeripheralsFabric: ModInitializer {
     override fun onInitialize() {
         SomePeripherals.init()
-
         if (Platform.isModLoaded("computercraft")) { SomePeripheralsPeripheralProviders.registerPeripheralProviders() }
 
         CommandRegistrationCallback.EVENT.register { dispatcher, _ -> SomePeripheralsCommands.registerServerCommands(dispatcher)}
