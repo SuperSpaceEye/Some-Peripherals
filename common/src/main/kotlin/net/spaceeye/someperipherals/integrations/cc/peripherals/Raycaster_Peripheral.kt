@@ -12,7 +12,6 @@ import net.spaceeye.someperipherals.SomePeripheralsConfig
 import net.spaceeye.someperipherals.blockentities.RaycasterBlockEntity
 import net.spaceeye.someperipherals.raycasting.*
 import net.spaceeye.someperipherals.raycasting.RaycastFunctions.castRay
-import java.lang.RuntimeException
 
 class Raycaster_Peripheral(private val level: Level, private val pos: BlockPos): IPeripheral {
     private var be = level.getBlockEntity(pos) as RaycasterBlockEntity
@@ -80,8 +79,8 @@ class Raycaster_Peripheral(private val level: Level, private val pos: BlockPos):
             is RaycastVSShipBlockReturn -> makeResponseVSBlock (res, ret, rcc)
             is RaycastNoResultReturn    -> makeResponseNoResult(res, ret, rcc)
             is RaycastERROR -> {ret["error"] = res.error_str}
-            else -> throw RuntimeException("i fucked up somehow.")
-        }
+            else -> {ret["error"] = "Something went very, very wrong, as this should never ever happen"}
+            }
 
         return ret
     }
@@ -90,10 +89,10 @@ class Raycaster_Peripheral(private val level: Level, private val pos: BlockPos):
     fun raycast(args: IArguments): MutableMap<Any, Any> {
         if(!SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.is_enabled) {return mutableMapOf()}
         val distance    = args.getDouble(0)
-        val use_fisheye = args.getBoolean(1)
-        val var1        = args.getDouble(2) // Pitch or Y
-        val var2        = args.getDouble(3) // Yaw or X
-        val var3        = args.optDouble(4).orElse(0.0) // palanar distance or nil
+        val use_fisheye = args.optBoolean(1).orElse(false)
+        val var1        = args.optDouble(2).orElse(0.0) // Pitch or Y
+        val var2        = args.optDouble(3).orElse(0.0) // Yaw or X
+        val var3        = args.optDouble(4).orElse(1.0) // planar distance or nil
 
         return makeRaycastResponse(castRay(level, be, pos, distance, use_fisheye, var1, var2, var3))
     }

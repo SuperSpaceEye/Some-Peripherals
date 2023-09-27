@@ -176,10 +176,8 @@ object BallisticFunctions {
         var dTs2 = ArrayList<Array<Double>>()
 
         for (i in 0 until num_iterations) {
-            if (c1) {dTs1 = tryPitches(flinspace(p1-pow(10.0, (-i).toDouble()), p1+pow(10.0, (-i).toDouble()), num_elements, amin.toDouble(), amax.toDouble()), initial_speed, length, distance, cannon, target, gravity, drag, max_steps)
-            }
-            if (c2) {dTs2 = tryPitches(flinspace(p2-pow(10.0, (-i).toDouble()), p2+pow(10.0, (-i).toDouble()), num_elements, amin.toDouble(), amax.toDouble()), initial_speed, length, distance, cannon, target, gravity, drag, max_steps)
-            }
+            if (c1) {dTs1 = tryPitches(flinspace(p1-pow(10.0, (-i).toDouble()), p1+pow(10.0, (-i).toDouble()), num_elements, amin.toDouble(), amax.toDouble()), initial_speed, length, distance, cannon, target, gravity, drag, max_steps) }
+            if (c2) {dTs2 = tryPitches(flinspace(p2-pow(10.0, (-i).toDouble()), p2+pow(10.0, (-i).toDouble()), num_elements, amin.toDouble(), amax.toDouble()), initial_speed, length, distance, cannon, target, gravity, drag, max_steps) }
 
             if (c1 && dTs1.size == 0) {c1 = false}
             if (c2 && dTs2.size == 0) {c2 = false}
@@ -197,22 +195,5 @@ object BallisticFunctions {
         if (check_impossible && dT2 > max_delta_t_error) {r2 = arrayOf(-1.0, -1.0, -1.0)}
 
         return Pair(r1, r2)
-    }
-
-    @JvmStatic
-    fun calculateYaw(Dx: Double, Dz: Double, direction: Int): Double {
-        var yaw: Double
-        if (Dx != 0.0) {
-            yaw = atan(Dz / Dx) * 180 / Math.PI
-        } else {
-            yaw = 90.0
-        }
-
-        if (Dx >= 0) {
-            yaw += 180
-        }
-
-        val directions = arrayOf(90, 180, 270, 0) // north, west, south, east
-        return (yaw + directions[direction]) % 360
     }
 }

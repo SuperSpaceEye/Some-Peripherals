@@ -92,13 +92,6 @@ class BallisticAccelerator_Peripheral(private val level: Level, private val pos:
         return ret
     }
 
-    @LuaFunction
-    @Throws(LuaException::class)
-    fun calculateYaw(Dx: Double, Dz: Double, direction: Double):Double {
-        if (direction.toInt() > 3 || direction.toInt() < 0) { throw LuaException("Direction should be between 0 and 3. 0-north, 1-west, 2-south, 3-east") }
-        return BallisticFunctions.calculateYaw(Dx, Dz, direction.toInt())
-    }
-
     override fun equals(p0: IPeripheral?): Boolean = level.getBlockState(pos).`is`(SomePeripheralsCommonBlocks.BALLISTIC_ACCELERATOR.get())
     override fun getType(): String = "ballisticAccelerator"
 }
