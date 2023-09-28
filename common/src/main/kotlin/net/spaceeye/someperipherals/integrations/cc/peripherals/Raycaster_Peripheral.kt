@@ -25,7 +25,7 @@ class Raycaster_Peripheral(private val level: Level, private val pos: BlockPos):
         val bs  = res.result.second
 
         ret["is_block"] = true
-        if (rcc.return_abs_pos)  {ret["abs_pos"] = mutableListOf(pos.x, pos.y, pos.z)}
+        if (rcc.return_abs_pos)  {ret["abs_pos"] = mutableListOf(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())}
         if (rcc.return_distance) {ret["distance"] = res.distance_to}
         if (rcc.return_block_id) {ret["block_type"] = bs.block.descriptionId.toString()}
     }
@@ -53,10 +53,10 @@ class Raycaster_Peripheral(private val level: Level, private val pos: BlockPos):
         val bs  = res.block.second
 
         ret["is_block"] = true
-        if (rcc.return_abs_pos)  {ret["abs_pos"] = mutableListOf(pos.x, pos.y, pos.z)}
+        if (rcc.return_abs_pos)  {ret["abs_pos"] = mutableListOf(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())}
         if (rcc.return_distance) {ret["distance"] = res.distance_to}
         if (rcc.return_block_id) {ret["block_type"] = bs.block.descriptionId.toString()}
-        if (rcc.return_ship_id)  {ret["ship_id"] = res.ship.id}
+        if (rcc.return_ship_id)  {ret["ship_id"] = res.ship.id.toDouble()}
     }
 
     private fun makeResponseNoResult(

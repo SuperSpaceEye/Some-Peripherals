@@ -1,7 +1,6 @@
 package net.spaceeye.someperipherals.raycasting
 
 import com.mojang.math.Quaternion
-import com.mojang.math.Vector3d
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.entity.Entity
@@ -15,17 +14,15 @@ import net.spaceeye.someperipherals.SomePeripheralsConfig
 import net.spaceeye.someperipherals.util.directionToQuat
 import net.spaceeye.someperipherals.util.quatToUnit
 import net.spaceeye.someperipherals.raycasting.VSRaycastFunctions.vsRaycast
+import net.spaceeye.someperipherals.util.Vector3d
 import org.valkyrienskies.mod.common.getShipManagingPos
 import org.valkyrienskies.mod.common.toWorldCoordinates
 import java.lang.Math.*
 
-typealias ray_iter_type = RayIter
-typealias jVector3d = org.joml.Vector3d
-
 object RaycastFunctions {
     private val logger = SomePeripherals.slogger
-    val eps  = 1e-30
-    val heps = 1/eps
+    const val eps  = 1e-30
+    const val heps = 1/eps
 
     //https://gamedev.stackexchange.com/questions/18436/most-efficient-aabb-vs-ray-collision-algorithms
     @JvmStatic
@@ -46,7 +43,7 @@ object RaycastFunctions {
     //Will check block hitbox
     @JvmStatic
     fun rayIntersectsBlock(start: Vector3d, at: BlockPos, d: Vector3d, boxes: List<AABB>): Pair<Boolean, Double> {
-        val r = Vector3d(-at.x + start.x, -at.y + start.y, -at.z + start.z)
+        val r = start - Vector3d(at)
 
         val intersecting = mutableListOf<Double>()
         for (box in boxes) {
@@ -64,10 +61,6 @@ object RaycastFunctions {
         d: Vector3d,
         ray_distance: Double,
         level: Level): Pair<Pair<BlockPos, BlockState>, Double>? {
-        //TODO do i need to do this? idk
-        if (   point.x.toInt() == start.x.toInt()
-            && point.y.toInt() == start.y.toInt()
-            && point.z.toInt() == start.z.toInt()) {return null}
         val bpos = BlockPos(point.x, point.y, point.z)
         val res = level.getBlockState(bpos)
 
@@ -103,13 +96,13 @@ object RaycastFunctions {
 
     // returns either Pair<BlockPos, BlockState> or Entity
     @JvmStatic
-    fun normalRaycast(level: Level, pointsIter: ray_iter_type): RaycastReturn {
+    fun normalRaycast(level: Level, pointsIter: RayIter): RaycastReturn {
         val start = pointsIter.start
         val stop  = pointsIter.stop
 
-        val rd = Vector3d(stop.x - start.x, stop.y - start.y, stop.z - start.z)
-        val d = Vector3d(1.0/(rd.x + eps), 1.0/(rd.y + eps), 1.0/(rd.z + eps))
-        val ray_distance = kotlin.math.sqrt(rd.x * rd.x + rd.y * rd.y + rd.z * rd.z)
+        val rd = stop - start
+        val d = (rd+eps).rdiv(1.0)
+        val ray_distance = rd.dist()
 
         val check_for_entities = SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.check_for_entities
         val er = SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.entity_check_radius
@@ -142,7 +135,7 @@ object RaycastFunctions {
         return RaycastNoResultReturn(pointsIter.up_to.toDouble())
     }
 
-    fun raycast(level: Level, pointsIter: ray_iter_type, pos: BlockPos): RaycastReturn {
+    fun raycast(level: Level, pointsIter: RayIter, pos: BlockPos): RaycastReturn {
         return when (SomePeripherals.has_vs) {
             false -> normalRaycast(level, pointsIter)
             true  -> vsRaycast(level, pointsIter, pos)
@@ -151,7 +144,21 @@ object RaycastFunctions {
 
 
     @JvmStatic
-    fun fisheyeRotationCalc(be: BlockEntity, pitch_: Double, yaw_: Double): org.joml.Vector3d {
+    fun dirToStartingOffset(direction: Direction): Vector3d {
+        //TODO this kinda works world->world, but world->ship is strange, and ship->world just doesnt work
+        val e = -1e-4 //if its just zero, then the blockpos will floor into raycaster, so small (but too small) negative offset
+        return when(direction) {
+            Direction.DOWN ->  Vector3d(0.5, e     , 0.5)
+            Direction.UP ->    Vector3d(0.5, 1  , 0.5)
+            Direction.NORTH -> Vector3d(0.5, 0.5, e     )
+            Direction.EAST ->  Vector3d(1  , 0.5, 0.5)
+            Direction.SOUTH -> Vector3d(0.5, 0.5, 1 )
+            Direction.WEST ->  Vector3d(e     , 0.5, 0.5)
+        }
+    }
+
+    @JvmStatic
+    fun fisheyeRotationCalc(be: BlockEntity, pitch_: Double, yaw_: Double): Vector3d {
         val pitch = (if (pitch_ < 0) { pitch_.coerceAtLeast(-SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.max_pitch_angle) } else { pitch_.coerceAtMost(SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.max_pitch_angle) })
         val yaw   = (if (yaw_ < 0)   { yaw_  .coerceAtLeast(-SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.max_yaw_angle  ) } else { yaw_  .coerceAtMost(SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.max_yaw_angle  ) })
 
@@ -163,21 +170,20 @@ object RaycastFunctions {
     }
 
     @JvmStatic
-    fun vectorRotationCalc(be: BlockEntity, posY: Double, posX:Double, length: Double): org.joml.Vector3d {
+    fun vectorRotationCalc(be: BlockEntity, posY: Double, posX:Double, length: Double): Vector3d {
         val dir_enum = be.blockState.getValue(BlockStateProperties.FACING)
-        val fdir = dir_enum.step()
-        val dir = jVector3d(fdir.x().toDouble(), fdir.y().toDouble(), fdir.z().toDouble())
+        val dir = Vector3d(dir_enum.step())
         val l = max(length, 0.01)
 
-        val posX = -posX // x is iverted, idk why
+        val posX = -posX // x is inverted, idk why
 
         //thanks getitemfromblock for this
 //      dir = dir + posX*right + posY*updir = dir.Normalize();
 
-        val right: jVector3d; val up: jVector3d
+        val right: Vector3d; val up: Vector3d
         if (dir_enum != Direction.UP && dir_enum != Direction.DOWN) {
-            up = jVector3d(0.0, l, 0.0)
-            right = jVector3d(0.0, l, 0.0); right.cross(dir)
+            up = Vector3d(0.0, l, 0.0)
+            right = Vector3d(0.0, l, 0.0); right.cross(dir)
 
             if (dir_enum == Direction.NORTH || dir_enum == Direction.SOUTH) {
                 right.mul(posX, 0.0, 0.0)
@@ -187,16 +193,15 @@ object RaycastFunctions {
                 up.mul(0.0, posY, 0.0)
             }
         } else {
-            up = jVector3d(0.0, 0.0, l)
-            right = jVector3d(0.0, 0.0, l); right.cross(dir)
+            up = Vector3d(0.0, 0.0, l)
+            right = Vector3d(0.0, 0.0, l); right.cross(dir)
 
             right.mul(posX, 0.0, 0.0)
             up.mul(0.0, 0.0, posY)
         }
-        dir.add(right)
-        dir.add(up)
+        dir += right + up
         dir.normalize()
-        return org.joml.Vector3d(dir.x, dir.y, dir.z)
+        return dir
     }
 
     @JvmStatic
@@ -212,26 +217,24 @@ object RaycastFunctions {
             val test = level.getShipManagingPos(pos)
             if (test != null) {
                 val new_pos = test.toWorldCoordinates(pos)
-                unit_d = test.transform.transformDirectionNoScalingFromShipToWorld(unit_d, unit_d)
+                unit_d = Vector3d(test.transform.transformDirectionNoScalingFromShipToWorld(unit_d.toJomlVector3d(), unit_d.toJomlVector3d()))
 
-                Vector3d(new_pos.x, new_pos.y, new_pos.z)
+                Vector3d(new_pos)
             } else {
-                Vector3d(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
+                Vector3d(pos)
             }
         } else {
-            Vector3d(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
+            Vector3d(pos)
         }
 
-        val start = Vector3d(dpos.x + 0.5, dpos.y + 0.5, dpos.z + 0.5)
 //        val start = Vector3d(
 //            dpos.x + SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.debug_x_displacement,
 //            dpos.y + SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.debug_y_displacement,
 //            dpos.z + SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.debug_z_displacement)
-        val stop = Vector3d(
-            unit_d.x * distance + start.x,
-            unit_d.y * distance + start.y,
-            unit_d.z * distance + start.z
-        )
+        //TODO think of a way to properly make ray start at a proper offset
+//        val start = dpos + dirToStartingOffset(be.blockState.getValue(BlockStateProperties.FACING))
+        val start = dpos + 0.5
+        val stop = unit_d * distance + start
 
         val max_dist = SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.max_raycast_iterations
         val max_iter = if (max_dist <= 0) { distance.toInt() } else { min(distance.toInt(), max_dist) }

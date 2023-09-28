@@ -1,6 +1,6 @@
 dependencies {
     api 'org.joml:joml-primitives:1.10.0'
-    api 'org.joml:joml:1.10.5'
+    api 'org.joml:joml:1.10.4'
     implementation 'com.github.imifou:jsonschema-module-addon:1.2.1'
 
     // We depend on fabric loader here to use the fabric @Environment annotations and get the mixin dependencies

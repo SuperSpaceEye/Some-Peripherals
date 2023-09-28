@@ -81,5 +81,5 @@ allprojects {
 
 dependencies {
     api 'org.joml:joml-primitives:1.10.0'
-    api 'org.joml:joml:1.10.5'
+    api 'org.joml:joml:1.10.4'
 }

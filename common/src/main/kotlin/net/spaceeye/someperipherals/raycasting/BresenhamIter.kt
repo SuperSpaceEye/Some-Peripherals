@@ -1,13 +1,12 @@
 package net.spaceeye.someperipherals.raycasting
 
-import com.mojang.math.Vector3d
-import kotlin.math.abs
+import net.spaceeye.someperipherals.util.Vector3d
 import kotlin.math.floor
 
 //https://lodev.org/cgtutor/raycasting.html
 //https://stackoverflow.com/questions/55263298/draw-all-voxels-that-pass-through-a-3d-line-in-3d-voxel-space
 class BresenhamIter(start: Vector3d, stop: Vector3d, up_to: Int):RayIter(start, stop, up_to) {
-    private var cpos = Vector3d(start.x, start.y, start.z)
+    private var cpos = Vector3d(start)
 
     private var rd: Vector3d
     private var tMax : Vector3d
@@ -15,18 +14,14 @@ class BresenhamIter(start: Vector3d, stop: Vector3d, up_to: Int):RayIter(start, 
     private var step : Vector3d
 
     init{
-        rd = Vector3d(abs(stop.x - start.x), abs(stop.y - start.y), abs(stop.z - start.z))
+        rd = (stop-start).abs()
+        tDelta = (rd+1e-60).rdiv(1.0).abs()
 
         step = Vector3d(
             if (stop.x < start.x) {-1.0} else {1.0},
             if (stop.y < start.y) {-1.0} else {1.0},
             if (stop.z < start.z) {-1.0} else {1.0}
         )
-
-        tDelta = Vector3d(
-            abs(1.0/(rd.x + 1e-60)),
-            abs(1.0/(rd.y + 1e-60)),
-            abs(1.0/(rd.z + 1e-60)))
 
         tMax = Vector3d(
             if (stop.x < start.x) {(cpos.x - floor(cpos.x)) * tDelta.x} else {(floor(cpos.x) + 1.0 - cpos.x) * tDelta.x},
@@ -35,7 +30,7 @@ class BresenhamIter(start: Vector3d, stop: Vector3d, up_to: Int):RayIter(start, 
         )
     }
 
-    private fun calcNextPos() {
+    inline private fun calcNextPos() {
         if (tMax.x < tMax.y) {
             if (tMax.x < tMax.z) {
                 cpos.x += step.x

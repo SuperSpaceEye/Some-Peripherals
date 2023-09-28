@@ -1,6 +1,5 @@
 package net.spaceeye.someperipherals.raycasting
 
-import com.mojang.math.Vector3d
 import net.minecraft.core.BlockPos
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.entity.Entity
@@ -11,14 +10,14 @@ import net.spaceeye.someperipherals.SomePeripheralsConfig
 import net.spaceeye.someperipherals.raycasting.RaycastFunctions.checkForBlockInWorld
 import net.spaceeye.someperipherals.raycasting.RaycastFunctions.checkForIntersectedEntity
 import net.spaceeye.someperipherals.raycasting.RaycastFunctions.rayIntersectsBox
+import net.spaceeye.someperipherals.util.Vector3d
 import org.valkyrienskies.core.api.ships.ServerShip
 import org.valkyrienskies.mod.common.getShipManagingPos
 import org.valkyrienskies.mod.common.transformToNearbyShipsAndWorld
 import org.valkyrienskies.mod.common.util.toMinecraft
-import kotlin.math.sqrt
 
 class Ray(
-    var iter: ray_iter_type,
+    var iter: RayIter,
     var ship: ServerShip,
     var d: Vector3d,
     var ray_distance: Double,
@@ -37,7 +36,6 @@ object VSRaycastFunctions {
             val data = (level as ServerLevel).getShipManagingPos(spos) ?: continue
             val (res, t) = rayIntersectsBox(data.worldAABB.toMinecraft(), start, d)
             if (!res) {continue}
-//            logger.warn("FOUND INTERSECTING SHIP ${t}")
             ret.add(Pair(data, t))
         }
         return ret
@@ -75,40 +73,26 @@ object VSRaycastFunctions {
         val start = org.joml.Vector3d(start_in_world.x, start_in_world.y, start_in_world.z)
         val world_dir = org.joml.Vector3d(1.0/d.x, 1.0/d.y, 1.0/d.z).normalize() //transform d back to ray direction
 
-        val sp_start = ship.transform.transformDirectionNoScalingFromWorldToShip(start.sub(ship_wp), start).add(ship_sp)
-        val s_dir    = ship.transform.transformDirectionNoScalingFromWorldToShip(world_dir, world_dir)
+        val sp_start = Vector3d(ship.transform.transformDirectionNoScalingFromWorldToShip(start.sub(ship_wp), start).add(ship_sp))
+        val s_dir    = Vector3d(ship.transform.transformDirectionNoScalingFromWorldToShip(world_dir, world_dir))
 
-        val sd = org.joml.Vector3d(1.0/s_dir.x, 1.0/s_dir.y, 1.0/s_dir.z) // make d again
+        val sd = s_dir.rdiv(1.0, Vector3d()) // make d again
 
         //TODO find how to actually find necessary length
         //ship size
-        val ss = org.joml.Vector3d(
+        val ss = Vector3d(
             (ship.shipAABB!!.maxX() - ship.shipAABB!!.minX()).toDouble(),
             (ship.shipAABB!!.maxY() - ship.shipAABB!!.minY()).toDouble(),
             (ship.shipAABB!!.maxZ() - ship.shipAABB!!.minZ()).toDouble(),
         )
-        val length = sqrt(ss.x*ss.x + ss.y*ss.y + ss.z*ss.z)
-        val sp_end = sp_start.add(s_dir.mul(length, org.joml.Vector3d()), org.joml.Vector3d())
-
-//        logger.warn("SHIP D ${sd.x} ${sd.y} ${sd.z}")
-//        logger.warn("S DIR ${s_dir.x} ${s_dir.y} ${s_dir.z}")
-//        logger.warn("START ${sp_start.x.toInt()} ${sp_start.y.toInt()} ${sp_start.z.toInt()} | ${sp_start.x} ${sp_start.y} ${sp_start.z}")
-//        logger.warn("STOP ${sp_end.x.toInt()} ${sp_end.y.toInt()} ${sp_end.z.toInt()} | ${sp_end.x} ${sp_end.y} ${sp_end.z}")
-//        logger.warn("LENGTH ${length}")
+        val sp_end = sp_start + s_dir * ss.dist()
 
         val ray = Ray(
-            BresenhamIter(
-                Vector3d(sp_start.x, sp_start.y, sp_start.z),
-                Vector3d(sp_end.x, sp_end.y, sp_end.z),
-                max_iter_num),
-            ship,
-            Vector3d(sd.x, sd.y, sd.z),
-            sqrt(s_dir.x*s_dir.x + s_dir.y*s_dir.y + s_dir.z*s_dir.z),
+            BresenhamIter(sp_start, sp_end, max_iter_num),
+            ship, sd, s_dir.dist(),
             initial_t * initial_ray_distance,
             initial_t < 1e-60 // if ray started from shipyard, t to intersection will be 0
         )
-        //im doing this so that on the first step it'll check the beginning pos in shipyard for block
-        ray.iter.start = Vector3d(sp_start.x, sp_start.y, sp_start.z)
 
         return ray
     }
@@ -116,16 +100,8 @@ object VSRaycastFunctions {
     // when ship is added to future intersections, its t is also saved, and as collision is calculated from starting point,
     // you can just calculate euclidean distance of diff between starting point and current pos, and compare it with t*ray_distance
     @JvmStatic
-    fun checkRayPassedShip(
-        start: Vector3d, ship: Pair<ServerShip, Double>, point:Vector3d, ray_distance: Double): Boolean {
-        val pd = Vector3d(point.x - start.x, point.y - start.y, point.z - start.z)
-        val point_dist = sqrt(pd.x*pd.x + pd.y*pd.y + pd.z*pd.z)
-
-//        logger.warn("SHIP INTERSECTION CHECK ${ship.second} ${ship.second * ray_distance} ${point_dist}")
-
-        val ship_dist = ship.second * ray_distance
-        return ship_dist <= point_dist
-    }
+    fun checkRayPassedShip(start: Vector3d, ship: Pair<ServerShip, Double>, point:Vector3d, ray_distance: Double): Boolean
+    = ship.second * ray_distance <= (point - start).dist()
 
     @JvmStatic
     fun checkForShipIntersections(
@@ -144,11 +120,7 @@ object VSRaycastFunctions {
         while (i < size) {
             val ship = future_ship_intersections[i]
             if (!checkRayPassedShip(start, ship, next, ray_distance)) {i++; continue}
-            val intersection_point = Vector3d(
-                start.x + rd.x*ship.second,
-                start.y + rd.y*ship.second,
-                start.z + rd.z*ship.second,
-            )
+            val intersection_point = start + rd * ship.second
             shipyard_rays.add(makeShipyardRay(intersection_point, d, max_iter_num, ray_distance, ship.second, ship.first))
 
             future_ship_intersections[i] = future_ship_intersections.last()
@@ -165,11 +137,8 @@ object VSRaycastFunctions {
         val hits = mutableListOf<Pair<RaycastReturn, Double>>()
         val to_remove = mutableListOf<Ray>()
         for (ray in rays) {
-            if (!ray.iter.hasNext()) {
-//                logger.warn("REMOVING SHIP")
-                to_remove.add(ray); continue}
+            if (!ray.iter.hasNext()) { to_remove.add(ray); continue }
             val point = ray.iter.next()
-//            logger.warn("SHIP POINT ${point.x} ${point.y} ${point.z}")
 
             // if ray has started from shipyard, then don't check starting pos (ray can clip into raycaster)
             if (ray.started_from_shipyard
@@ -199,16 +168,15 @@ object VSRaycastFunctions {
     }
 
     @JvmStatic
-    fun vsRaycast(level: Level, pointsIter: ray_iter_type, pos: BlockPos): RaycastReturn {
+    fun vsRaycast(level: Level, pointsIter: RayIter, pos: BlockPos): RaycastReturn {
         val start = pointsIter.start // starting position
         val stop = pointsIter.stop
 
         val second_start = if (level.getShipManagingPos(pos) != null) { Vector3d(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble()) } else { start }
 
-        val eps = RaycastFunctions.eps
-        val rd = Vector3d(stop.x - start.x, stop.y - start.y, stop.z - start.z)
-        val d = Vector3d(1.0/(rd.x + eps), 1.0/(rd.y + eps), 1.0/(rd.z + eps))
-        val ray_distance = sqrt(rd.x*rd.x + rd.y*rd.y + rd.z*rd.z)
+        val rd = stop - start
+        val d = (rd+RaycastFunctions.eps).rdiv(1.0)
+        val ray_distance = rd.dist()
 
         val check_for_entities = SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.check_for_entities
         val er = SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.entity_check_radius
@@ -221,7 +189,6 @@ object VSRaycastFunctions {
         val shipyard_rays = mutableListOf<Ray>()
 
         for (point in pointsIter) {
-//            logger.warn("WORLD POINT ${point.x} ${point.y} ${point.z}")
             checkForShipIntersections(start, point, ray_distance, d, rd, pointsIter.up_to, future_ship_intersections, shipyard_rays)
 
             val ship_hit_res = iterateShipRays(level, shipyard_rays, ships_already_intersected, second_start)

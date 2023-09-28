@@ -8,6 +8,7 @@ import net.minecraft.resources.ResourceLocation
 import net.minecraft.world.item.CreativeModeTab
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
+import net.spaceeye.someperipherals.items.RangeGogglesItem
 
 object SomePeripheralsItems {
     val ITEMS = DeferredRegister.create(SomePeripherals.MOD_ID, Registry.ITEM_REGISTRY)
@@ -19,6 +20,8 @@ object SomePeripheralsItems {
     ) {ItemStack(LOGO.get())}
 
     var LOGO: RegistrySupplier<Item> = ITEMS.register("someperipherals_logo") {Item(Item.Properties())}
+
+    var RANGE_GOGGLES: RegistrySupplier<Item> = ITEMS.register("range_goggles") { RangeGogglesItem() }
 
     fun register() {
         SomePeripheralsBlocks.registerItems(ITEMS)

@@ -6,12 +6,12 @@ import kotlin.math.*
 object BallisticFunctions {
     @JvmStatic
     // filter linspace
-    private fun flinspace(start: Double, stop: Double, num_elements:Int, min: Double, max: Double): List<Double> {
+    inline private fun flinspace(start: Double, stop: Double, num_elements:Int, min: Double, max: Double): List<Double> {
         return linspace(start, stop , num_elements).filter { it in min..max }
     }
 
     @JvmStatic
-    private fun getRoot(data: ArrayList<Array<Double>>, from_end:Boolean): Array<Double> {
+    inline private fun getRoot(data: ArrayList<Array<Double>>, from_end:Boolean): Array<Double> {
         if (from_end) {
             for (i in data.size-2 downTo  0) {
                 if (data[i][0] > data[i+1][0]) {return data[i+1]}
@@ -26,7 +26,19 @@ object BallisticFunctions {
     }
 
     @JvmStatic
-    fun timeInAir(y_projectile:Double,
+    inline private fun rad(deg:Double): Double {return deg * (Math.PI / 180)}
+
+    @JvmStatic
+    inline private fun minArray(vec: ArrayList<Array<Double>>): Array<Double> {
+        var min = vec[0]
+        for (item in vec) {
+            if (item[0] < min[0]) {min = item}
+        }
+        return min
+    }
+
+    @JvmStatic
+    inline fun timeInAir(y_projectile:Double,
                   y_target:Double,
                   projectile_y_velocity:Double,
                   gravity: Double = 0.05,
@@ -68,9 +80,6 @@ object BallisticFunctions {
     }
 
     @JvmStatic
-    private fun rad(deg:Double): Double {return deg * (Math.PI / 180)}
-
-    @JvmStatic
     fun tryPitch(
         pitch_to_try: Double,
         initial_speed: Double,
@@ -110,15 +119,6 @@ object BallisticFunctions {
             (delta_t + horizontal_time_to_target)
         ),
             true)
-    }
-
-    @JvmStatic
-    private fun minArray(vec: ArrayList<Array<Double>>): Array<Double> {
-        var min = vec[0]
-        for (item in vec) {
-            if (item[0] < min[0]) {min = item}
-        }
-        return min
     }
 
     @JvmStatic
