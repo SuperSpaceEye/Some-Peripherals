@@ -23,7 +23,16 @@ class Vector3d(x:Number, y:Number, z:Number) {
     inline fun toMCVector3d(): MCVector3d {return MCVector3d(x, y, z) }
     inline fun toJomlVector3d(): JVector3d {return JVector3d(x, y, z) }
 
-    inline fun abs(): Vector3d {return Vector3d(kotlin.math.abs(x), kotlin.math.abs(y), kotlin.math.abs(z))}
+    inline override fun toString(): String = "{${x} ${y} ${z}}"
+
+    inline fun abs  (dest: Vector3d): Vector3d {dest.x = kotlin.math.abs(x)  ; dest.y = kotlin.math.abs(y)  ; dest.z = kotlin.math.abs(z)  ; return dest}
+    inline fun floor(dest: Vector3d): Vector3d {dest.x = kotlin.math.floor(x); dest.y = kotlin.math.floor(y); dest.z = kotlin.math.floor(z); return dest}
+
+    inline fun abs  (): Vector3d {return abs  (Vector3d())}
+    inline fun floor(): Vector3d {return floor(Vector3d())}
+
+    inline fun sabs  (): Vector3d {return abs  (this)}
+    inline fun sfloor(): Vector3d {return floor(this)}
 
     inline fun cross(x: Number, y: Number, z: Number): Vector3d {
         val (x,y,z) = toD(x,y,z)
@@ -53,11 +62,6 @@ class Vector3d(x:Number, y:Number, z:Number) {
    inline fun normalize(length: Number):Vector3d { return normalize(length, this) }
    inline fun normalize(): Vector3d {return normalize(1)}
    inline fun normalize(dest: Vector3d): Vector3d {return normalize(1, dest)}
-
-    private fun _unaryPlus(): Vector3d {return this}
-    private fun _unaryMinus(): Vector3d {return Vector3d(-x, -y, -z)}
-    private fun _inc(): Vector3d {x++; y++; z++; return this}
-    private fun _dec(): Vector3d {x--; y--; z--; return this}
 
     inline fun add(other: Vector3d, dest: Vector3d): Vector3d {
         dest.x = x + other.x
@@ -141,10 +145,11 @@ class Vector3d(x:Number, y:Number, z:Number) {
     inline fun rdiv(x:Number, y: Number, z: Number):  Vector3d {return rdiv(Vector3d(x,y,z), this)}
     inline fun rdiv(other:Double): Vector3d {return rdiv(other, this)}
 
-    operator fun unaryPlus():Vector3d {return _unaryPlus()}
-    operator fun unaryMinus(): Vector3d {return _unaryMinus()}
-    operator fun inc(): Vector3d {return _inc()}
-    operator fun dec(): Vector3d {return _dec()}
+    inline operator fun unaryPlus():Vector3d {return this}
+    inline operator fun unaryMinus(): Vector3d {return Vector3d(-x, -y, -z)}
+    inline operator fun inc(): Vector3d {x++; y++; z++; return this}
+    inline operator fun dec(): Vector3d {x--; y--; z--; return this}
+
 
 
 
@@ -158,7 +163,6 @@ class Vector3d(x:Number, y:Number, z:Number) {
     inline operator fun timesAssign(other: Vector3d) {mul(other, this)}
     inline operator fun divAssign  (other: Vector3d) {div(other, this)}
     inline operator fun remAssign  (other: Vector3d) {rem(other, this)}
-
 
     inline operator fun plus (other: Number): Vector3d { return add(other.toDouble(), Vector3d())}
     inline operator fun minus(other: Number): Vector3d { return sub(other.toDouble(), Vector3d())}

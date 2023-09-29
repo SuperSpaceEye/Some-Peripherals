@@ -16,7 +16,6 @@ import net.spaceeye.someperipherals.util.quatToUnit
 import net.spaceeye.someperipherals.raycasting.VSRaycastFunctions.vsRaycast
 import net.spaceeye.someperipherals.util.Vector3d
 import org.valkyrienskies.mod.common.getShipManagingPos
-import org.valkyrienskies.mod.common.toWorldCoordinates
 import java.lang.Math.*
 
 object RaycastFunctions {
@@ -216,10 +215,10 @@ object RaycastFunctions {
         val dpos = if (SomePeripherals.has_vs) {
             val test = level.getShipManagingPos(pos)
             if (test != null) {
-                val new_pos = test.toWorldCoordinates(pos)
+                // ship.toWorldCoordinates gives inaccurate result
+                val new_pos = Vector3d(test.shipToWorld.transformPosition(org.joml.Vector3d(pos.x+0.5, pos.y+0.5, pos.z+0.5))).sfloor()
                 unit_d = Vector3d(test.transform.transformDirectionNoScalingFromShipToWorld(unit_d.toJomlVector3d(), unit_d.toJomlVector3d()))
-
-                Vector3d(new_pos)
+                new_pos
             } else {
                 Vector3d(pos)
             }

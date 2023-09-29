@@ -15,6 +15,7 @@ import org.valkyrienskies.core.api.ships.ServerShip
 import org.valkyrienskies.mod.common.getShipManagingPos
 import org.valkyrienskies.mod.common.transformToNearbyShipsAndWorld
 import org.valkyrienskies.mod.common.util.toMinecraft
+import java.lang.Math.floor
 
 class Ray(
     var iter: RayIter,
@@ -87,6 +88,14 @@ object VSRaycastFunctions {
         )
         val sp_end = sp_start + s_dir * ss.dist()
 
+//        logger.warn("SHIP D ${sd.x} ${sd.y} ${sd.z}")
+//        logger.warn("S DIR ${s_dir.x} ${s_dir.y} ${s_dir.z}")
+//        logger.warn("START ${floor(sp_start.x).toInt()} ${floor(sp_start.y).toInt()} ${floor(sp_start.z).toInt()} | ${sp_start.x} ${sp_start.y} ${sp_start.z}")
+//        logger.warn("STOP ${floor(sp_end.x).toInt()} ${floor(sp_end.y).toInt()} ${floor(sp_end.z).toInt()} | ${sp_end.x} ${sp_end.y} ${sp_end.z}")
+//        logger.warn("LENGTH ${s_dir.dist()}")
+//        logger.warn("DIST TO RAY START ${initial_ray_distance*initial_t}")
+//        logger.warn("STARTED FROM SHIPYARD ${initial_t < 1e-60}")
+
         val ray = Ray(
             BresenhamIter(sp_start, sp_end, max_iter_num),
             ship, sd, s_dir.dist(),
@@ -140,6 +149,8 @@ object VSRaycastFunctions {
             if (!ray.iter.hasNext()) { to_remove.add(ray); continue }
             val point = ray.iter.next()
 
+//            logger.warn("SHIPYARD POINT ${floor(point.x).toInt()} ${floor(point.y).toInt()} ${floor(point.z).toInt()} | ${point}")
+
             // if ray has started from shipyard, then don't check starting pos (ray can clip into raycaster)
             if (ray.started_from_shipyard
                 && point.x.toInt() == second_start.x.toInt()
@@ -189,6 +200,7 @@ object VSRaycastFunctions {
         val shipyard_rays = mutableListOf<Ray>()
 
         for (point in pointsIter) {
+//            logger.warn("WORLD POINT ${floor(point.x).toInt()} ${floor(point.y).toInt()} ${floor(point.z).toInt()} | ${point}")
             checkForShipIntersections(start, point, ray_distance, d, rd, pointsIter.up_to, future_ship_intersections, shipyard_rays)
 
             val ship_hit_res = iterateShipRays(level, shipyard_rays, ships_already_intersected, second_start)
