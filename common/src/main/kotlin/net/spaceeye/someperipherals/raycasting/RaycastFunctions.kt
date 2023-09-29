@@ -231,6 +231,8 @@ object RaycastFunctions {
         val max_dist = SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.max_raycast_iterations
         val max_iter = if (max_dist <= 0) { distance.toInt() } else { min(distance.toInt(), max_dist) }
         val iter = BresenhamIter(start, stop, max_iter)
+        //shit doesn't work right in world->ship when numbers are whole
+        iter.cpos.plusAssign(unit_d/2) //kotlin being stupid
 
         val result = raycast(level, iter, pos)
 

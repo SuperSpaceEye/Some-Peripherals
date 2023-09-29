@@ -6,14 +6,13 @@ import kotlin.math.floor
 //https://lodev.org/cgtutor/raycasting.html
 //https://stackoverflow.com/questions/55263298/draw-all-voxels-that-pass-through-a-3d-line-in-3d-voxel-space
 class BresenhamIter(start: Vector3d, stop: Vector3d, up_to: Int):RayIter(start, stop, up_to) {
-    private var cpos = Vector3d(start)
-
     private var tMax : Vector3d
     private var tDelta : Vector3d
     private var step : Vector3d
 
     init{
-       val rd = (stop-start).abs()
+        cpos = Vector3d(start)
+        val rd = (stop-start).abs()
         tDelta = (rd+1e-60).rdiv(1.0).abs()
 
         step = Vector3d(
