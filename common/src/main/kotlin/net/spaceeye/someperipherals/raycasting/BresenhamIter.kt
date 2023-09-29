@@ -8,13 +8,12 @@ import kotlin.math.floor
 class BresenhamIter(start: Vector3d, stop: Vector3d, up_to: Int):RayIter(start, stop, up_to) {
     private var cpos = Vector3d(start)
 
-    private var rd: Vector3d
     private var tMax : Vector3d
     private var tDelta : Vector3d
     private var step : Vector3d
 
     init{
-        rd = (stop-start).abs()
+       val rd = (stop-start).abs()
         tDelta = (rd+1e-60).rdiv(1.0).abs()
 
         step = Vector3d(
@@ -89,7 +88,8 @@ class BresenhamIter(start: Vector3d, stop: Vector3d, up_to: Int):RayIter(start, 
 
     override fun next(): Vector3d {
         cur_i++
+        val res = Vector3d(cpos.x, cpos.y, cpos.z)
         calcNextPos()
-        return Vector3d(cpos.x, cpos.y, cpos.z)
+        return res
     }
 }

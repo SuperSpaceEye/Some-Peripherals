@@ -146,12 +146,12 @@ object RaycastFunctions {
     fun dirToStartingOffset(direction: Direction): Vector3d {
         //TODO this kinda works world->world, but world->ship is strange, and ship->world just doesnt work
         val e = -1e-4 //if its just zero, then the blockpos will floor into raycaster, so small (but too small) negative offset
-        return when(direction) {
+        return when(direction) { //Looks better in idea
             Direction.DOWN ->  Vector3d(0.5, e     , 0.5)
             Direction.UP ->    Vector3d(0.5, 1  , 0.5)
             Direction.NORTH -> Vector3d(0.5, 0.5, e     )
             Direction.EAST ->  Vector3d(1  , 0.5, 0.5)
-            Direction.SOUTH -> Vector3d(0.5, 0.5, 1 )
+            Direction.SOUTH -> Vector3d(0.5, 0.5, 1  )
             Direction.WEST ->  Vector3d(e     , 0.5, 0.5)
         }
     }
@@ -212,28 +212,21 @@ object RaycastFunctions {
         var unit_d = if (use_fisheye || !SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.vector_rotation_enabled)
         { fisheyeRotationCalc(be, var1, var2) } else { vectorRotationCalc(be, var1, var2, var3) }
 
-        val dpos = if (SomePeripherals.has_vs) {
+        val start = if (SomePeripherals.has_vs) {
             val test = level.getShipManagingPos(pos)
             if (test != null) {
-                // ship.toWorldCoordinates gives inaccurate result
-                val new_pos = Vector3d(test.shipToWorld.transformPosition(org.joml.Vector3d(pos.x+0.5, pos.y+0.5, pos.z+0.5))).sfloor()
                 unit_d = Vector3d(test.transform.transformDirectionNoScalingFromShipToWorld(unit_d.toJomlVector3d(), unit_d.toJomlVector3d()))
-                new_pos
+                Vector3d(test.shipToWorld.transformPosition( // ship.toWorldCoordinates gives inaccurate result
+                    (Vector3d(pos) + dirToStartingOffset(be.blockState.getValue(BlockStateProperties.FACING))).toJomlVector3d()))
             } else {
-                Vector3d(pos)
+                Vector3d(pos) + dirToStartingOffset(be.blockState.getValue(BlockStateProperties.FACING))
             }
         } else {
-            Vector3d(pos)
+            Vector3d(pos) + dirToStartingOffset(be.blockState.getValue(BlockStateProperties.FACING))
         }
-
-//        val start = Vector3d(
-//            dpos.x + SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.debug_x_displacement,
-//            dpos.y + SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.debug_y_displacement,
-//            dpos.z + SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.debug_z_displacement)
-        //TODO think of a way to properly make ray start at a proper offset
-//        val start = dpos + dirToStartingOffset(be.blockState.getValue(BlockStateProperties.FACING))
-        val start = dpos + 0.5
         val stop = unit_d * distance + start
+
+        logger.warn("STARTSTART ${start}")
 
         val max_dist = SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.max_raycast_iterations
         val max_iter = if (max_dist <= 0) { distance.toInt() } else { min(distance.toInt(), max_dist) }

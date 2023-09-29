@@ -40,11 +40,12 @@ object SomePeripheralsCommands {
             lt("some_peripherals").then(
                 lt("debug-logging")
                     .then(arg("enable", BoolArgumentType.bool()).executes{ optionDebugLogging(it) })
-                ).then(
-                lt("debug-offset")
-                    .then(arg("xyz", StringArgumentType.string())
-                        .then(arg("offset", FloatArgumentType.floatArg()).executes{ optionSetDebugOffset(it) }))
                 )
+//                .then(
+//                lt("debug-offset")
+//                    .then(arg("xyz", StringArgumentType.string())
+//                        .then(arg("offset", FloatArgumentType.floatArg()).executes{ optionSetDebugOffset(it) }))
+//                )
         )
     }
 }
