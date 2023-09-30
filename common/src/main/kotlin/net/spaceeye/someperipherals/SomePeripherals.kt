@@ -2,7 +2,6 @@ package net.spaceeye.someperipherals
 
 import dev.architectury.platform.Platform
 import net.minecraft.resources.ResourceLocation
-import net.spaceeye.PlatformUtils
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 
