@@ -5,6 +5,7 @@ import dev.architectury.injectables.annotations.ExpectPlatform
 
 object PlatformUtils {
     @ExpectPlatform
+    @JvmStatic
     fun getPeripheralProvider(): IPeripheralProvider {
         throw AssertionError()
     }
