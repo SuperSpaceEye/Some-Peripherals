@@ -2,6 +2,7 @@ package net.spaceeye.someperipherals
 
 import dev.architectury.platform.Platform
 import net.minecraft.resources.ResourceLocation
+import net.spaceeye.PlatformUtils
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 
@@ -24,6 +25,8 @@ object SomePeripherals {
         SomePeripheralsBlocks.register()
         SomePeripheralsBlockEntities.register()
         SomePeripheralsItems.register()
+
+        if (Platform.isModLoaded("computercraft")) { PlatformUtils.getPeripheralProvider() }
     }
 
     @JvmStatic
