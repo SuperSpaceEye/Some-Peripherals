@@ -44,9 +44,7 @@ object SomePeripheralsConfig {
                 var return_entity_type_descriptionId = true
 
 
-                var debug_x_displacement = 0.5
-                var debug_y_displacement = 0.5
-                var debug_z_displacement = 0.5
+                var debug_offset = 0.0
             }
         }
     }

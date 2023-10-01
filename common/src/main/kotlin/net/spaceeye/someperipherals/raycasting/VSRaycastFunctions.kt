@@ -61,7 +61,7 @@ object VSRaycastFunctions {
 
     @JvmStatic
     fun makeShipyardRay(
-        start_in_world: Vector3d,
+        start: Vector3d,
         d: Vector3d,
         max_iter_num: Int,
         initial_ray_distance: Double,
@@ -70,11 +70,12 @@ object VSRaycastFunctions {
     ): Ray {
         val ship_wp = ship.transform.positionInWorld
         val ship_sp = ship.transform.positionInShip
+        val scale   = ship.transform.shipToWorldScaling
 
-        val start = org.joml.Vector3d(start_in_world.x, start_in_world.y, start_in_world.z)
-        val world_dir = org.joml.Vector3d(1.0/d.x, 1.0/d.y, 1.0/d.z).normalize() //transform d back to ray direction
+        val start = ((start - Vector3d(ship_wp)) / Vector3d(scale)).toJomlVector3d()
+        val world_dir = d.rdiv(1.0).snormalize().toJomlVector3d() //transform d back to ray direction
 
-        val sp_start = Vector3d(ship.transform.transformDirectionNoScalingFromWorldToShip(start.sub(ship_wp), start).add(ship_sp))
+        val sp_start = Vector3d(ship.transform.transformDirectionNoScalingFromWorldToShip(start, start).add(ship_sp))
         val s_dir    = Vector3d(ship.transform.transformDirectionNoScalingFromWorldToShip(world_dir, world_dir))
 
         val sd = s_dir.rdiv(1.0, Vector3d()) // make d again
@@ -150,13 +151,9 @@ object VSRaycastFunctions {
             val point = ray.iter.next()
 
             logger.warn("SHIPYARD POINT ${floor(point.x).toInt()} ${floor(point.y).toInt()} ${floor(point.z).toInt()} | ${point}")
-            logger.warn("SECOND START ${floor(second_start.x).toInt()} ${floor(second_start.y).toInt()} ${floor(second_start.z).toInt()} | ${second_start}")
 
             // if ray has started from shipyard, then don't check starting pos (ray can clip into raycaster)
-            if (ray.started_from_shipyard
-                && floor(point.x).toInt() == floor(second_start.x).toInt()
-                && floor(point.y).toInt() == floor(second_start.y).toInt()
-                && floor(point.z).toInt() == floor(second_start.z).toInt()) {continue}
+            if (ray.started_from_shipyard && point.floorCompare(second_start)) {continue}
             val world_res = checkForBlockInWorld(ray.iter.start, point, ray.d, ray.ray_distance, level) ?: continue
             val distance_to = world_res.second + ray.dist_to_ray_start
             hits.add(Pair(RaycastVSShipBlockReturn(ray.ship, world_res.first, distance_to), distance_to))
@@ -180,14 +177,14 @@ object VSRaycastFunctions {
     }
 
     @JvmStatic
-    fun vsRaycast(level: Level, pointsIter: RayIter, pos: BlockPos): RaycastReturn {
+    fun vsRaycast(level: Level, pointsIter: RayIter, pos: BlockPos, unit_d: Vector3d): RaycastReturn {
         val start = pointsIter.start // starting position
         val stop = pointsIter.stop
 
         val second_start = if (level.getShipManagingPos(pos) != null) { Vector3d(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble()) } else { start }
 
         val rd = stop - start
-        val d = (rd+RaycastFunctions.eps).rdiv(1.0)
+        val d = (rd+RaycastFunctions.eps).srdiv(1.0)
         val ray_distance = rd.dist()
 
         val check_for_entities = SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.check_for_entities
@@ -218,7 +215,9 @@ object VSRaycastFunctions {
             }
             entity_step_counter++
 
-            checkForShipIntersections(start, point, ray_distance, d, rd, pointsIter.up_to, future_ship_intersections, shipyard_rays)
+            //if you don't add unit_d to point, it incorrectly calculates that ray hits world block instead of ship block.
+            // why? idfk, but this fixes it, i think. Idk what will happen if ship touches another ship though.
+            checkForShipIntersections(start, point+unit_d, ray_distance, d, rd, pointsIter.up_to, future_ship_intersections, shipyard_rays)
 
             ship_hit_res = iterateShipRays(level, shipyard_rays, ships_already_intersected, second_start)
             world_res = checkForBlockInWorld(start, point, d, ray_distance, level)

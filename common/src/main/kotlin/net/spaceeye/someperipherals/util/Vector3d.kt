@@ -5,6 +5,7 @@ import net.minecraft.core.BlockPos
 typealias MCVector3d = com.mojang.math.Vector3d
 typealias MCVector3f = com.mojang.math.Vector3f
 typealias JVector3d  = org.joml.Vector3d
+typealias JVector3dc = org.joml.Vector3dc
 
 class Vector3d(x:Number, y:Number, z:Number) {
     var x = x.toDouble()
@@ -16,6 +17,7 @@ class Vector3d(x:Number, y:Number, z:Number) {
     constructor(o: JVector3d): this(o.x, o.y, o.z)
     constructor(o: MCVector3d): this(o.x, o.y, o.z)
     constructor(o: MCVector3f): this(o.x(), o.y(), o.z())
+    constructor(o: JVector3dc): this(o.x(), o.y(), o.z())
     constructor(o: BlockPos): this(o.x, o.y, o.z)
 
     inline fun toD(x:Number, y: Number, z: Number): Array<Double> {return arrayOf(x.toDouble(), y.toDouble(), z.toDouble())}
@@ -33,6 +35,12 @@ class Vector3d(x:Number, y:Number, z:Number) {
 
     inline fun sabs  (): Vector3d {return abs  (this)}
     inline fun sfloor(): Vector3d {return floor(this)}
+
+    inline fun floorCompare(other: Vector3d): Boolean {
+        return     kotlin.math.floor(x) == kotlin.math.floor(other.x)
+                && kotlin.math.floor(y) == kotlin.math.floor(other.y)
+                && kotlin.math.floor(z) == kotlin.math.floor(other.z)
+    }
 
     inline fun cross(x: Number, y: Number, z: Number): Vector3d {
         val (x,y,z) = toD(x,y,z)
@@ -59,9 +67,12 @@ class Vector3d(x:Number, y:Number, z:Number) {
         return dest
     }
 
-   inline fun normalize(length: Number):Vector3d { return normalize(length, this) }
-   inline fun normalize(): Vector3d {return normalize(1)}
-   inline fun normalize(dest: Vector3d): Vector3d {return normalize(1, dest)}
+    inline fun normalize(length: Number):Vector3d  { return normalize(length, Vector3d()) }
+    inline fun snormalize(length: Number):Vector3d { return normalize(length, this) }
+
+    inline fun normalize(): Vector3d {return normalize(1)}
+    inline fun snormalize(): Vector3d {return snormalize(1)}
+    inline fun normalize(dest: Vector3d): Vector3d {return normalize(1, dest)}
 
     inline fun add(other: Vector3d, dest: Vector3d): Vector3d {
         dest.x = x + other.x
@@ -142,8 +153,11 @@ class Vector3d(x:Number, y:Number, z:Number) {
 
     inline fun rdiv(other: Vector3d, dest: Vector3d): Vector3d {return other.div(this, dest)}
     inline fun rdiv(other: Double, dest: Vector3d):   Vector3d {return Vector3d(other, other, other).div(this, dest)}
-    inline fun rdiv(x:Number, y: Number, z: Number):  Vector3d {return rdiv(Vector3d(x,y,z), this)}
-    inline fun rdiv(other:Double): Vector3d {return rdiv(other, this)}
+    inline fun rdiv(x:Number, y: Number, z: Number):  Vector3d {return rdiv(Vector3d(x,y,z), Vector3d())}
+    inline fun rdiv(other:Double): Vector3d {return rdiv(other, Vector3d())}
+
+    inline fun srdiv(x:Number, y: Number, z: Number):  Vector3d {return rdiv(Vector3d(x,y,z), this)}
+    inline fun srdiv(other:Double): Vector3d {return rdiv(other, this)}
 
     inline operator fun unaryPlus():Vector3d {return this}
     inline operator fun unaryMinus(): Vector3d {return Vector3d(-x, -y, -z)}

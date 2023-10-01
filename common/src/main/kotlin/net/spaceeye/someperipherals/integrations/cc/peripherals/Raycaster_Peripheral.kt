@@ -89,12 +89,12 @@ class Raycaster_Peripheral(private val level: Level, private val pos: BlockPos):
     fun raycast(args: IArguments): MutableMap<Any, Any> {
         if(!SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.is_enabled) {return mutableMapOf()}
         val distance    = args.getDouble(0)
-        val use_fisheye = args.optBoolean(1).orElse(false)
+        val euler_mode  = args.optBoolean(1).orElse(false)
         val var1        = args.optDouble(2).orElse(0.0) // Pitch or Y
         val var2        = args.optDouble(3).orElse(0.0) // Yaw or X
         val var3        = args.optDouble(4).orElse(1.0) // planar distance or nil
 
-        return makeRaycastResponse(castRay(level, be, pos, distance, use_fisheye, var1, var2, var3))
+        return makeRaycastResponse(castRay(level, be, pos, distance, euler_mode, var1, var2, var3))
     }
 
     @LuaFunction

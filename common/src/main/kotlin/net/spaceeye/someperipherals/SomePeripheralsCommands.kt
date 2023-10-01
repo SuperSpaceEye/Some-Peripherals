@@ -22,16 +22,8 @@ object SomePeripheralsCommands {
 
     private fun optionSetDebugOffset(it: CommandContext<CommandSourceStack>): Int {
         val offset: Float = FloatArgumentType.getFloat(it, "offset")
-        val what_offset: String = StringArgumentType.getString(it, "xyz")
 
-        when(what_offset.lowercase()) {
-            "x" -> {SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.debug_x_displacement = offset.toDouble()}
-            "y" -> {SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.debug_y_displacement = offset.toDouble()}
-            "z" -> {SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.debug_z_displacement = offset.toDouble()}
-            else -> {
-                return 1
-            }
-        }
+        SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.debug_offset = offset.toDouble()
         return 0
     }
 
@@ -43,8 +35,7 @@ object SomePeripheralsCommands {
                 )
 //                .then(
 //                lt("debug-offset")
-//                    .then(arg("xyz", StringArgumentType.string())
-//                        .then(arg("offset", FloatArgumentType.floatArg()).executes{ optionSetDebugOffset(it) }))
+//                    .then(arg("offset", FloatArgumentType.floatArg()).executes{ optionSetDebugOffset(it) })
 //                )
         )
     }
