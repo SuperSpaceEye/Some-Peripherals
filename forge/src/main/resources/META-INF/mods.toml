@@ -36,7 +36,7 @@ logoFile="icon.png" #optional
 description='''
 
 '''
-authors = "SpaceEye, Illuc"
+authors = "SpaceEye, Illuc, Tetrode"
 # A dependency - use the . to indicate dependency for a specific modid. Dependencies are optional.
 [[dependencies.some_peripherals]] #optional
    # the modid of the dependency

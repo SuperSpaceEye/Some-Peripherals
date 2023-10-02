@@ -11,6 +11,8 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.world.phys.AABB
 import net.spaceeye.someperipherals.SomePeripherals
 import net.spaceeye.someperipherals.SomePeripheralsConfig
+import net.spaceeye.someperipherals.blockentities.RaycasterBlockEntity
+import net.spaceeye.someperipherals.blocks.raycaster.RaycasterBaseBlock
 import net.spaceeye.someperipherals.util.directionToQuat
 import net.spaceeye.someperipherals.raycasting.VSRaycastFunctions.vsRaycast
 import net.spaceeye.someperipherals.util.Vector3d
@@ -57,9 +59,10 @@ object RaycastFunctions {
         point: Vector3d,
         d: Vector3d,
         ray_distance: Double,
-        level: Level): Pair<Pair<BlockPos, BlockState>, Double>? {
+        level: Level,
+        cache: PosCache): Pair<Pair<BlockPos, BlockState>, Double>? {
         val bpos = BlockPos(point.x, point.y, point.z)
-        val res = level.getBlockState(bpos)
+        val res = cache.getBlockState(level, bpos, SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.max_cached_positions, SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.do_position_caching)
 
         if (res.isAir) {return null}
         val (test_res, t) = rayIntersectsAABBs(start, bpos, d, res.getShape(level, bpos).toAabbs())
@@ -93,7 +96,7 @@ object RaycastFunctions {
 
     // returns either Pair<BlockPos, BlockState> or Entity
     @JvmStatic
-    fun normalRaycast(level: Level, pointsIter: RayIter): RaycastReturn {
+    fun normalRaycast(level: Level, pointsIter: RayIter, cache: PosCache): RaycastReturn {
         val start = pointsIter.start
         val stop  = pointsIter.stop
 
@@ -118,7 +121,7 @@ object RaycastFunctions {
             }
             entity_step_counter++
 
-            val world_res = checkForBlockInWorld(start, point, d, ray_distance, level)
+            val world_res = checkForBlockInWorld(start, point, d, ray_distance, level, cache)
 
             //if the block and intersected entity are both hit, then we need to find out actual intersection as
             // checkForIntersectedEntity checks "er" block radius
@@ -131,10 +134,10 @@ object RaycastFunctions {
         return RaycastNoResultReturn(pointsIter.up_to.toDouble())
     }
 
-    fun raycast(level: Level, pointsIter: RayIter, pos: BlockPos, unit_d:Vector3d): RaycastReturn {
+    fun raycast(level: Level, pointsIter: RayIter, cache: PosCache, pos: BlockPos, unit_d:Vector3d): RaycastReturn {
         return when (SomePeripherals.has_vs) {
-            false -> normalRaycast(level, pointsIter)
-            true  -> vsRaycast(level, pointsIter, pos, unit_d)
+            false -> normalRaycast(level, pointsIter, cache)
+            true  -> vsRaycast(level, pointsIter, cache, pos, unit_d)
         }
     }
 
@@ -226,13 +229,15 @@ object RaycastFunctions {
         }
         val stop = unit_d * distance + start
 
-        logger.warn("STARTSTART ${start}")
+//        logger.warn("STARTSTART ${start}")
 
         val max_dist = SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.max_raycast_iterations
         val max_iter = if (max_dist <= 0) { distance.toInt() } else { min(distance.toInt(), max_dist) }
         val iter = BresenhamIter(start, stop, max_iter)
 
-        val result = raycast(level, iter, pos, unit_d)
+        val cache = (be.blockState.block as RaycasterBaseBlock).pos_cache
+
+        val result = raycast(level, iter, cache, pos, unit_d)
 
         return result
     }

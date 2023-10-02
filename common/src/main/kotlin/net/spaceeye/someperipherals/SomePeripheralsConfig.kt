@@ -44,6 +44,10 @@ object SomePeripheralsConfig {
                 var return_entity_type_descriptionId = true
 
 
+                var do_position_caching = true
+                var max_cached_positions= 1000
+                var save_cache_for_ticks = 20
+
                 var debug_offset = 0.0
             }
         }
