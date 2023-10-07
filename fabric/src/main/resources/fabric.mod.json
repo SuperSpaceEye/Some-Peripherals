@@ -6,7 +6,7 @@
   "name": "Some Peripherals",
   "description": "",
   "authors": ["SpaceEye"],
-  "contributors": ["Illuc", "Tetrode"],
+  "contributors": ["Illuc", "Tetrode", "sashafiesta"],
   "contact": {},
 
   "license": "MIT",
@@ -25,7 +25,7 @@
   ],
   "depends": {
     "fabricloader": ">=0.14.22",
-    "minecraft": ">=1.18",
+    "minecraft": ">=1.19",
     "fabric-language-kotlin": ">=1.10.10+kotlin.1.9.10"
   }
 }
