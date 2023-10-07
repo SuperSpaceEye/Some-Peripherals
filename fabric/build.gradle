@@ -35,7 +35,7 @@ dependencies {
     common(project(path: ":common", configuration: "namedElements")) { transitive false }
     shadowCommon(project(path: ":common", configuration: "transformProductionFabric")) { transitive false }
 
-    modApi("org.valkyrienskies:valkyrienskies-118-fabric:${rootProject.vs2_version}") { transitive = false }
+    modApi("org.valkyrienskies:valkyrienskies-1192-fabric:${rootProject.vs2_version}") { transitive = false }
     implementation("org.valkyrienskies.core:api:${rootProject.vs_core_version}") { transitive = false }
 
     // Kotlin
@@ -44,7 +44,7 @@ dependencies {
     api "org.jetbrains.kotlin:kotlin-reflect:1.7.21"
 
     // CC Restitched
-    modImplementation("curse.maven:cc-restitched-462672:3622561")
+    modImplementation("curse.maven:cc-restitched-462672:3908334")
 }
 
 processResources {

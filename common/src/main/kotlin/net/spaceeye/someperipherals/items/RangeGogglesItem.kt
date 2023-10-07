@@ -2,7 +2,6 @@ package net.spaceeye.someperipherals.items
 
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.chat.Component
-import net.minecraft.network.chat.TranslatableComponent
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.item.ArmorItem
@@ -19,7 +18,7 @@ class RangeGogglesItem:
     private val CONTROLLER_LEVEL = "controller_level"
 
     override fun getDescription(): Component {
-        return TranslatableComponent("item.some_peripherals.tootlip.range_goggles")
+        return Component.translatable("item.some_peripherals.tootlip.range_goggles")
     }
 
     override fun useOn(context: UseOnContext): InteractionResult {
@@ -29,7 +28,7 @@ class RangeGogglesItem:
         val entity = level.getBlockEntity(bpos)
         if (entity !is GoggleLinkPortBlockEntity) {return super.useOn(context)}
         if (level.isClientSide) {
-            context.player!!.displayClientMessage(TranslatableComponent("text.some_peripherals.linked_rage_goggles"), true)
+            context.player!!.displayClientMessage(Component.translatable("text.some_peripherals.linked_rage_goggles"), true)
             return InteractionResult.SUCCESS
         }
         val controller: GoggleLinkPortBlockEntity = entity
@@ -41,7 +40,7 @@ class RangeGogglesItem:
         nbt.putString(CONTROLLER_LEVEL, controller.getLevel()?.dimension().toString());
         item.setTag(nbt);
 
-        context.player!!.displayClientMessage(TranslatableComponent("text.some_peripherals.linked_rage_goggles"), true)
+        context.player!!.displayClientMessage(Component.translatable("text.some_peripherals.linked_rage_goggles"), true)
         return InteractionResult.SUCCESS
     }
 }

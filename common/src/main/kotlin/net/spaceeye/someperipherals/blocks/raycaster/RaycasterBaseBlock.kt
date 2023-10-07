@@ -3,6 +3,7 @@ package net.spaceeye.someperipherals.blocks.raycaster
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.server.level.ServerLevel
+import net.minecraft.util.RandomSource
 import net.minecraft.world.item.context.BlockPlaceContext
 import net.minecraft.world.level.block.BaseEntityBlock
 import net.minecraft.world.level.block.Block
@@ -46,7 +47,7 @@ class RaycasterBaseBlock(properties: Properties): BaseEntityBlock(properties) {
         return RenderShape.MODEL
     }
 
-    override fun tick(state: BlockState, level: ServerLevel, pos: BlockPos, random: Random) {
+    override fun tick(state: BlockState, level: ServerLevel, pos: BlockPos, random: RandomSource) {
         super.tick(state, level, pos, random)
         if (ticks >= SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.save_cache_for_ticks) {
             pos_cache.clear()
