@@ -6,8 +6,11 @@
   "name": "Some Peripherals",
   "description": "",
   "authors": ["SpaceEye"],
-  "contributors": ["Illuc", "Tetrode"],
-  "contact": {},
+  "contributors": ["Illuc", "Tetrode", ", sashafiesta"],
+  "contact": {
+    "homepage": "https://modrinth.com/mod/some-peripherals",
+    "sources": "https://github.com/SuperSpaceEye/Some-Peripherals"
+  },
 
   "license": "MIT",
 
@@ -26,6 +29,12 @@
   "depends": {
     "fabricloader": ">=0.14.22",
     "minecraft": ">=1.18",
-    "fabric-language-kotlin": ">=1.10.10+kotlin.1.9.10"
+    "fabric-language-kotlin": ">=1.10.10+kotlin.1.9.10",
+    "fabric-api": ">=0.76.0+1.18.2",
+    "architectury": ">=4.11.93"
+  },
+  "suggests": {
+    "computercraft": ">=1.100.8",
+    "valkyrienskies": ">=2.1.0-beta.14"
   }
 }

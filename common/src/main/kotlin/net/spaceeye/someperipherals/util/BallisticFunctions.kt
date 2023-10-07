@@ -5,40 +5,25 @@ import kotlin.math.*
 
 object BallisticFunctions {
     @JvmStatic
-    // filter linspace
-    inline private fun flinspace(start: Double, stop: Double, num_elements:Int, min: Double, max: Double): List<Double> {
-        return linspace(start, stop , num_elements).filter { it in min..max }
-    }
+    inline fun rad(deg:Double): Double = deg * 0.017453292519943295
 
     @JvmStatic
-    inline private fun getRoot(data: ArrayList<Array<Double>>, from_end:Boolean): Array<Double> {
+    inline fun flinspace(start: Double, stop: Double, num_elements:Int, min: Double, max: Double): List<Double>
+        = linspace(max(start, min), min(stop, max) , num_elements)
+
+    @JvmStatic
+    fun getRoot(data: ArrayList<Array<Double>>, from_end:Boolean): Array<Double> {
         if (from_end) {
-            for (i in data.size-2 downTo  0) {
-                if (data[i][0] > data[i+1][0]) {return data[i+1]}
-            }
+            for (i in data.size-2 downTo  0) { if (data[i][0] > data[i+1][0]) {return data[i+1]} }
             return data[0]
         } else {
-            for (i in 1 until data.size) {
-                if (data[i-1][0] < data[i][0]) {return data[i-1]}
-            }
+            for (i in 1 until data.size) { if (data[i-1][0] < data[i][0]) {return data[i-1]} }
             return data.last()
         }
     }
 
     @JvmStatic
-    inline private fun rad(deg:Double): Double {return deg * (Math.PI / 180)}
-
-    @JvmStatic
-    inline private fun minArray(vec: ArrayList<Array<Double>>): Array<Double> {
-        var min = vec[0]
-        for (item in vec) {
-            if (item[0] < min[0]) {min = item}
-        }
-        return min
-    }
-
-    @JvmStatic
-    inline fun timeInAir(y_projectile:Double,
+    fun timeInAir(y_projectile:Double,
                   y_target:Double,
                   projectile_y_velocity:Double,
                   gravity: Double = 0.05,
@@ -46,23 +31,19 @@ object BallisticFunctions {
                   max_steps: Int = 1000000): Pair<Int, Int> {
         var t = 0
         var t_below = Int.MAX_VALUE
-        var y0 = y_projectile; val y = y_target; var Vy = projectile_y_velocity
+        var y0 = y_projectile; var Vy = projectile_y_velocity
 
-        if (y0 < y) {
+        if (y0 < y_target) {
             var y0_p: Double
             while (t < max_steps) {
                 y0_p = y0
                 y0 += Vy
                 Vy = drag * Vy - gravity
 
-                t+=1
+                t += 1
 
-                if (y0>y) {
-                    t_below = t-1
-                    break
-                }
-
-                if (y0 - y0_p < 0) {return Pair(-1, -1)}
+                if (y0 > y_target) { t_below = t - 1; break }
+                if (y0 - y0_p < 0) { return Pair(-1, -1) }
             }
         }
 
@@ -72,8 +53,7 @@ object BallisticFunctions {
 
             t+=1
 
-            if (y0 <= y) {return Pair(t_below, t)
-            }
+            if (y0 <= y_target) { return Pair(t_below, t) }
         }
 
         return Pair(t_below, -1)
@@ -90,7 +70,7 @@ object BallisticFunctions {
         gravity: Double = 0.05,
         drag: Double = 0.99,
         max_steps: Int = 1000000
-    ): Pair<Array<Double>, Boolean> {
+    ): Array<Double>? {
         val tp_rad = rad(pitch_to_try)
 
         val Vw = cos(tp_rad) * initial_speed
@@ -98,27 +78,26 @@ object BallisticFunctions {
 
         val x_coord_2d = length * cos(tp_rad)
 
-        if (Vw == 0.0) {return Pair(arrayOf(-1.0, -1.0, -1.0), false)}
+        if (Vw == 0.0) { return null }
         val part = 1 - (distance - x_coord_2d) / (100 * Vw)
-        if (part <= 0.0) { return Pair(arrayOf(-1.0, -1.0, -1.0), false)}
+        if (part <= 0.0) { return null }
         val horizontal_time_to_target = abs(ln(part) / ln(drag))
 
         val y_coord_end_of_barrel = cannon[1] + sin(tp_rad) * length;
 
         val (t_below, t_above) = timeInAir(y_coord_end_of_barrel, target[1], Vy, gravity, drag, max_steps)
 
-        if (t_below < 0) { return Pair(arrayOf(-1.0, -1.0, -1.0), false)}
+        if (t_below < 0) { return null }
 
         val delta_t = min(
             abs(horizontal_time_to_target-t_below),
             abs(horizontal_time_to_target-t_above)
         )
-        return Pair(arrayOf(
+        return arrayOf(
             delta_t,
             pitch_to_try,
             (delta_t + horizontal_time_to_target)
-        ),
-            true)
+        )
     }
 
     @JvmStatic
@@ -135,8 +114,7 @@ object BallisticFunctions {
     ): ArrayList<Array<Double>> {
         val delta_times = ArrayList<Array<Double>>()
         for (item in iter) {
-            val (items, is_successful) = tryPitch(item, initial_speed, length, distance, cannon, target, gravity, drag, max_steps)
-            if (!is_successful) {continue}
+            val items = tryPitch(item, initial_speed, length, distance, cannon, target, gravity, drag, max_steps) ?: continue
             delta_times.add(items)
         }
         return delta_times
@@ -184,8 +162,8 @@ object BallisticFunctions {
 
             if (!c1 && !c2) {return Pair(arrayOf(-1.0, -1.0, -1.0), arrayOf(-1.0, -1.0, -1.0))}
 
-            if (c1) {val (t1, t2, t3) = minArray(dTs1); dT1=t1; p1=t2; at1=t3;}
-            if (c2) {val (t1, t2, t3) = minArray(dTs2); dT2=t1; p2=t2; at2=t3;}
+            if (c1) {val t = dTs1.minBy{it[0]}; dT1=t[0]; p1=t[1]; at1=t[2];}
+            if (c2) {val t = dTs2.minBy{it[0]}; dT2=t[0]; p2=t[1]; at2=t[2];}
         }
 
         if (same_res) {dT2 = dT1; p2 = p1; at2 = at1;}

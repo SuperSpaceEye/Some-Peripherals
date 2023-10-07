@@ -40,7 +40,8 @@ class BallisticAccelerator_Peripheral(private val level: Level, private val pos:
         val max_steps     = args.optInt   (8).orElse(1000000)
 
         val res = BallisticFunctions.tryPitch(pitch_to_try, initial_speed, length, distance, cannon, target, gravity, drag, max_steps)
-        return mutableListOf(res.first, res.second)
+            ?: return mutableListOf(-1, -1, -1)
+        return res.toMutableList()
     }
 
     @LuaFunction
@@ -93,5 +94,5 @@ class BallisticAccelerator_Peripheral(private val level: Level, private val pos:
     }
 
     override fun equals(p0: IPeripheral?): Boolean = level.getBlockState(pos).`is`(SomePeripheralsCommonBlocks.BALLISTIC_ACCELERATOR.get())
-    override fun getType(): String = "ballisticAccelerator"
+    override fun getType(): String = "ballistic_accelerator"
 }

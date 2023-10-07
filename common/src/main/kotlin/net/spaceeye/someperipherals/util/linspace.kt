@@ -2,7 +2,7 @@ package net.spaceeye.someperipherals.util
 
 import kotlin.math.abs
 
-inline fun linspace(start: Double, end: Double, num: Int): ArrayList<Double> {
+fun linspace(start: Double, end: Double, num: Int): ArrayList<Double> {
     var _start = start
     var _end = end
 
