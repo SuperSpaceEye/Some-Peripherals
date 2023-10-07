@@ -1,5 +1,5 @@
 modLoader="javafml"
-loaderVersion="[38,)"
+loaderVersion="[41,)"
 license="MIT"
 issueTrackerURL="https://github.com/SuperSpaceEye/Some-Peripherals/issues"
 [[mods]]
@@ -20,13 +20,16 @@ credits="Contributors: Illuc, Tetrode, sashafiesta"
 [[dependencies.some_peripherals]]
    modId="forge" #mandatory
    mandatory=true #mandatory
-   versionRange="[38,)" #mandatory
+   # The version range of the dependency
+   versionRange="[41,)" #mandatory
+   # An ordering relationship for the dependency - BEFORE or AFTER required if the relationship is not mandatory
    ordering="NONE"
    side="BOTH"
 [[dependencies.some_peripherals]]
    modId="minecraft"
    mandatory=true
-   versionRange="[1.18,1.19)"
+   # This version range declares a minimum of the current minecraft version up to but not including the next major version
+   versionRange="[1.19,1.20)"
    ordering="NONE"
    side="BOTH"
 [[dependencies.some_peripherals]]
