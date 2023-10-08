@@ -11,7 +11,6 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.world.phys.AABB
 import net.spaceeye.someperipherals.SomePeripherals
 import net.spaceeye.someperipherals.SomePeripheralsConfig
-import net.spaceeye.someperipherals.blockentities.RaycasterBlockEntity
 import net.spaceeye.someperipherals.blocks.raycaster.RaycasterBaseBlock
 import net.spaceeye.someperipherals.util.directionToQuat
 import net.spaceeye.someperipherals.raycasting.VSRaycastFunctions.vsRaycast
@@ -104,7 +103,7 @@ object RaycastFunctions {
         val d = (rd+eps).srdiv(1.0)
         val ray_distance = rd.dist()
 
-        val check_for_entities = SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.check_for_entities
+        val check_for_entities = SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.check_for_intersection_with_entities
         val er = SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.entity_check_radius
 
         var intersected_entity: Pair<Entity, Double>? = null
@@ -229,9 +228,7 @@ object RaycastFunctions {
         }
         val stop = unit_d * distance + start
 
-//        logger.warn("STARTSTART ${start}")
-
-        val max_dist = SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.max_raycast_iterations
+        val max_dist = SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.max_raycast_distance
         val max_iter = if (max_dist <= 0) { distance.toInt() } else { min(distance.toInt(), max_dist) }
         val iter = BresenhamIter(start, stop, max_iter)
 

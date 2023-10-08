@@ -4,11 +4,11 @@ import net.minecraftforge.api.ModLoadingContext
 import net.minecraftforge.common.ForgeConfigSpec
 import net.minecraftforge.fml.config.ModConfig
 import net.spaceeye.someperipherals.SomePeripherals
-import net.spaceeye.someperipherals.config.ConfigBuilder
+import net.spaceeye.someperipherals.config.AbstractConfigBuilder
 import net.spaceeye.someperipherals.config.ConfigValueGetSet
 import java.lang.AssertionError
 
-class FabricConfigBuilder: ConfigBuilder() {
+class FabricConfigBuilder: AbstractConfigBuilder() {
     val BUILDER = ForgeConfigSpec.Builder()
     var SPEC: ForgeConfigSpec? = null
 
@@ -28,11 +28,41 @@ class FabricConfigBuilder: ConfigBuilder() {
         ModLoadingContext.registerConfig(SomePeripherals.MOD_ID, type, SPEC, "some_peripherals-$type.toml")
     }
 
-    override fun <T : Any> makeItem(name: String, defaultValue: T, description: String): ConfigValueGetSet {
-        val newVal = BUILDER.comment(description).define(name, defaultValue)
-        return ConfigValueGetSet(
-            { newVal.get() },
-            { newVal.set(it as T) }
-        )
+    override fun <T : Any> makeItem(name: String, defaultValue: T, description: String, range: Pair<T, T>?): ConfigValueGetSet {
+        if (range == null) {
+            val newVal = BUILDER.comment(description).define(name, defaultValue)
+            return ConfigValueGetSet(
+                { newVal.get() },
+                { newVal.set(it as T) }
+            )
+        } else {
+            val part = BUILDER.comment(description)
+
+            //TODO refactor whatever this is
+            when (defaultValue) {
+                is Int -> {
+                    val newVal = part.defineInRange(name, defaultValue as Int, range.first as Int, range.second as Int)
+                    return ConfigValueGetSet(
+                        { newVal.get() },
+                        { newVal.set(it as Int) }
+                    )
+                }
+                is Double -> {
+                    val newVal = part.defineInRange(name, defaultValue as Double, range.first as Double, range.second as Double)
+                    return ConfigValueGetSet(
+                        { newVal.get() },
+                        { newVal.set(it as Double) }
+                    )
+                }
+                is Long -> {
+                    val newVal = part.defineInRange(name, defaultValue as Long, range.first as Long, range.second as Long)
+                    return ConfigValueGetSet(
+                        { newVal.get() },
+                        { newVal.set(it as Long) }
+                    )
+                }
+                else -> throw AssertionError("Invalid type for defineInRange")
+            }
+        }
     }
 }

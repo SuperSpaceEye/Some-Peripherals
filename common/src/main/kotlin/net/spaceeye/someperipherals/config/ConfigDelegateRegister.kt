@@ -6,15 +6,16 @@ import kotlin.reflect.KProperty
 import kotlin.reflect.KVisibility
 import kotlin.reflect.full.declaredMemberProperties
 
-var DelegateRegisterItemCount = 0
+private var GLOBAL_DelegateRegisterItemCount = 0
 data class DelegateRegisterItem(
     val parentReg: Any?,
     val property: KProperty<*>,
     val val_type: String,
     val description: String,
+    val range: Pair<Any, Any>?,
     var resolved_name:String="") {
-    val counter = DelegateRegisterItemCount
-    init { DelegateRegisterItemCount++ }
+    val counter = GLOBAL_DelegateRegisterItemCount
+    init { GLOBAL_DelegateRegisterItemCount++ }
 
     override fun hashCode(): Int {
         return counter
@@ -28,6 +29,7 @@ abstract class ConfigSubDirectory
 
 object ConfigDelegateRegister {
     private var default_parameters = hashMapOf<DelegateRegisterItem, Any>()
+    private var parameter_range = hashMapOf<DelegateRegisterItem, Pair<Any, Any>?>()
     private var registers = hashMapOf<KProperty<*>, DelegateRegisterItem>()
 
     private var resolved_get = hashMapOf<String, () -> Any>()
@@ -35,6 +37,7 @@ object ConfigDelegateRegister {
 
     fun newEntry(entry: DelegateRegisterItem, it: Any) {
         default_parameters[entry] = it
+        parameter_range[entry] = entry.range
         registers[entry.property] = entry
     }
 
@@ -44,9 +47,10 @@ object ConfigDelegateRegister {
     private fun getEntry(it: KProperty<*>): DelegateRegisterItem? = registers[it]
     private fun resolveEntry(it: DelegateRegisterItem) {
         val default_parameter = default_parameters[it]!!
+        val parameters_range  = parameter_range[it]
 
         val getSet = SomePeripheralsConfig.server_config_holder.makeItem(
-            it.property.name, default_parameter, it.description)
+            it.property.name, default_parameter, it.description, parameters_range)
 
         resolved_get[it.resolved_name] = getSet.get
         resolved_set[it.resolved_name] = getSet.set
@@ -90,6 +94,7 @@ object ConfigDelegateRegister {
         SomePeripheralsConfig.common_config_holder.finishBuilding("common")
 
         default_parameters.clear()
+        parameter_range.clear()
         registers.clear()
     }
 }

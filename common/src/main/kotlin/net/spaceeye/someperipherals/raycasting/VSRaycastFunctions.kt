@@ -15,9 +15,8 @@ import org.valkyrienskies.core.api.ships.ServerShip
 import org.valkyrienskies.mod.common.getShipManagingPos
 import org.valkyrienskies.mod.common.transformToNearbyShipsAndWorld
 import org.valkyrienskies.mod.common.util.toMinecraft
-import java.lang.Math.floor
 
-class Ray(
+data class Ray(
     var iter: RayIter,
     var ship: ServerShip,
     var d: Vector3d,
@@ -89,14 +88,6 @@ object VSRaycastFunctions {
         )
         val sp_end = sp_start + s_dir * ss.dist()
 
-//        logger.warn("SHIP D ${sd.x} ${sd.y} ${sd.z}")
-//        logger.warn("S DIR ${s_dir.x} ${s_dir.y} ${s_dir.z}")
-//        logger.warn("START ${floor(sp_start.x).toInt()} ${floor(sp_start.y).toInt()} ${floor(sp_start.z).toInt()} | ${sp_start.x} ${sp_start.y} ${sp_start.z}")
-//        logger.warn("STOP ${floor(sp_end.x).toInt()} ${floor(sp_end.y).toInt()} ${floor(sp_end.z).toInt()} | ${sp_end.x} ${sp_end.y} ${sp_end.z}")
-//        logger.warn("LENGTH ${s_dir.dist()}")
-//        logger.warn("DIST TO RAY START ${initial_ray_distance*initial_t}")
-//        logger.warn("STARTED FROM SHIPYARD ${initial_t < 1e-60}")
-
         val ray = Ray(
             BresenhamIter(sp_start, sp_end, max_iter_num),
             ship, sd, s_dir.dist(),
@@ -151,8 +142,6 @@ object VSRaycastFunctions {
             if (!ray.iter.hasNext()) { to_remove.add(ray); continue }
             val point = ray.iter.next()
 
-//            logger.warn("SHIPYARD POINT ${floor(point.x).toInt()} ${floor(point.y).toInt()} ${floor(point.z).toInt()} | ${point}")
-
             // if ray has started from shipyard, then don't check starting pos (ray can clip into raycaster)
             if (ray.started_from_shipyard && point.floorCompare(second_start)) {continue}
             val world_res = checkForBlockInWorld(ray.iter.start, point, ray.d, ray.ray_distance, level, cache) ?: continue
@@ -188,7 +177,7 @@ object VSRaycastFunctions {
         val d = (rd+RaycastFunctions.eps).srdiv(1.0)
         val ray_distance = rd.dist()
 
-        val check_for_entities = SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.check_for_entities
+        val check_for_entities = SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.check_for_intersection_with_entities
         val er = SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.entity_check_radius
 
         var intersected_entity: Pair<Entity, Double>? = null
@@ -202,11 +191,9 @@ object VSRaycastFunctions {
         var world_res: Pair<Pair<BlockPos, BlockState>, Double>? = null
 
         for (point in pointsIter) {
-//            logger.warn("WORLD POINT ${floor(point.x).toInt()} ${floor(point.y).toInt()} ${floor(point.z).toInt()} | ${point}")
-
             //if ray hits entity and any block wasn't hit before another check, then previous intersected entity is the actual hit place
             if (check_for_entities && entity_step_counter % er == 0) {
-                if (intersected_entity != null) { return calculateReturn(world_res, intersected_entity, ship_hit_res) }
+                if (intersected_entity != null) { return calculateReturn(world_res, intersected_entity, ship_hit_res, world_unit_rd) }
 
                 intersected_entity = checkForIntersectedEntity(start, point, level, d, ray_distance, er)
                 addPossibleShipIntersections(
@@ -223,7 +210,7 @@ object VSRaycastFunctions {
             ship_hit_res = iterateShipRays(level, shipyard_rays, ships_already_intersected, second_start, cache)
             world_res = checkForBlockInWorld(start, point, d, ray_distance, level, cache)
 
-            if ( world_res != null || !ship_hit_res.isEmpty()) {return calculateReturn(world_res, intersected_entity, ship_hit_res) }
+            if ( world_res != null || !ship_hit_res.isEmpty()) {return calculateReturn(world_res, intersected_entity, ship_hit_res, world_unit_rd) }
         }
 
         return RaycastNoResultReturn(pointsIter.up_to.toDouble())

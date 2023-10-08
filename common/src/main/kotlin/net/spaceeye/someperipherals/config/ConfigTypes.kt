@@ -2,7 +2,7 @@ package net.spaceeye.someperipherals.config
 
 import kotlin.reflect.KProperty
 
-open class BaseConfigDelegate <T : Any>(var it:T, var description: String="") {
+open class BaseConfigDelegate <T : Any>(var it:T, var range: Pair<T, T>? = null, var description: String="") {
     private lateinit var delegateRegister: DelegateRegisterItem
     operator fun getValue(thisRef: Any?, property: KProperty<*>):T {
         return ConfigDelegateRegister.getResolved(delegateRegister.resolved_name)() as T
@@ -23,13 +23,13 @@ open class BaseConfigDelegate <T : Any>(var it:T, var description: String="") {
     }
 
     operator fun provideDelegate(thisRef: Any?, property: KProperty<*>): BaseConfigDelegate<T> {
-        delegateRegister = DelegateRegisterItem(thisRef, property, T_to_str(), description)
+        delegateRegister = DelegateRegisterItem(thisRef, property, T_to_str(), description, range)
         ConfigDelegateRegister.newEntry(delegateRegister, it)
         return this
     }
 }
 
-class CInt   (it:Int,     description: String=""): BaseConfigDelegate<Int>    (it, description)
-class CDouble(it:Double,  description: String=""): BaseConfigDelegate<Double> (it, description)
-class CBool  (it:Boolean, description: String=""): BaseConfigDelegate<Boolean>(it, description)
-class CString(it:String,  description: String=""): BaseConfigDelegate<String> (it, description)
+class CInt   (it:Int,     description: String="", range: Pair<Int, Int>?       = null): BaseConfigDelegate<Int>    (it, range, description)
+class CDouble(it:Double,  description: String="", range: Pair<Double, Double>? = null): BaseConfigDelegate<Double> (it, range, description)
+class CBool  (it:Boolean, description: String=""): BaseConfigDelegate<Boolean>(it, null, description)
+class CString(it:String,  description: String=""): BaseConfigDelegate<String> (it, null, description)

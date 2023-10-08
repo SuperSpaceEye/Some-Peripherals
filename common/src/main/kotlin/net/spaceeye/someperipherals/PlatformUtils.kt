@@ -2,7 +2,7 @@ package net.spaceeye.someperipherals
 
 import dan200.computercraft.api.peripheral.IPeripheralProvider
 import dev.architectury.injectables.annotations.ExpectPlatform
-import net.spaceeye.someperipherals.config.ConfigBuilder
+import net.spaceeye.someperipherals.config.AbstractConfigBuilder
 
 object PlatformUtils {
     @ExpectPlatform
@@ -13,7 +13,7 @@ object PlatformUtils {
 
     @ExpectPlatform
     @JvmStatic
-    fun getConfig(): ConfigBuilder {
+    fun getConfig(): AbstractConfigBuilder {
         throw AssertionError()
     }
 }

@@ -1,7 +1,7 @@
 package net.spaceeye.someperipherals.fabric
 
 import dan200.computercraft.api.peripheral.IPeripheralProvider
-import net.spaceeye.someperipherals.config.ConfigBuilder
+import net.spaceeye.someperipherals.config.AbstractConfigBuilder
 import net.spaceeye.someperipherals.fabric.integrations.cc.SomePeripheralsPeripheralProviderFabric
 
 object PlatformUtilsImpl {
@@ -11,7 +11,7 @@ object PlatformUtilsImpl {
     }
 
     @JvmStatic
-    fun getConfig(): ConfigBuilder {
+    fun getConfig(): AbstractConfigBuilder {
         return FabricConfigBuilder()
     }
 }

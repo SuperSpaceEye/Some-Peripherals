@@ -48,7 +48,7 @@ class RaycasterBaseBlock(properties: Properties): BaseEntityBlock(properties) {
 
     override fun tick(state: BlockState, level: ServerLevel, pos: BlockPos, random: Random) {
         super.tick(state, level, pos, random)
-        if (ticks >= SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.save_cache_for_ticks) {
+        if (ticks >= SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.save_cache_for_N_ticks) {
             pos_cache.clear()
             ticks = 0
         }
