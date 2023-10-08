@@ -20,12 +20,12 @@ object SomePeripheralsCommands {
         return 0
     }
 
-    private fun optionSetDebugOffset(it: CommandContext<CommandSourceStack>): Int {
-        val offset: Float = FloatArgumentType.getFloat(it, "offset")
-
-        SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.debug_offset = offset.toDouble()
-        return 0
-    }
+//    private fun optionSetDebugOffset(it: CommandContext<CommandSourceStack>): Int {
+//        val offset: Float = FloatArgumentType.getFloat(it, "offset")
+//
+//        SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.debug_offset = offset.toDouble()
+//        return 0
+//    }
 
     fun registerServerCommands(dispatcher: CommandDispatcher<CommandSourceStack>) {
         dispatcher.register(

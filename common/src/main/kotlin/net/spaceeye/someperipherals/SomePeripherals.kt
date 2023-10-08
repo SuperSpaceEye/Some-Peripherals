@@ -3,6 +3,7 @@ package net.spaceeye.someperipherals
 import dan200.computercraft.api.ComputerCraftAPI
 import dev.architectury.platform.Platform
 import net.minecraft.resources.ResourceLocation
+import net.spaceeye.someperipherals.config.ConfigDelegateRegister
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 
@@ -21,6 +22,7 @@ object SomePeripherals {
 
     @JvmStatic
     fun init() {
+        ConfigDelegateRegister.initConfig()
         if (Platform.isModLoaded("valkyrienskies")) { has_vs = true}
         SomePeripheralsBlocks.register()
         SomePeripheralsBlockEntities.register()

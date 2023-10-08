@@ -1,54 +1,49 @@
 package net.spaceeye.someperipherals
 
-import com.github.imifou.jsonschema.module.addon.annotation.JsonSchema
+import net.spaceeye.someperipherals.config.*
 
 object SomePeripheralsConfig {
-    @JvmField
-    val CLIENT = Client()
-    @JvmField
+    lateinit var server_config_holder: ConfigBuilder
+    lateinit var client_config_holder: ConfigBuilder
+    lateinit var common_config_holder: ConfigBuilder
+
+
     val SERVER = Server()
+    val CLIENT = Client()
+    val COMMON = Common()
 
-    class Client
+    class Client: ConfigSubDirectory()
+    class Common: ConfigSubDirectory()
 
-    class Server {
+    class Server: ConfigSubDirectory() {
         val COMMON = Common()
 
-        class Common {
+        class Common: ConfigSubDirectory() {
             val RAYCASTER_SETTINGS = RaycasterSettings()
 
-            class RaycasterSettings {
-                @JsonSchema(description = "disables functionality of the block")
-                var is_enabled = true
-                @JsonSchema
-                var vector_rotation_enabled = true
+            class RaycasterSettings: ConfigSubDirectory() {
+                var is_enabled: Boolean by CBool(true, "disables functionality of the block")
 
-                @JsonSchema(description = "set to num <=0 for no limit")
-                var max_raycast_iterations = -1
-                @JsonSchema(description = "angle in radians")
-                var max_yaw_angle = Math.PI / 2
-                @JsonSchema(description = "angle in radians")
-                var max_pitch_angle = Math.PI / 2
-                @JsonSchema(description = "should be a positive integer divisible by two or it will FUCKING CRASH, probably")
-                var entity_check_radius = 8
+                var vector_rotation_enabled: Boolean by CBool(true)
 
-                @JsonSchema(description = "Includes VS ships if VS exists")
-                var check_for_entities: Boolean = true
-
-                var return_abs_pos = true
-                var return_distance = true
-                var return_block_id = true
-                @JsonSchema(description = "only with VS existing")
-                var return_ship_id = true
-
-                @JsonSchema(description = "")
-                var return_entity_type_descriptionId = true
+                var max_raycast_iterations: Int by CInt(-1, "set to num <=0 for no limit")
+                var max_yaw_angle: Double by CDouble(Math.PI / 2, "angle in radians")
+                var max_pitch_angle: Double by CDouble(Math.PI / 2, "angle in radians")
+                var entity_check_radius: Int by CInt(8, "should be a positive integer")
 
 
-                var do_position_caching = true
-                var max_cached_positions= 1000
-                var save_cache_for_ticks = 20
+                var check_for_entities: Boolean by CBool(true, "Includes VS ships if VS exists")
 
-                var debug_offset = 0.0
+                var return_abs_pos: Boolean by CBool(true)
+                var return_distance: Boolean by CBool(true)
+                var return_block_id: Boolean by CBool(true)
+                var return_ship_id: Boolean by CBool(true, "only if VS is installed")
+
+                var return_entity_type_descriptionId: Boolean by CBool(true)
+
+                var do_position_caching: Boolean by CBool(true)
+                var max_cached_positions: Int by CInt(1000)
+                var save_cache_for_ticks: Int by CInt(20)
             }
         }
     }
