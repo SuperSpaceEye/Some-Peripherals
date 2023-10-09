@@ -24,6 +24,7 @@ class Vector3d(x:Number, y:Number, z:Number) {
 
     inline fun toMCVector3d(): MCVector3d {return MCVector3d(x, y, z) }
     inline fun toJomlVector3d(): JVector3d {return JVector3d(x, y, z) }
+    inline fun toArray(): Array<Double> {return arrayOf(x, y, z) }
 
     inline override fun toString(): String = "{${x} ${y} ${z}}"
 

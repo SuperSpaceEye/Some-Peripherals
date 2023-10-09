@@ -34,9 +34,12 @@ object SomePeripheralsConfig {
                 var check_for_intersection_with_entities: Boolean by CBool(true, "Includes Valkyrien Skies ships if VS is installed")
 
                 var return_abs_pos: Boolean by CBool(true)
+                var return_hit_pos: Boolean by CBool(true, "Returns hit position of ray relative to world origin")
                 var return_distance: Boolean by CBool(true, "Distance is from ray origin to hit position")
                 var return_block_type: Boolean by CBool(true)
+
                 var return_ship_id: Boolean by CBool(true, "Only if Valkyrien Skies is installed and ray hit block on ship")
+                val return_shipyard_hit_pos: Boolean by CBool(true, "Only if Valkyrien Skies is installed. Returns hit position of ray relative to shipyard origin")
 
                 var return_entity_type: Boolean by CBool(true)
 

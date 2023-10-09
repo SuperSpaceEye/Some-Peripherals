@@ -22,7 +22,8 @@ data class Ray(
     var d: Vector3d,
     var ray_distance: Double,
     var dist_to_ray_start: Double,
-    var started_from_shipyard: Boolean
+    var started_from_shipyard: Boolean,
+    var world_unit_rd: Vector3d
 )
 
 object VSRaycastFunctions {
@@ -92,7 +93,8 @@ object VSRaycastFunctions {
             BresenhamIter(sp_start, sp_end, max_iter_num),
             ship, sd, s_dir.dist(),
             initial_t * initial_ray_distance,
-            initial_t < 1e-60 // if ray started from shipyard, t to intersection will be 0
+            initial_t < 1e-60, // if ray started from shipyard, t to intersection will be 0
+            d.rdiv(1.0).snormalize()
         )
 
         return ray
@@ -134,6 +136,7 @@ object VSRaycastFunctions {
     fun iterateShipRays(level: Level,
                         rays: MutableList<Ray>,
                         ships_already_intersected: MutableList<ServerShip>,
+                        start: Vector3d,
                         second_start: Vector3d,
                         cache: PosCache): MutableList<Pair<RaycastReturn, Double>> {
         val hits = mutableListOf<Pair<RaycastReturn, Double>>()
@@ -146,7 +149,11 @@ object VSRaycastFunctions {
             if (ray.started_from_shipyard && point.floorCompare(second_start)) {continue}
             val world_res = checkForBlockInWorld(ray.iter.start, point, ray.d, ray.ray_distance, level, cache) ?: continue
             val distance_to = world_res.second + ray.dist_to_ray_start
-            hits.add(Pair(RaycastVSShipBlockReturn(ray.ship, world_res.first, distance_to), distance_to))
+            hits.add(Pair(RaycastVSShipBlockReturn(
+                ray.ship, world_res.first, distance_to,
+                ray.world_unit_rd.normalize()*distance_to+start,
+                ray.d.rdiv(1.0).snormalize()*world_res.second+ray.iter.start // norm_shipyard_rd * dist_to_shipyard_block
+                ), distance_to))
         }
         rays.removeAll(to_remove)
         ships_already_intersected.addAll(to_remove.map { it.ship })
@@ -158,10 +165,12 @@ object VSRaycastFunctions {
         world_res: Pair<Pair<BlockPos, BlockState>, Double>?,
         entity_res: Pair<Entity, Double>?,
         ships_res: MutableList<Pair<RaycastReturn, Double>>,
+        world_unit_rd: Vector3d,
+        start: Vector3d
     ): RaycastReturn {
         val results = ships_res
-        if (world_res != null)  {results.add(Pair(RaycastBlockReturn (world_res.first,  world_res.second),  world_res.second))}
-        if (entity_res != null) {results.add(Pair(RaycastEntityReturn(entity_res.first, entity_res.second), entity_res.second))}
+        if (world_res  != null) {results.add(Pair(RaycastBlockReturn ( world_res.first,  world_res.second, world_unit_rd* world_res.second+start),  world_res.second))}
+        if (entity_res != null) {results.add(Pair(RaycastEntityReturn(entity_res.first, entity_res.second, world_unit_rd*entity_res.second+start), entity_res.second))}
 
         return results.minBy { it.second }.first
     }
@@ -176,6 +185,7 @@ object VSRaycastFunctions {
         val rd = stop - start
         val d = (rd+RaycastFunctions.eps).srdiv(1.0)
         val ray_distance = rd.dist()
+        val world_unit_rd = rd.normalize()
 
         val check_for_entities = SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.check_for_intersection_with_entities
         val er = SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.entity_check_radius
@@ -193,7 +203,7 @@ object VSRaycastFunctions {
         for (point in pointsIter) {
             //if ray hits entity and any block wasn't hit before another check, then previous intersected entity is the actual hit place
             if (check_for_entities && entity_step_counter % er == 0) {
-                if (intersected_entity != null) { return calculateReturn(world_res, intersected_entity, ship_hit_res, world_unit_rd) }
+                if (intersected_entity != null) { return calculateReturn(world_res, intersected_entity, ship_hit_res, world_unit_rd, start) }
 
                 intersected_entity = checkForIntersectedEntity(start, point, level, d, ray_distance, er)
                 addPossibleShipIntersections(
@@ -207,10 +217,10 @@ object VSRaycastFunctions {
             // why? idfk, but this fixes it, i think. Idk what will happen if ship touches another ship though.
             checkForShipIntersections(start, point+unit_d, ray_distance, d, rd, pointsIter.up_to, future_ship_intersections, shipyard_rays)
 
-            ship_hit_res = iterateShipRays(level, shipyard_rays, ships_already_intersected, second_start, cache)
+            ship_hit_res = iterateShipRays(level, shipyard_rays, ships_already_intersected, start, second_start, cache)
             world_res = checkForBlockInWorld(start, point, d, ray_distance, level, cache)
 
-            if ( world_res != null || !ship_hit_res.isEmpty()) {return calculateReturn(world_res, intersected_entity, ship_hit_res, world_unit_rd) }
+            if ( world_res != null || !ship_hit_res.isEmpty()) {return calculateReturn(world_res, intersected_entity, ship_hit_res, world_unit_rd, start) }
         }
 
         return RaycastNoResultReturn(pointsIter.up_to.toDouble())

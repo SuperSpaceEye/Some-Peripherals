@@ -10,7 +10,6 @@ private var GLOBAL_DelegateRegisterItemCount = 0
 data class DelegateRegisterItem(
     val parentReg: Any?,
     val property: KProperty<*>,
-    val val_type: String,
     val description: String,
     val range: Pair<Any, Any>?,
     var resolved_name:String="") {

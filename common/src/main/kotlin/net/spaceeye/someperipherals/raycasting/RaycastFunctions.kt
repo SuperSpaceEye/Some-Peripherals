@@ -102,6 +102,7 @@ object RaycastFunctions {
         val rd = stop - start
         val d = (rd+eps).srdiv(1.0)
         val ray_distance = rd.dist()
+        val unit_d = rd.normalize()
 
         val check_for_entities = SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.check_for_intersection_with_entities
         val er = SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.entity_check_radius
@@ -112,7 +113,7 @@ object RaycastFunctions {
         for (point in pointsIter) {
             //if ray hits entity and any block wasn't hit before another check, then previous intersected entity is the actual hit place
             if (check_for_entities && entity_step_counter % er == 0) {
-                if (intersected_entity != null) { return RaycastEntityReturn(intersected_entity.first, intersected_entity.second) }
+                if (intersected_entity != null) { return RaycastEntityReturn(intersected_entity.first, intersected_entity.second, unit_d * intersected_entity.second+start) }
 
                 // Pair of Entity, t
                 intersected_entity = checkForIntersectedEntity(start, point, level, d, ray_distance, er)
@@ -125,9 +126,10 @@ object RaycastFunctions {
             //if the block and intersected entity are both hit, then we need to find out actual intersection as
             // checkForIntersectedEntity checks "er" block radius
             if (world_res != null && intersected_entity != null) { return if (world_res.second < intersected_entity.second)
-            {RaycastBlockReturn(world_res.first, world_res.second)} else {RaycastEntityReturn(intersected_entity.first, intersected_entity.second)} }
+            {RaycastBlockReturn(world_res.first, world_res.second, unit_d*world_res.second+start)}
+            else {RaycastEntityReturn(intersected_entity.first, intersected_entity.second, unit_d*intersected_entity.second+start)} }
 
-            if (world_res != null) {return RaycastBlockReturn(world_res.first, world_res.second)}
+            if (world_res != null) {return RaycastBlockReturn(world_res.first, world_res.second, unit_d*world_res.second+start)}
         }
 
         return RaycastNoResultReturn(pointsIter.up_to.toDouble())

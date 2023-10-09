@@ -4,7 +4,6 @@ import dan200.computercraft.api.lua.IArguments
 import dan200.computercraft.api.lua.LuaFunction
 import dan200.computercraft.api.peripheral.IPeripheral
 import net.minecraft.core.BlockPos
-import net.minecraft.world.entity.Entity
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.spaceeye.someperipherals.SomePeripheralsCommonBlocks
@@ -23,9 +22,11 @@ class Raycaster_Peripheral(private val level: Level, private val pos: BlockPos):
     ) {
         val pos = res.result.first
         val bs  = res.result.second
+        val hpos= res.hit_position
 
         ret["is_block"] = true
         if (rcc.return_abs_pos)  {ret["abs_pos"] = mutableListOf(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())}
+        if (rcc.return_hit_pos)  {ret["hit_pos"] = hpos.toArray()}
         if (rcc.return_distance) {ret["distance"] = res.distance_to}
         if (rcc.return_block_type) {ret["block_type"] = bs.block.descriptionId.toString()}
     }
@@ -35,10 +36,12 @@ class Raycaster_Peripheral(private val level: Level, private val pos: BlockPos):
         ret: MutableMap<Any, Any>,
         rcc: SomePeripheralsConfig.Server.Common.RaycasterSettings
     ) {
-        val entity: Entity = res.result
+        val entity = res.result
+        val hpos = res.hit_position
 
         ret["is_entity"] = true
         if (rcc.return_abs_pos)  {ret["abs_pos"] = mutableListOf(entity.x, entity.y, entity.z)}
+        if (rcc.return_hit_pos)  {ret["hit_pos"] = hpos.toArray()}
         if (rcc.return_distance) {ret["distance"] = res.distance_to}
 
         if (rcc.return_entity_type) {ret["descriptionId"] = entity.type.descriptionId}
@@ -51,12 +54,16 @@ class Raycaster_Peripheral(private val level: Level, private val pos: BlockPos):
     ) {
         val pos = res.block.first
         val bs  = res.block.second
+        val hpos= res.hit_position
 
         ret["is_block"] = true
         if (rcc.return_abs_pos)  {ret["abs_pos"] = mutableListOf(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())}
+        if (rcc.return_hit_pos)  {ret["hit_pos"] = hpos.toArray()}
         if (rcc.return_distance) {ret["distance"] = res.distance_to}
         if (rcc.return_block_type) {ret["block_type"] = bs.block.descriptionId.toString()}
+
         if (rcc.return_ship_id)  {ret["ship_id"] = res.ship.id.toDouble()}
+        if (rcc.return_shipyard_hit_pos) {ret["hit_pos_ship"] = res.hit_position_ship.toArray()}
     }
 
     private fun makeResponseNoResult(
