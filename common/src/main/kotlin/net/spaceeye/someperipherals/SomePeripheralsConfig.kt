@@ -43,10 +43,9 @@ object SomePeripheralsConfig {
 
                 var return_entity_type: Boolean by CBool(true)
 
-                //TODO TODO TODO TODO
-                var do_position_caching: Boolean by CBool(false, "If true, raycaster will cache traveled blocks for some time", false)
-                var max_cached_positions: Int by CInt(1000, "", Pair(1, Int.MAX_VALUE), false)
-                var save_cache_for_N_ticks: Int by CInt(20, "Will clear cache after N tick passed", Pair(1, Int.MAX_VALUE), false)
+                var do_position_caching: Boolean by CBool(true, "If true, raycaster will cache traveled blocks for some time")
+                var max_cached_positions: Int by CInt(1000, "", Pair(1, Int.MAX_VALUE))
+                var save_cache_for_N_ticks: Int by CInt(20, "Will clear raycaster cache after N MC ticks passed", Pair(1, Int.MAX_VALUE))
             }
         }
     }

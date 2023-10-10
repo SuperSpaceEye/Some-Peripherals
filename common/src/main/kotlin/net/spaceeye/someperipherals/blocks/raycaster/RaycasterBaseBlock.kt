@@ -4,17 +4,19 @@ import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.item.context.BlockPlaceContext
+import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.BaseEntityBlock
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.RenderShape
 import net.minecraft.world.level.block.entity.BlockEntity
+import net.minecraft.world.level.block.entity.BlockEntityTicker
+import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.state.StateDefinition
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.spaceeye.someperipherals.SomePeripheralsConfig
 import net.spaceeye.someperipherals.blockentities.RaycasterBlockEntity
 import net.spaceeye.someperipherals.raycasting.PosCache
-import java.util.*
 
 class RaycasterBaseBlock(properties: Properties): BaseEntityBlock(properties) {
     val pos_cache = PosCache()
@@ -46,12 +48,24 @@ class RaycasterBaseBlock(properties: Properties): BaseEntityBlock(properties) {
         return RenderShape.MODEL
     }
 
-    override fun tick(state: BlockState, level: ServerLevel, pos: BlockPos, random: Random) {
-        super.tick(state, level, pos, random)
+    fun doTick(state: BlockState, level: ServerLevel, pos: BlockPos) {
+        if (level.isClientSide || !SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.do_position_caching) {return}
         if (ticks >= SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.save_cache_for_N_ticks) {
             pos_cache.clear()
             ticks = 0
         }
         ticks += 1
+    }
+
+    override fun <T : BlockEntity?> getTicker(
+        level: Level,
+        state: BlockState,
+        type: BlockEntityType<T>
+    ): BlockEntityTicker<T>? {
+        return if(level.isClientSide) {null} else {
+            BlockEntityTicker<T> { level: Level, pos: BlockPos, state: BlockState, entity: T ->
+                doTick(state, level as ServerLevel, pos)
+            }
+        }
     }
 }

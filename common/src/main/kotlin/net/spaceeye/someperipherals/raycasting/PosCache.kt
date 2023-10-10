@@ -65,7 +65,7 @@ class PosCache {
     }
 
     fun clear() {
-        mutex.lock()
+        if (!mutex.tryLock()) {return}
         data.clear()
         cached.clear()
         mutex.unlock()
