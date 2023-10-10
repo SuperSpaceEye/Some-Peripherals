@@ -1,7 +1,6 @@
 package net.spaceeye.someperipherals.integrations.cc.peripherals
 
-import dan200.computercraft.api.lua.IArguments
-import dan200.computercraft.api.lua.LuaFunction
+import dan200.computercraft.api.lua.*
 import dan200.computercraft.api.peripheral.IPeripheral
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
@@ -110,6 +109,48 @@ class Raycaster_Peripheral(private val level: Level, private val pos: BlockPos):
         level.setBlockAndUpdate(be.blockPos, be.blockState.setValue(BlockStateProperties.POWERED, state))
     }
 
+    @LuaFunction
+    fun getConfigInfo(): Any {
+        val rc = SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS
+        return mutableMapOf(
+            Pair("is_enabled", rc.is_enabled),
+            Pair("vector_rotation_enabled", rc.vector_rotation_enabled),
+            Pair("max_raycast_distance", rc.max_raycast_distance),
+            Pair("max_yaw_angle", rc.max_yaw_angle),
+            Pair("max_pitch_angle", rc.max_pitch_angle),
+            Pair("entity_check_radius", rc.entity_check_radius),
+            Pair("check_for_intersection_with_entities", rc.check_for_intersection_with_entities),
+            Pair("return_abs_pos", rc.return_abs_pos),
+            Pair("return_hit_pos", rc.return_hit_pos),
+            Pair("return_distance", rc.return_distance),
+            Pair("return_block_type", rc.return_block_type),
+            Pair("return_ship_id", rc.return_ship_id),
+            Pair("return_shipyard_hit_pos", rc.return_shipyard_hit_pos),
+            Pair("return_entity_type", rc.return_entity_type),
+            Pair("do_position_caching", rc.do_position_caching),
+            Pair("max_cached_positions", rc.max_cached_positions),
+            Pair("save_cache_for_N_ticks", rc.save_cache_for_N_ticks),
+        )
+    }
+
     override fun equals(p0: IPeripheral?): Boolean = level.getBlockState(pos).`is`(SomePeripheralsCommonBlocks.RAYCASTER.get())
     override fun getType(): String = "raycaster"
+
+//    @LuaFunction
+//    @Throws(LuaException::class)
+//    fun test(args: IArguments): Any {
+//        return mutableListOf(
+//            testLuaFn(3.14),
+//            testLuaFn(5.46),
+//            testLuaFn(42.0)
+//        )
+//    }
+//
+//    class testLuaFn(var test: Double) : ILuaFunction {
+//        @Throws(LuaException::class)
+//        override fun call(p0: IArguments): MethodResult {
+//            SomePeripherals.logger.warn("test function return was called")
+//            return MethodResult.of(test)
+//        }
+//    }
 }
