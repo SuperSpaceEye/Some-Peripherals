@@ -43,9 +43,9 @@ object SomePeripheralsConfig {
 
                 var return_entity_type: Boolean by CBool(true)
 
-                var do_position_caching: Boolean by CBool(true, "If true, raycaster will cache traveled blocks for some time")
-                var max_cached_positions: Int by CInt(1000, "", Pair(1, Int.MAX_VALUE))
-                var save_cache_for_N_ticks: Int by CInt(20, "Will clear cache after N tick passed", Pair(1, Int.MAX_VALUE))
+                var do_position_caching: Boolean by CBool(false, "IT'S BROKEN RN DON'T USE. If true, raycaster will cache traveled blocks for some time")
+                var max_cached_positions: Int by CInt(1000, "IT'S BROKEN RN DON'T USE", Pair(1, Int.MAX_VALUE))
+                var save_cache_for_N_ticks: Int by CInt(20, "IT'S BROKEN RN DON'T USE. Will clear cache after N tick passed", Pair(1, Int.MAX_VALUE))
             }
         }
     }
