@@ -11,7 +11,7 @@ import net.spaceeye.someperipherals.util.BallisticFunctions
 import net.spaceeye.someperipherals.util.tableToDoubleArray
 import net.spaceeye.someperipherals.util.tableToTableArray
 
-class BallisticAccelerator_Peripheral(private val level: Level, private val pos: BlockPos): IPeripheral {
+class BallisticAcceleratorPeripheral(private val level: Level, private val pos: BlockPos): IPeripheral {
     @LuaFunction
     @Throws(LuaException::class)
     fun timeInAir(args: IArguments): MutableList<Any> {

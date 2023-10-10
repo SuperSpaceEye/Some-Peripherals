@@ -1,4 +1,4 @@
-package net.spaceeye.someperipherals.blocks.raycaster
+package net.spaceeye.someperipherals.blocks
 
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
@@ -18,7 +18,7 @@ import net.spaceeye.someperipherals.SomePeripheralsConfig
 import net.spaceeye.someperipherals.blockentities.RaycasterBlockEntity
 import net.spaceeye.someperipherals.raycasting.PosCache
 
-class RaycasterBaseBlock(properties: Properties): BaseEntityBlock(properties) {
+class RaycasterBlock(properties: Properties): BaseEntityBlock(properties) {
     val pos_cache = PosCache()
     private var ticks = 0
 
@@ -49,8 +49,8 @@ class RaycasterBaseBlock(properties: Properties): BaseEntityBlock(properties) {
     }
 
     fun doTick(state: BlockState, level: ServerLevel, pos: BlockPos) {
-        if (level.isClientSide || !SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.do_position_caching) {return}
-        if (ticks >= SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.save_cache_for_N_ticks) {
+        if (level.isClientSide || !SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.do_position_caching) {return}
+        if (ticks >= SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.save_cache_for_N_ticks) {
             pos_cache.clear()
             ticks = 0
         }

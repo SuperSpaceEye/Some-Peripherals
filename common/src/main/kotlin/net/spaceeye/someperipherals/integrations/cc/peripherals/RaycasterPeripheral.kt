@@ -11,13 +11,13 @@ import net.spaceeye.someperipherals.blockentities.RaycasterBlockEntity
 import net.spaceeye.someperipherals.raycasting.*
 import net.spaceeye.someperipherals.raycasting.RaycastFunctions.castRay
 
-class Raycaster_Peripheral(private val level: Level, private val pos: BlockPos): IPeripheral {
+class RaycasterPeripheral(private val level: Level, private val pos: BlockPos): IPeripheral {
     private var be = level.getBlockEntity(pos) as RaycasterBlockEntity
 
     private fun makeResponseBlock(
         res: RaycastBlockReturn,
         ret: MutableMap<Any, Any>,
-        rcc: SomePeripheralsConfig.Server.Common.RaycasterSettings
+        rcc: SomePeripheralsConfig.Server.RaycasterSettings
     ) {
         val pos = res.result.first
         val bs  = res.result.second
@@ -33,7 +33,7 @@ class Raycaster_Peripheral(private val level: Level, private val pos: BlockPos):
     private fun makeResponseEntity(
         res: RaycastEntityReturn,
         ret: MutableMap<Any, Any>,
-        rcc: SomePeripheralsConfig.Server.Common.RaycasterSettings
+        rcc: SomePeripheralsConfig.Server.RaycasterSettings
     ) {
         val entity = res.result
         val hpos = res.hit_position
@@ -49,7 +49,7 @@ class Raycaster_Peripheral(private val level: Level, private val pos: BlockPos):
     private fun makeResponseVSBlock(
         res: RaycastVSShipBlockReturn,
         ret: MutableMap<Any, Any>,
-        rcc: SomePeripheralsConfig.Server.Common.RaycasterSettings
+        rcc: SomePeripheralsConfig.Server.RaycasterSettings
     ) {
         val pos = res.block.first
         val bs  = res.block.second
@@ -68,7 +68,7 @@ class Raycaster_Peripheral(private val level: Level, private val pos: BlockPos):
     private fun makeResponseNoResult(
         res: RaycastNoResultReturn,
         ret: MutableMap<Any, Any>,
-        rcc: SomePeripheralsConfig.Server.Common.RaycasterSettings
+        rcc: SomePeripheralsConfig.Server.RaycasterSettings
     ) {
         ret["is_block"] = true
         ret["distance"] = res.distance_to
@@ -77,7 +77,7 @@ class Raycaster_Peripheral(private val level: Level, private val pos: BlockPos):
 
     private fun makeRaycastResponse(res: RaycastReturn): MutableMap<Any, Any> {
         val ret = mutableMapOf<Any, Any>()
-        val rcc = SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS
+        val rcc = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS
 
         when (res) {
             is RaycastBlockReturn       -> makeResponseBlock   (res, ret, rcc)
@@ -93,7 +93,7 @@ class Raycaster_Peripheral(private val level: Level, private val pos: BlockPos):
 
     @LuaFunction
     fun raycast(args: IArguments): MutableMap<Any, Any> {
-        if(!SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.is_enabled) {return mutableMapOf()}
+        if(!SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.is_enabled) {return mutableMapOf()}
         val distance    = args.getDouble(0)
         val euler_mode  = args.optBoolean(1).orElse(false)
         val var1        = args.optDouble(2).orElse(0.0) // Pitch or Y
@@ -111,7 +111,7 @@ class Raycaster_Peripheral(private val level: Level, private val pos: BlockPos):
 
     @LuaFunction
     fun getConfigInfo(): Any {
-        val rc = SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS
+        val rc = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS
         return mutableMapOf(
             Pair("is_enabled", rc.is_enabled),
             Pair("vector_rotation_enabled", rc.vector_rotation_enabled),

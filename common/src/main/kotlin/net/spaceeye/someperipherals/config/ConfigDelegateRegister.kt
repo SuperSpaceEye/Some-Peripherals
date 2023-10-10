@@ -4,6 +4,7 @@ import net.spaceeye.someperipherals.PlatformUtils
 import net.spaceeye.someperipherals.SomePeripherals
 import net.spaceeye.someperipherals.SomePeripheralsConfig
 import kotlin.reflect.KProperty
+import kotlin.reflect.KProperty1
 import kotlin.reflect.KVisibility
 import kotlin.reflect.full.declaredMemberProperties
 
@@ -61,12 +62,18 @@ object ConfigDelegateRegister {
         configBuilder.pushNamespace(name)
 
         val resolve_later = mutableListOf<Any>()
+        val to_resolve = mutableListOf<Pair<DelegateRegisterItem, KProperty1<out Any, *>>>()
         for (item in cls::class.declaredMemberProperties) {
             if (item.visibility != KVisibility.PUBLIC) {continue}
             val entry = getEntry(item)
 
             if (entry == null) { item.getter.call(cls)?.let { if (it is ConfigSubDirectory) resolve_later.add(it) }; continue }
 
+            to_resolve.add(Pair(entry, item))
+        }
+
+        to_resolve.sortBy { it.first.hashCode() }
+        for ((entry, item) in to_resolve) {
             entry.resolved_name = str_path + "." + item.name
             resolveEntry(entry, configBuilder)
         }

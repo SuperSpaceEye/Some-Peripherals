@@ -187,8 +187,8 @@ object VSRaycastFunctions {
         val ray_distance = rd.dist()
         val world_unit_rd = rd.normalize()
 
-        val check_for_entities = SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.check_for_intersection_with_entities
-        val er = SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.entity_check_radius
+        val check_for_entities = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.check_for_intersection_with_entities
+        val er = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.entity_check_radius
 
         var intersected_entity: Pair<Entity, Double>? = null
         var entity_step_counter = 0

@@ -1,5 +1,16 @@
 {
   "block.some_peripherals.ballistic_accelerator": "Ballistic Accelerator",
   "block.some_peripherals.raycaster": "Raycaster",
-  "itemGroup.some_peripherals.someperipherals_tab": "Some Peripherals"
+  "block.some_peripherals.goggle_link_port": "Goggle Link Port",
+
+  "item.some_peripherals.status_goggles": "Status Goggles",
+  "item.some_peripherals.range_goggles": "Range Goggles",
+
+  "itemGroup.some_peripherals.someperipherals_tab": "Some Peripherals",
+
+  "item.some_peripherals.tootlip.range_goggles": "Range Goggles",
+  "text.some_peripherals.linked_range_goggles": "Linked Range Goggles",
+
+  "item.some_peripherals.tootlip.status_goggles": "Status Goggles",
+  "text.some_peripherals.linked_status_goggles": "Linked Status Goggles"
 }

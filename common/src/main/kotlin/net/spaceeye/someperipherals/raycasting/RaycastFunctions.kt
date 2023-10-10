@@ -11,7 +11,7 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.world.phys.AABB
 import net.spaceeye.someperipherals.SomePeripherals
 import net.spaceeye.someperipherals.SomePeripheralsConfig
-import net.spaceeye.someperipherals.blocks.raycaster.RaycasterBaseBlock
+import net.spaceeye.someperipherals.blocks.RaycasterBlock
 import net.spaceeye.someperipherals.util.directionToQuat
 import net.spaceeye.someperipherals.raycasting.VSRaycastFunctions.vsRaycast
 import net.spaceeye.someperipherals.util.Vector3d
@@ -61,7 +61,7 @@ object RaycastFunctions {
         level: Level,
         cache: PosCache): Pair<Pair<BlockPos, BlockState>, Double>? {
         val bpos = BlockPos(point.x, point.y, point.z)
-        val res = cache.getBlockState(level, bpos, SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.max_cached_positions, SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.do_position_caching)
+        val res = cache.getBlockState(level, bpos, SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.max_cached_positions, SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.do_position_caching)
 
         if (res.isAir) {return null}
         val (test_res, t) = rayIntersectsAABBs(start, bpos, d, res.getShape(level, bpos).toAabbs())
@@ -104,8 +104,8 @@ object RaycastFunctions {
         val ray_distance = rd.dist()
         val unit_d = rd.normalize()
 
-        val check_for_entities = SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.check_for_intersection_with_entities
-        val er = SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.entity_check_radius
+        val check_for_entities = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.check_for_intersection_with_entities
+        val er = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.entity_check_radius
 
         var intersected_entity: Pair<Entity, Double>? = null
         var entity_step_counter = 0
@@ -158,8 +158,8 @@ object RaycastFunctions {
 
     @JvmStatic
     fun eulerRotationCalc(be: BlockEntity, pitch_: Double, yaw_: Double): Vector3d {
-        val pitch = (if (pitch_ < 0) { pitch_.coerceAtLeast(-SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.max_pitch_angle) } else { pitch_.coerceAtMost(SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.max_pitch_angle) })
-        val yaw   = (if (yaw_ < 0)   { yaw_  .coerceAtLeast(-SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.max_yaw_angle  ) } else { yaw_  .coerceAtMost(SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.max_yaw_angle  ) })
+        val pitch = (if (pitch_ < 0) { pitch_.coerceAtLeast(-SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.max_pitch_angle) } else { pitch_.coerceAtMost(SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.max_pitch_angle) })
+        val yaw   = (if (yaw_ < 0)   { yaw_  .coerceAtLeast(-SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.max_yaw_angle  ) } else { yaw_  .coerceAtMost(SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.max_yaw_angle  ) })
 
         val direction = directionToQuat(be.blockState.getValue(BlockStateProperties.FACING))
         //idk why roll is yaw, and it needs to be inverted so that +yaw is right and -yaw is left
@@ -209,7 +209,7 @@ object RaycastFunctions {
                 var3: Double): RaycastReturn {
         if (level.isClientSide) { return RaycastERROR("Level is clientside. how.") }
 
-        var unit_d = if (euler_mode || !SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.vector_rotation_enabled)
+        var unit_d = if (euler_mode || !SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.vector_rotation_enabled)
         { eulerRotationCalc(be, var1, var2) } else { vectorRotationCalc(be, var1, var2, var3) }
 
         val start = if (SomePeripherals.has_vs) {
@@ -230,11 +230,11 @@ object RaycastFunctions {
         }
         val stop = unit_d * distance + start
 
-        val max_dist = SomePeripheralsConfig.SERVER.COMMON.RAYCASTER_SETTINGS.max_raycast_distance
+        val max_dist = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.max_raycast_distance
         val max_iter = if (max_dist <= 0) { distance.toInt() } else { min(distance.toInt(), max_dist) }
         val iter = BresenhamIter(start, stop, max_iter)
 
-        val cache = (be.blockState.block as RaycasterBaseBlock).pos_cache
+        val cache = (be.blockState.block as RaycasterBlock).pos_cache
 
         val result = raycast(level, iter, cache, pos, unit_d)
 
