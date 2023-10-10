@@ -38,14 +38,15 @@ object SomePeripheralsConfig {
                 var return_distance: Boolean by CBool(true, "Distance is from ray origin to hit position")
                 var return_block_type: Boolean by CBool(true)
 
-                var return_ship_id: Boolean by CBool(true, "Only if Valkyrien Skies is installed and ray hit block on ship")
-                val return_shipyard_hit_pos: Boolean by CBool(true, "Only if Valkyrien Skies is installed. Returns hit position of ray relative to shipyard origin")
+                var return_ship_id: Boolean by CBool(true, "If ray hit block on ship", SomePeripherals.has_vs)
+                val return_shipyard_hit_pos: Boolean by CBool(true, "Returns hit position of ray relative to shipyard origin", SomePeripherals.has_vs)
 
                 var return_entity_type: Boolean by CBool(true)
 
-                var do_position_caching: Boolean by CBool(false, "IT'S BROKEN RN DON'T USE. If true, raycaster will cache traveled blocks for some time")
-                var max_cached_positions: Int by CInt(1000, "IT'S BROKEN RN DON'T USE", Pair(1, Int.MAX_VALUE))
-                var save_cache_for_N_ticks: Int by CInt(20, "IT'S BROKEN RN DON'T USE. Will clear cache after N tick passed", Pair(1, Int.MAX_VALUE))
+                //TODO TODO TODO TODO
+                var do_position_caching: Boolean by CBool(false, "If true, raycaster will cache traveled blocks for some time", false)
+                var max_cached_positions: Int by CInt(1000, "", Pair(1, Int.MAX_VALUE), false)
+                var save_cache_for_N_ticks: Int by CInt(20, "Will clear cache after N tick passed", Pair(1, Int.MAX_VALUE), false)
             }
         }
     }

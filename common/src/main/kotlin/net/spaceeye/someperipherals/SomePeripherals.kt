@@ -22,8 +22,10 @@ object SomePeripherals {
 
     @JvmStatic
     fun init() {
-        ConfigDelegateRegister.initConfig()
         if (Platform.isModLoaded("valkyrienskies")) { has_vs = true}
+
+        ConfigDelegateRegister.initConfig()
+
         SomePeripheralsBlocks.register()
         SomePeripheralsBlockEntities.register()
         SomePeripheralsItems.register()

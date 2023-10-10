@@ -1,6 +1,7 @@
 package net.spaceeye.someperipherals.config
 
 import net.spaceeye.someperipherals.PlatformUtils
+import net.spaceeye.someperipherals.SomePeripherals
 import net.spaceeye.someperipherals.SomePeripheralsConfig
 import kotlin.reflect.KProperty
 import kotlin.reflect.KVisibility
@@ -12,7 +13,8 @@ data class DelegateRegisterItem(
     val property: KProperty<*>,
     val description: String,
     val range: Pair<Any, Any>?,
-    var resolved_name:String="") {
+    var resolved_name:String="",
+    val do_show: Boolean=true) {
     val counter = GLOBAL_DelegateRegisterItemCount
     init { GLOBAL_DelegateRegisterItemCount++ }
 
@@ -44,19 +46,19 @@ object ConfigDelegateRegister {
     fun setResolved(resolved_name: String, it: Any) = resolved_set[resolved_name]!!(it)
 
     private fun getEntry(it: KProperty<*>): DelegateRegisterItem? = registers[it]
-    private fun resolveEntry(it: DelegateRegisterItem) {
+    private fun resolveEntry(it: DelegateRegisterItem, configBuilder: AbstractConfigBuilder) {
         val default_parameter = default_parameters[it]!!
         val parameters_range  = parameter_range[it]
 
-        val getSet = SomePeripheralsConfig.server_config_holder.makeItem(
-            it.property.name, default_parameter, it.description, parameters_range)
+        val getSet = if (it.do_show) { configBuilder.makeItem(it.property.name, default_parameter, it.description, parameters_range) }
+        else { var local:Any = default_parameter; ConfigValueGetSet({local}, {local = it}) }
 
         resolved_get[it.resolved_name] = getSet.get
         resolved_set[it.resolved_name] = getSet.set
     }
 
-    private fun reflectResolveConfigPaths(cls: Any, str_path: String = "", name: String) {
-        SomePeripheralsConfig.server_config_holder.pushNamespace(name)
+    private fun reflectResolveConfigPaths(cls: Any, str_path: String, name: String, configBuilder: AbstractConfigBuilder) {
+        configBuilder.pushNamespace(name)
 
         val resolve_later = mutableListOf<Any>()
         for (item in cls::class.declaredMemberProperties) {
@@ -66,30 +68,30 @@ object ConfigDelegateRegister {
             if (entry == null) { item.getter.call(cls)?.let { if (it is ConfigSubDirectory) resolve_later.add(it) }; continue }
 
             entry.resolved_name = str_path + "." + item.name
-            resolveEntry(entry)
+            resolveEntry(entry, configBuilder)
         }
 
         for (item in resolve_later) {
-            reflectResolveConfigPaths(item, str_path + "." + item::class.simpleName, item::class.simpleName!!)
+            reflectResolveConfigPaths(item, str_path + "." + item::class.simpleName, item::class.simpleName!!, configBuilder)
         }
 
-        SomePeripheralsConfig.server_config_holder.popNamespace()
+        configBuilder.popNamespace()
     }
 
     fun initConfig() {
         SomePeripheralsConfig.server_config_holder = PlatformUtils.getConfig()
         SomePeripheralsConfig.server_config_holder.beginBuilding()
-        reflectResolveConfigPaths(SomePeripheralsConfig.SERVER, "SomePeripheralsConfig", "SomePeripheralsConfig")
+        reflectResolveConfigPaths(SomePeripheralsConfig.SERVER, "SomePeripheralsConfig", "SomePeripheralsConfig", SomePeripheralsConfig.server_config_holder)
         SomePeripheralsConfig.server_config_holder.finishBuilding("server")
 
         SomePeripheralsConfig.client_config_holder = PlatformUtils.getConfig()
         SomePeripheralsConfig.client_config_holder.beginBuilding()
-        reflectResolveConfigPaths(SomePeripheralsConfig.CLIENT, "SomePeripheralsConfig", "SomePeripheralsConfig")
+        reflectResolveConfigPaths(SomePeripheralsConfig.CLIENT, "SomePeripheralsConfig", "SomePeripheralsConfig", SomePeripheralsConfig.client_config_holder)
         SomePeripheralsConfig.client_config_holder.finishBuilding("client")
 
         SomePeripheralsConfig.common_config_holder = PlatformUtils.getConfig()
         SomePeripheralsConfig.common_config_holder.beginBuilding()
-        reflectResolveConfigPaths(SomePeripheralsConfig.COMMON, "SomePeripheralsConfig", "SomePeripheralsConfig")
+        reflectResolveConfigPaths(SomePeripheralsConfig.COMMON, "SomePeripheralsConfig", "SomePeripheralsConfig", SomePeripheralsConfig.common_config_holder)
         SomePeripheralsConfig.common_config_holder.finishBuilding("common")
 
         default_parameters.clear()
