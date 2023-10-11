@@ -9,7 +9,7 @@ import net.spaceeye.someperipherals.SomePeripheralsCommonBlocks
 import net.spaceeye.someperipherals.SomePeripheralsConfig
 import net.spaceeye.someperipherals.blockentities.RaycasterBlockEntity
 import net.spaceeye.someperipherals.raycasting.*
-import net.spaceeye.someperipherals.raycasting.RaycastFunctions.castRay
+import net.spaceeye.someperipherals.raycasting.RaycastFunctions.castRayBlock
 
 class RaycasterPeripheral(private val level: Level, private val pos: BlockPos): IPeripheral {
     private var be = level.getBlockEntity(pos) as RaycasterBlockEntity
@@ -101,7 +101,7 @@ class RaycasterPeripheral(private val level: Level, private val pos: BlockPos): 
         val var2        = args.optDouble(4).orElse(0.0) // Yaw or X
         val var3        = args.optDouble(5).orElse(1.0) // planar distance or nil
 
-        return makeRaycastResponse(castRay(level, be, pos, distance, euler_mode, do_cache, var1, var2, var3))
+        return makeRaycastResponse(castRayBlock(level, be, pos, distance, euler_mode, do_cache, var1, var2, var3))
     }
 
     @LuaFunction

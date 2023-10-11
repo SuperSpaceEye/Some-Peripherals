@@ -135,7 +135,7 @@ object RaycastFunctions {
         return RaycastNoResultReturn(pointsIter.up_to.toDouble())
     }
 
-    fun raycast(level: Level, pointsIter: RayIter, cache: PosCache, pos: BlockPos, unit_d:Vector3d): RaycastReturn {
+    fun raycast(level: Level, pointsIter: RayIter, cache: PosCache, pos: Vector3d, unit_d:Vector3d): RaycastReturn {
         return when (SomePeripherals.has_vs) {
             false -> normalRaycast(level, pointsIter, cache)
             true  -> vsRaycast(level, pointsIter, cache, pos, unit_d)
@@ -157,11 +157,11 @@ object RaycastFunctions {
     }
 
     @JvmStatic
-    fun eulerRotationCalc(be: BlockEntity, pitch_: Double, yaw_: Double): Vector3d {
+    fun eulerRotationCalc(direction: Direction, pitch_: Double, yaw_: Double): Vector3d {
         val pitch = (if (pitch_ < 0) { pitch_.coerceAtLeast(-SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.max_pitch_angle) } else { pitch_.coerceAtMost(SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.max_pitch_angle) })
         val yaw   = (if (yaw_ < 0)   { yaw_  .coerceAtLeast(-SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.max_yaw_angle  ) } else { yaw_  .coerceAtMost(SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.max_yaw_angle  ) })
 
-        val direction = directionToQuat(be.blockState.getValue(BlockStateProperties.FACING))
+        val direction = directionToQuat(direction)
         //idk why roll is yaw, and it needs to be inverted so that +yaw is right and -yaw is left
         val rotation = Quaternion(-yaw.toFloat(), pitch.toFloat(), 0f, false)
         direction.mul(rotation)
@@ -169,9 +169,8 @@ object RaycastFunctions {
     }
 
     @JvmStatic
-    fun vectorRotationCalc(be: BlockEntity, posY: Double, posX:Double, length: Double): Vector3d {
-        val dir_enum = be.blockState.getValue(BlockStateProperties.FACING)
-        val dir = Vector3d(dir_enum.step())
+    fun vectorRotationCalc(direction: Direction, posY: Double, posX:Double, length: Double): Vector3d {
+        val dir = Vector3d(direction.step())
         val l = max(length, 0.01)
 
         val posX = -posX // x is inverted, idk why
@@ -180,14 +179,14 @@ object RaycastFunctions {
 //      dir = dir + posX*right + posY*updir = dir.Normalize();
 
         val right: Vector3d; val up: Vector3d
-        if (dir_enum != Direction.UP && dir_enum != Direction.DOWN) {
+        if (direction != Direction.UP && direction != Direction.DOWN) {
             up = Vector3d(0.0, l, 0.0)
             right = Vector3d(0.0, l, 0.0); right.cross(dir)
 
-            if (dir_enum == Direction.NORTH || dir_enum == Direction.SOUTH) {
+            if (direction == Direction.NORTH || direction == Direction.SOUTH) {
                 right.mul(posX, 0.0, 0.0)
                 up.mul(0.0, posY, 0.0)
-            } else if (dir_enum == Direction.WEST || dir_enum == Direction.EAST) {
+            } else if (direction == Direction.WEST || direction == Direction.EAST) {
                 right.mul(0.0, 0.0, posX)
                 up.mul(0.0, posY, 0.0)
             }
@@ -204,13 +203,43 @@ object RaycastFunctions {
     }
 
     @JvmStatic
-    fun castRay(level: Level, be: BlockEntity, pos: BlockPos,
-                distance: Double, euler_mode: Boolean = true, do_cache:Boolean = false,
-                var1:Double, var2: Double, var3: Double): RaycastReturn {
+    fun commonCastRay(level: Level, start: Vector3d, unit_d: Vector3d, distance: Double, cache: PosCache, pos: Vector3d): RaycastReturn {
+        val stop = unit_d * distance + start
+
+        val max_dist = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.max_raycast_distance
+        val max_iter = if (max_dist <= 0) { distance.toInt() } else { min(distance.toInt(), max_dist) }
+        val iter = BresenhamIter(start, stop, max_iter)
+
+        val result = raycast(level, iter, cache, pos, unit_d)
+
+        return result
+    }
+
+    fun castRayEntity(entity: Entity, distance: Double, euler_mode: Boolean = true, do_cache:Boolean = false,
+                      var1:Double, var2: Double, var3: Double): RaycastReturn {
+        val level = entity.getLevel()
+
+        val start = Vector3d(entity.eyePosition)
+
+//        return commonCastRay(level, start, )
+        TODO()
+    }
+
+    @JvmStatic
+    fun castRayBlock(level: Level, be: BlockEntity, pos: BlockPos,
+                     distance: Double, euler_mode: Boolean = true, do_cache:Boolean = false,
+                     var1:Double, var2: Double, var3: Double): RaycastReturn {
         if (level.isClientSide) { return RaycastERROR("Level is clientside. how.") }
 
-        var unit_d = if (euler_mode || !SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.vector_rotation_enabled)
-        { eulerRotationCalc(be, var1, var2) } else { vectorRotationCalc(be, var1, var2, var3) }
+        val cache = (be.blockState.block as RaycasterBlock).pos_cache
+        cache.do_cache = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.do_position_caching && do_cache
+        cache.max_items = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.max_cached_positions
+
+        var unit_d = if (euler_mode || !SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.vector_rotation_enabled) {
+            eulerRotationCalc(be.blockState.getValue(BlockStateProperties.FACING), var1, var2)
+        } else {
+            vectorRotationCalc(be.blockState.getValue(BlockStateProperties.FACING), var1, var2, var3)
+        }
 
         val start = if (SomePeripherals.has_vs) {
             val ship = level.getShipManagingPos(pos)
@@ -228,18 +257,6 @@ object RaycastFunctions {
         } else {
             Vector3d(pos) + dirToStartingOffset(be.blockState.getValue(BlockStateProperties.FACING))
         }
-        val stop = unit_d * distance + start
-
-        val max_dist = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.max_raycast_distance
-        val max_iter = if (max_dist <= 0) { distance.toInt() } else { min(distance.toInt(), max_dist) }
-        val iter = BresenhamIter(start, stop, max_iter)
-
-        val cache = (be.blockState.block as RaycasterBlock).pos_cache
-        cache.do_cache = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.do_position_caching && do_cache
-        cache.max_items = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.max_cached_positions
-
-        val result = raycast(level, iter, cache, pos, unit_d)
-
-        return result
+        return commonCastRay(level, start, unit_d, distance, cache, Vector3d(pos))
     }
 }

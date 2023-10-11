@@ -27,7 +27,7 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
         val ret = mutableMapOf<String, Any>()
         val port = (be.blockState.block as GoggleLinkPort)
 
-        for ((k, v) in port.link_connections.updates) {
+        for ((k, v) in port.link_connections.constant_updates) {
             val item = (v as Server_EntityPhysUpdate).data
             item["timestamp"] = v.timestamp
             item["goggle_type"] = goggleType(v)

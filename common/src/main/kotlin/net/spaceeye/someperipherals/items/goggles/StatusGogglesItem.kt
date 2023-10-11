@@ -32,6 +32,11 @@ open class StatusGogglesItem:
     protected open val base_name = "item.some_peripherals.tootlip.status_goggles"
     protected open val linked_name = "text.some_peripherals.linked_status_goggles"
 
+    protected var tick_successful = false
+    protected lateinit var pos: BlockPos
+    protected lateinit var uuid: UUID
+    protected lateinit var controller: GoggleLinkPort
+
     override fun getDescription(): Component {
         return TranslatableComponent(base_name)
     }
@@ -41,8 +46,9 @@ open class StatusGogglesItem:
     }
 
     override fun inventoryTick(stack: ItemStack, level: Level, entity: Entity, slotId: Int, isSelected: Boolean) {
-        if (slotId != Constants.HELMET_ARMOR_SLOT_ID) {return}
+        tick_successful = false
         if (level.isClientSide) {return}
+        if (slotId != Constants.HELMET_ARMOR_SLOT_ID) {return}
         if (!stack.hasTag()
             || !stack.tag!!.contains(CONTROLLER_POS)
             || !stack.tag!!.contains(CONTROLLER_LEVEL)
@@ -52,17 +58,19 @@ open class StatusGogglesItem:
 
         val arr = stack.tag!!.getIntArray(CONTROLLER_POS)
         if (arr.size < 3) {return}
-        val pos = BlockPos(arr[0], arr[1], arr[2])
+        pos = BlockPos(arr[0], arr[1], arr[2])
 
         val be = level.getBlockEntity(pos)?: return
         if (be.blockState.block !is GoggleLinkPort) {return}
 
         //All checks have successfully passed
 
-        val uuid = stack.tag!!.getUUID(_UUID)
-        val controller = be.blockState.block as GoggleLinkPort
+        uuid = stack.tag!!.getUUID(_UUID)
+        controller = be.blockState.block as GoggleLinkPort
 
-        controller.link_connections.updates[uuid.toString()] = makeConnectionUpdate(entity)
+        tick_successful = true
+
+        controller.link_connections.constant_updates[uuid.toString()] = makeConnectionUpdate(entity)
     }
 
     override fun useOn(context: UseOnContext): InteractionResult {

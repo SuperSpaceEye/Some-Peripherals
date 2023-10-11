@@ -176,11 +176,11 @@ object VSRaycastFunctions {
     }
 
     @JvmStatic
-    fun vsRaycast(level: Level, pointsIter: RayIter, cache: PosCache, pos: BlockPos, unit_d: Vector3d): RaycastReturn {
+    fun vsRaycast(level: Level, pointsIter: RayIter, cache: PosCache, pos: Vector3d, unit_d: Vector3d): RaycastReturn {
         val start = pointsIter.start // starting position
         val stop = pointsIter.stop
 
-        val second_start = if (level.getShipManagingPos(pos) != null) { Vector3d(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble()) } else { start }
+        val second_start = if (level.getShipManagingPos(pos.toBlockPos()) != null) { pos } else { start }
 
         val rd = stop - start
         val d = (rd+RaycastFunctions.eps).srdiv(1.0)

@@ -1,6 +1,7 @@
 package net.spaceeye.someperipherals.util
 
 import net.minecraft.core.BlockPos
+import net.minecraft.world.phys.Vec3
 
 typealias MCVector3d = com.mojang.math.Vector3d
 typealias MCVector3f = com.mojang.math.Vector3f
@@ -19,12 +20,15 @@ class Vector3d(x:Number, y:Number, z:Number) {
     constructor(o: MCVector3f): this(o.x(), o.y(), o.z())
     constructor(o: JVector3dc): this(o.x(), o.y(), o.z())
     constructor(o: BlockPos): this(o.x, o.y, o.z)
+    constructor(o: Vec3): this(o.x, o.y, o.z)
 
     inline fun toD(x:Number, y: Number, z: Number): Array<Double> {return arrayOf(x.toDouble(), y.toDouble(), z.toDouble())}
 
     inline fun toMCVector3d(): MCVector3d {return MCVector3d(x, y, z) }
     inline fun toJomlVector3d(): JVector3d {return JVector3d(x, y, z) }
     inline fun toArray(): Array<Double> {return arrayOf(x, y, z) }
+    inline fun toBlockPos(): BlockPos {return BlockPos(x, y, z)
+    }
 
     inline override fun toString(): String = "{${x} ${y} ${z}}"
 
