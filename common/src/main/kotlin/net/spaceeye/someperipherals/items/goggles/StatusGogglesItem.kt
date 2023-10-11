@@ -14,8 +14,8 @@ import net.minecraft.world.item.context.UseOnContext
 import net.minecraft.world.level.Level
 import net.spaceeye.someperipherals.LinkPortUtils.LinkUpdate
 import net.spaceeye.someperipherals.LinkPortUtils.Server_EntityPhysUpdate
+import net.spaceeye.someperipherals.LinkPortUtils.entityToMap
 import net.spaceeye.someperipherals.SomePeripheralsCommonBlocks
-import net.spaceeye.someperipherals.SomePeripheralsConfig
 import net.spaceeye.someperipherals.SomePeripheralsItems
 import net.spaceeye.someperipherals.blockentities.GoggleLinkPortBlockEntity
 import net.spaceeye.someperipherals.blocks.GoggleLinkPort
@@ -37,7 +37,7 @@ open class StatusGogglesItem:
     }
 
     protected open fun makeConnectionUpdate(entity: Entity): LinkUpdate {
-        return Server_EntityPhysUpdate(entity)
+        return Server_EntityPhysUpdate(entityToMap(entity))
     }
 
     override fun inventoryTick(stack: ItemStack, level: Level, entity: Entity, slotId: Int, isSelected: Boolean) {
@@ -48,8 +48,7 @@ open class StatusGogglesItem:
             || !stack.tag!!.contains(CONTROLLER_LEVEL)
             || !stack.tag!!.contains(_UUID)) {return}
         val dimension = stack.tag!!.getString(CONTROLLER_LEVEL)
-        if (!SomePeripheralsConfig.SERVER.LINK_PORT_SETTINGS.allow_crossdimenstional_connection
-            && dimension != level.dimension().toString()) {return}
+        if (dimension != level.dimension().toString()) {return}
 
         val arr = stack.tag!!.getIntArray(CONTROLLER_POS)
         if (arr.size < 3) {return}

@@ -47,9 +47,7 @@ object SomePeripheralsConfig {
             var save_cache_for_N_ticks: Int by CInt(20, "Will clear raycaster cache after N MC ticks passed", Pair(1, Int.MAX_VALUE))
         }
 
-        class LinkPortSettings: ConfigSubDirectory() {
-            var allow_crossdimenstional_connection: Boolean by CBool(true, "If false, then goggles and link port will work when both are in the same dimension")
-        }
+        class LinkPortSettings: ConfigSubDirectory() {}
 
         class GogglesSettings: ConfigSubDirectory() {
             val ALLOWED_GOGGLE_DATA = AllowedGoggleData()
@@ -58,6 +56,7 @@ object SomePeripheralsConfig {
                 var pos: Boolean by CBool(true)
                 var eye_pos: Boolean by CBool(true)
                 var eye_height: Boolean by CBool(true)
+                var look_angle: Boolean by CBool(true)
                 var dimension: Boolean by CBool(true)
                 var entity_type: Boolean by CBool(true)
                 var air_supply: Boolean by CBool(true)

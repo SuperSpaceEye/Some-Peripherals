@@ -12,6 +12,7 @@ fun entityToMap(entity: Entity): MutableMap<String, Any> {
     if(s.pos) item["pos"] = listOf(entity.x, entity.y, entity.z)
     if(s.eye_pos) item["eye_pos"] = listOf(entity.eyePosition.x, entity.eyePosition.y, entity.eyePosition.z)
     if(s.eye_height) item["eye_height"] = entity.eyeHeight.toDouble()
+    if(s.look_angle) item["look_angle"] = listOf(entity.lookAngle.x, entity.lookAngle.y, entity.lookAngle.z)
     if(s.dimension) item["dimension"] = entity.level.dimension().toString()
     if(s.entity_type) item["entity_type"] = entity.type.descriptionId
     if(s.air_supply) item["air_supply"] = entity.airSupply
@@ -34,7 +35,7 @@ fun entityToMap(entity: Entity): MutableMap<String, Any> {
     if (entity is Player) {
         item["is_player"] = true
 
-        if (s.nickname) item["nickname"] = entity.displayName
+        if (s.nickname) item["nickname"] = entity.gameProfile.name
         if (s.experience_level) item["experience_level"] = entity.experienceLevel
         if (s.xp_needed_for_next_level) item["xp_needed_for_next_level"] = entity.xpNeededForNextLevel
         if (s.experience_progress) item["experience_progress"] = entity.experienceProgress

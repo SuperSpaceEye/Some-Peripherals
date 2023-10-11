@@ -61,7 +61,7 @@ object RaycastFunctions {
         level: Level,
         cache: PosCache): Pair<Pair<BlockPos, BlockState>, Double>? {
         val bpos = BlockPos(point.x, point.y, point.z)
-        val res = cache.getBlockState(level, bpos, SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.max_cached_positions, SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.do_position_caching)
+        val res = cache.getBlockState(level, bpos)
 
         if (res.isAir) {return null}
         val (test_res, t) = rayIntersectsAABBs(start, bpos, d, res.getShape(level, bpos).toAabbs())
@@ -205,8 +205,8 @@ object RaycastFunctions {
 
     @JvmStatic
     fun castRay(level: Level, be: BlockEntity, pos: BlockPos,
-                distance: Double, euler_mode: Boolean = true, var1:Double, var2: Double,
-                var3: Double): RaycastReturn {
+                distance: Double, euler_mode: Boolean = true, do_cache:Boolean = false,
+                var1:Double, var2: Double, var3: Double): RaycastReturn {
         if (level.isClientSide) { return RaycastERROR("Level is clientside. how.") }
 
         var unit_d = if (euler_mode || !SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.vector_rotation_enabled)
@@ -235,6 +235,8 @@ object RaycastFunctions {
         val iter = BresenhamIter(start, stop, max_iter)
 
         val cache = (be.blockState.block as RaycasterBlock).pos_cache
+        cache.do_cache = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.do_position_caching && do_cache
+        cache.max_items = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.max_cached_positions
 
         val result = raycast(level, iter, cache, pos, unit_d)
 

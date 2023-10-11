@@ -3,6 +3,7 @@ package net.spaceeye.someperipherals.raycasting
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.state.BlockState
+import net.spaceeye.someperipherals.SomePeripheralsConfig
 import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.ReentrantLock
 
@@ -18,6 +19,8 @@ class PosCache {
     private var data = HashMap<Int, HashMap<Int, HashMap<Int, CachedObject>>>()
     private var cached = mutableListOf<CachedObject>()
     private val mutex: Lock = ReentrantLock(true)
+    var do_cache = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.do_position_caching
+    var max_items: Int = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.max_cached_positions
 
     private fun getItem(bpos: BlockPos): CachedObject? {
         val r1 = data[bpos.x] ?: return null
@@ -71,7 +74,7 @@ class PosCache {
         mutex.unlock()
     }
 
-    fun getBlockState(level: Level, bpos: BlockPos, max_items: Int = 1000, do_cache: Boolean = true): BlockState {
+    fun getBlockState(level: Level, bpos: BlockPos): BlockState {
         if (!do_cache) {return level.getBlockState(bpos)}
 
         mutex.lock()
