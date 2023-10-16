@@ -1,6 +1,10 @@
 package net.spaceeye.someperipherals.raycasting
 
 import com.mojang.math.Quaternion
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.yield
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.entity.Entity
@@ -95,7 +99,7 @@ object RaycastFunctions {
 
     // returns either Pair<BlockPos, BlockState> or Entity
     @JvmStatic
-    fun normalRaycast(level: Level, pointsIter: RayIter, ignore_entity: Entity?, cache: PosCache): RaycastReturn {
+    suspend fun normalRaycast(level: Level, pointsIter: RayIter, ignore_entity: Entity?, cache: PosCache): RaycastReturn {
         val start = pointsIter.start
         val stop  = pointsIter.stop
 
@@ -111,6 +115,8 @@ object RaycastFunctions {
         var entity_step_counter = 0
 
         for (point in pointsIter) {
+            if (!Dispatchers.Default.isActive) { yield() }
+
             //if ray hits entity and any block wasn't hit before another check, then previous intersected entity is the actual hit place
             if (check_for_entities && entity_step_counter % er == 0) {
                 if (intersected_entity != null) { return RaycastEntityReturn(intersected_entity.first, intersected_entity.second, unit_d * intersected_entity.second+start) }
@@ -135,7 +141,7 @@ object RaycastFunctions {
         return RaycastNoResultReturn(pointsIter.up_to.toDouble())
     }
 
-    fun raycast(level: Level, pointsIter: RayIter, ignore_entity:Entity?=null, cache: PosCache, pos: Vector3d, unit_d:Vector3d): RaycastReturn {
+    suspend fun raycast(level: Level, pointsIter: RayIter, ignore_entity:Entity?=null, cache: PosCache, pos: Vector3d, unit_d:Vector3d): RaycastReturn {
         return when (SomePeripherals.has_vs) {
             false -> normalRaycast(level, pointsIter, ignore_entity, cache)
             true  -> vsRaycast(level, pointsIter, ignore_entity, cache, pos, unit_d)
@@ -187,7 +193,7 @@ object RaycastFunctions {
     }
 
     @JvmStatic
-    fun commonCastRay(level: Level, start: Vector3d, unit_d: Vector3d, distance: Double, cache: PosCache, pos: Vector3d, ignore_entity: Entity?): RaycastReturn {
+    suspend fun commonCastRay(level: Level, start: Vector3d, unit_d: Vector3d, distance: Double, cache: PosCache, pos: Vector3d, ignore_entity: Entity?): RaycastReturn {
         val stop = unit_d * distance + start
 
         val max_dist = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.max_raycast_distance
@@ -199,7 +205,7 @@ object RaycastFunctions {
         return result
     }
 
-    fun castRayEntity(entity: Entity, distance: Double, euler_mode: Boolean = true, do_cache:Boolean = false,
+    suspend fun castRayEntity(entity: Entity, distance: Double, euler_mode: Boolean = true, do_cache:Boolean = false,
                       var1:Double, var2: Double, var3: Double): RaycastReturn {
         val level = entity.getLevel()
 
@@ -266,6 +272,6 @@ object RaycastFunctions {
         } else {
             Vector3d(pos) + dirToStartingOffset(be.blockState.getValue(BlockStateProperties.FACING))
         }
-        return commonCastRay(level, start, unit_d, distance, cache, Vector3d(pos), null)
+        return runBlocking { commonCastRay(level, start, unit_d, distance, cache, Vector3d(pos), null) }
     }
 }

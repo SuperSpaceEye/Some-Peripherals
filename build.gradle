@@ -82,4 +82,5 @@ allprojects {
 dependencies {
     api 'org.joml:joml-primitives:1.10.0'
     api 'org.joml:joml:1.10.4'
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3"
 }

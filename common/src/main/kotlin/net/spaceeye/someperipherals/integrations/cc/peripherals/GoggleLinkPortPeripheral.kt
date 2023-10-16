@@ -11,17 +11,21 @@ import net.spaceeye.someperipherals.blockentities.GoggleLinkPortBlockEntity
 import net.spaceeye.someperipherals.blocks.GoggleLinkPort
 import net.spaceeye.someperipherals.integrations.cc.JavaToLuaWrapper
 import net.spaceeye.someperipherals.raycasting.RaycastERROR
+import net.spaceeye.someperipherals.util.getNow_ms
+import net.spaceeye.someperipherals.util.tableToDoubleArray
+import net.spaceeye.someperipherals.util.tableToTableArray
 import java.util.*
 import kotlin.math.max
 import kotlin.math.min
 
 private fun checkConnection(v: LinkUpdate?): Boolean {
     if (v == null) {return false}
-    if (Calendar.getInstance(TimeZone.getTimeZone("UTC")).time.time - v.timestamp > SomePeripheralsConfig.SERVER.LINK_PORT_SETTINGS.max_connection_timeout_time * 1000) {return false}
+    if (getNow_ms() - v.timestamp > SomePeripheralsConfig.SERVER.LINK_PORT_SETTINGS.max_connection_timeout_time_ms) {return false}
 
     return true
 }
 
+//TODO refactor and simplify logic
 class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockPos):IPeripheral {
     private var be = level.getBlockEntity(pos) as GoggleLinkPortBlockEntity
 
@@ -63,17 +67,21 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
         item["raycast"] = JavaToLuaWrapper {
             val v = port.link_connections.constant_updates[k]
             if (!checkConnection(v)) {
-                return@JavaToLuaWrapper mutableListOf(Pair("error", "Connection has been terminated"))
+                return@JavaToLuaWrapper mutableMapOf(Pair("error", "Connection has been terminated"))
+            }
+            val cur_req = port.link_connections.port_requests[k]
+            if (   cur_req != null
+                && cur_req is LinkBatchRaycastRequest
+                && getNow_ms() - cur_req.start < cur_req.timeout) {
+                return@JavaToLuaWrapper mutableMapOf(Pair("error", "Connection already has a batch raycast request"))
             }
 
             val timeout = min(
-                max(it.getDouble(0), 0.0),
-                SomePeripheralsConfig.SERVER.GOGGLE_SETTINGS.RANGE_GOGGLES_SETTINGS.max_allowed_waiting_time
+                max(it.getLong(0), 0L),
+                SomePeripheralsConfig.SERVER.GOGGLE_SETTINGS.RANGE_GOGGLES_SETTINGS.max_allowed_raycast_waiting_time_ms
             )
-            val start = Calendar.getInstance(TimeZone.getTimeZone("UTC")).time.time
-            if (port.link_connections.link_response[k] != null) {
-                port.link_connections.link_response.remove(k)
-            }
+            val start = getNow_ms()
+            if (port.link_connections.link_response[k] != null) { port.link_connections.link_response.remove(k) }
             port.link_connections.port_requests[k] = LinkRaycastRequest(
                 it.getDouble(1),
                 it.optBoolean(2).orElse(false),
@@ -83,9 +91,9 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
                 it.optDouble(6).orElse(1.0) // planar distance or nil
             )
             val sleep_for =
-                SomePeripheralsConfig.SERVER.GOGGLE_SETTINGS.RANGE_GOGGLES_SETTINGS.thread_awaiting_sleep_time
+                SomePeripheralsConfig.SERVER.GOGGLE_SETTINGS.RANGE_GOGGLES_SETTINGS.thread_awaiting_sleep_time_ms
 
-            while (Calendar.getInstance(TimeZone.getTimeZone("UTC")).time.time - start <= timeout * 1000) {
+            while (getNow_ms() - start <= timeout) {
                 val res = port.link_connections.link_response[k]
                 if (res == null) {
                     Thread.sleep(sleep_for); continue
@@ -93,16 +101,63 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
                 return@JavaToLuaWrapper RaycasterPeripheral.makeRaycastResponse((res as LinkRaycastResponse).result)
             }
 
-            return@JavaToLuaWrapper RaycastERROR("timeout")
+            return@JavaToLuaWrapper RaycasterPeripheral.makeRaycastResponse(RaycastERROR("timeout"))
+        }
+
+        item["queue_raycasts"] = JavaToLuaWrapper {
+            val v = port.link_connections.constant_updates[k]
+            if (!checkConnection(v)) {
+                return@JavaToLuaWrapper mutableMapOf(Pair("error", "Connection has been terminated"))
+            }
+
+            val timeout = min(
+                max(it.getLong(0), 0L),
+                SomePeripheralsConfig.SERVER.GOGGLE_SETTINGS.RANGE_GOGGLES_SETTINGS.max_allowed_raycast_waiting_time_ms
+            )
+            val start = getNow_ms()
+            if (port.link_connections.link_response[k] != null) { port.link_connections.link_response.remove(k) }
+
+            val data = mutableListOf<Array<Double>>()
+            tableToTableArray(it.getTable(4)).forEach { data.add(tableToDoubleArray(it)) }
+
+            port.link_connections.port_requests[k] = LinkBatchRaycastRequest(
+                it.getDouble(1),
+                it.optBoolean(2).orElse(false),
+                it.optBoolean(3).orElse(false),
+                data.toTypedArray(),
+                start,
+                timeout
+            )
+
+            return@JavaToLuaWrapper mutableMapOf(Pair("queued", true))
+        }
+
+        item["get_queued_data"] = JavaToLuaWrapper {
+            val v = port.link_connections.constant_updates[k]
+            if (!checkConnection(v)) {
+                if (port.link_connections.link_response[k] != null) { port.link_connections.link_response.remove(k) }
+                return@JavaToLuaWrapper mutableMapOf(Pair("error", "Connection has been terminated"))
+            }
+
+            val r = port.link_connections.link_response[k]
+            if (r == null || r !is LinkBatchRaycastResponse) { return@JavaToLuaWrapper mutableMapOf(Pair("error", "No batch raycast response")) }
+
+            val data = mutableMapOf<String, Any>()
+            data["is_done"] = r.is_done
+            val returns = mutableMapOf<Double, Any>()
+            r.results.forEachIndexed { idx, item -> returns[idx.toDouble()] = RaycasterPeripheral.makeRaycastResponse(item) }
+            data["results"] = returns
+
+            return@JavaToLuaWrapper data
         }
 
         item["getConfigInfo"] = JavaToLuaWrapper {
             val rgc = SomePeripheralsConfig.SERVER.GOGGLE_SETTINGS.RANGE_GOGGLES_SETTINGS
             val data = RaycasterPeripheral.makeConfigInfo()
 
-            data["max_allowed_waiting_time"] = rgc.max_allowed_waiting_time
-            data["thread_awaiting_sleep_time"] = rgc.thread_awaiting_sleep_time
-            data["max_connection_timeout_time"] = SomePeripheralsConfig.SERVER.LINK_PORT_SETTINGS.max_connection_timeout_time
+            data["max_allowed_waiting_time"] = rgc.max_allowed_raycast_waiting_time_ms
+            data["thread_awaiting_sleep_time"] = rgc.thread_awaiting_sleep_time_ms
+            data["max_connection_timeout_time"] = SomePeripheralsConfig.SERVER.LINK_PORT_SETTINGS.max_connection_timeout_time_ms
 
             data
         }

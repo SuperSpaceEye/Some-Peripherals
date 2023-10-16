@@ -48,7 +48,7 @@ object SomePeripheralsConfig {
         }
 
         class LinkPortSettings: ConfigSubDirectory() {
-            var max_connection_timeout_time: Double by CDouble(2.0, "If time between now and previous update is bigger than N, then the connection is treated as terminated. In seconds", Pair(0.0, Double.MAX_VALUE))
+            var max_connection_timeout_time_ms: Long by CLong(2000L, "If time between now and previous update is bigger than N, then the connection is treated as terminated. In milliseconds", Pair(0L, Long.MAX_VALUE))
         }
 
         class GogglesSettings: ConfigSubDirectory() {
@@ -84,8 +84,9 @@ object SomePeripheralsConfig {
             }
 
             class RangeGogglesSettings: ConfigSubDirectory() {
-                var max_allowed_waiting_time: Double by CDouble(4.0, "In seconds", Pair(0.0, 10.0))
-                var thread_awaiting_sleep_time: Long by CLong(100L, "In milliseconds", Pair(0L, Long.MAX_VALUE))
+                var max_allowed_raycast_waiting_time_ms: Long by CLong(4000L, "In milliseconds", Pair(0L, Long.MAX_VALUE))
+                var thread_awaiting_sleep_time_ms: Long by CLong(100L, "In milliseconds", Pair(0L, Long.MAX_VALUE))
+                var max_batch_raycast_time_ms: Long by CLong(100L, "In milliseconds", Pair(0L, Long.MAX_VALUE))
             }
         }
     }

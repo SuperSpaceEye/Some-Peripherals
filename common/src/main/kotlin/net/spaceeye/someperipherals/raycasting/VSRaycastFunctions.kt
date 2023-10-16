@@ -1,5 +1,8 @@
 package net.spaceeye.someperipherals.raycasting
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.yield
 import net.minecraft.core.BlockPos
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.entity.Entity
@@ -176,7 +179,7 @@ object VSRaycastFunctions {
     }
 
     @JvmStatic
-    fun vsRaycast(level: Level, pointsIter: RayIter, ignore_entity:Entity?=null, cache: PosCache, pos: Vector3d, unit_d: Vector3d): RaycastReturn {
+    suspend fun vsRaycast(level: Level, pointsIter: RayIter, ignore_entity:Entity?=null, cache: PosCache, pos: Vector3d, unit_d: Vector3d): RaycastReturn {
         val start = pointsIter.start // starting position
         val stop = pointsIter.stop
 
@@ -201,6 +204,8 @@ object VSRaycastFunctions {
         var world_res: Pair<Pair<BlockPos, BlockState>, Double>? = null
 
         for (point in pointsIter) {
+            if (!Dispatchers.Default.isActive) { yield() }
+
             //if ray hits entity and any block wasn't hit before another check, then previous intersected entity is the actual hit place
             if (check_for_entities && entity_step_counter % er == 0) {
                 if (intersected_entity != null) { return calculateReturn(world_res, intersected_entity, ship_hit_res, world_unit_rd, start) }
