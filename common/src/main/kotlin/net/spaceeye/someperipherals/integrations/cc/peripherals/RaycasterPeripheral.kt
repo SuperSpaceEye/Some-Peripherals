@@ -14,81 +14,107 @@ import net.spaceeye.someperipherals.raycasting.RaycastFunctions.castRayBlock
 class RaycasterPeripheral(private val level: Level, private val pos: BlockPos): IPeripheral {
     private var be = level.getBlockEntity(pos) as RaycasterBlockEntity
 
-    private fun makeResponseBlock(
-        res: RaycastBlockReturn,
-        ret: MutableMap<Any, Any>,
-        rcc: SomePeripheralsConfig.Server.RaycasterSettings
-    ) {
-        val pos = res.result.first
-        val bs  = res.result.second
-        val hpos= res.hit_position
+    companion object {
+        @JvmStatic
+        private fun makeResponseBlock(
+            res: RaycastBlockReturn,
+            ret: MutableMap<Any, Any>,
+            rcc: SomePeripheralsConfig.Server.RaycasterSettings
+        ) {
+            val pos = res.result.first
+            val bs  = res.result.second
+            val hpos= res.hit_position
 
-        ret["is_block"] = true
-        if (rcc.return_abs_pos)  {ret["abs_pos"] = mutableListOf(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())}
-        if (rcc.return_hit_pos)  {ret["hit_pos"] = hpos.toArray()}
-        if (rcc.return_distance) {ret["distance"] = res.distance_to}
-        if (rcc.return_block_type) {ret["block_type"] = bs.block.descriptionId.toString()}
-    }
+            ret["is_block"] = true
+            if (rcc.return_abs_pos)  {ret["abs_pos"] = mutableListOf(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())}
+            if (rcc.return_hit_pos)  {ret["hit_pos"] = hpos.toArray()}
+            if (rcc.return_distance) {ret["distance"] = res.distance_to}
+            if (rcc.return_block_type) {ret["block_type"] = bs.block.descriptionId.toString()}
+        }
+        @JvmStatic
+        private fun makeResponseEntity(
+            res: RaycastEntityReturn,
+            ret: MutableMap<Any, Any>,
+            rcc: SomePeripheralsConfig.Server.RaycasterSettings
+        ) {
+            val entity = res.result
+            val hpos = res.hit_position
 
-    private fun makeResponseEntity(
-        res: RaycastEntityReturn,
-        ret: MutableMap<Any, Any>,
-        rcc: SomePeripheralsConfig.Server.RaycasterSettings
-    ) {
-        val entity = res.result
-        val hpos = res.hit_position
+            ret["is_entity"] = true
+            if (rcc.return_abs_pos)  {ret["abs_pos"] = mutableListOf(entity.x, entity.y, entity.z)}
+            if (rcc.return_hit_pos)  {ret["hit_pos"] = hpos.toArray()}
+            if (rcc.return_distance) {ret["distance"] = res.distance_to}
 
-        ret["is_entity"] = true
-        if (rcc.return_abs_pos)  {ret["abs_pos"] = mutableListOf(entity.x, entity.y, entity.z)}
-        if (rcc.return_hit_pos)  {ret["hit_pos"] = hpos.toArray()}
-        if (rcc.return_distance) {ret["distance"] = res.distance_to}
+            if (rcc.return_entity_type) {ret["descriptionId"] = entity.type.descriptionId}
+        }
+        @JvmStatic
+        private fun makeResponseVSBlock(
+            res: RaycastVSShipBlockReturn,
+            ret: MutableMap<Any, Any>,
+            rcc: SomePeripheralsConfig.Server.RaycasterSettings
+        ) {
+            val pos = res.block.first
+            val bs  = res.block.second
+            val hpos= res.hit_position
 
-        if (rcc.return_entity_type) {ret["descriptionId"] = entity.type.descriptionId}
-    }
+            ret["is_block"] = true
+            if (rcc.return_abs_pos)  {ret["abs_pos"] = mutableListOf(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())}
+            if (rcc.return_hit_pos)  {ret["hit_pos"] = hpos.toArray()}
+            if (rcc.return_distance) {ret["distance"] = res.distance_to}
+            if (rcc.return_block_type) {ret["block_type"] = bs.block.descriptionId.toString()}
 
-    private fun makeResponseVSBlock(
-        res: RaycastVSShipBlockReturn,
-        ret: MutableMap<Any, Any>,
-        rcc: SomePeripheralsConfig.Server.RaycasterSettings
-    ) {
-        val pos = res.block.first
-        val bs  = res.block.second
-        val hpos= res.hit_position
+            if (rcc.return_ship_id)  {ret["ship_id"] = res.ship.id.toDouble()}
+            if (rcc.return_shipyard_hit_pos) {ret["hit_pos_ship"] = res.hit_position_ship.toArray()}
+        }
+        @JvmStatic
+        private fun makeResponseNoResult(
+            res: RaycastNoResultReturn,
+            ret: MutableMap<Any, Any>,
+            rcc: SomePeripheralsConfig.Server.RaycasterSettings
+        ) {
+            ret["is_block"] = true
+            ret["distance"] = res.distance_to
+            ret["block_type"] = "block.minecraft.air"
+        }
+        @JvmStatic
+        fun makeRaycastResponse(res: RaycastReturn): MutableMap<Any, Any> {
+            val ret = mutableMapOf<Any, Any>()
+            val rcc = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS
 
-        ret["is_block"] = true
-        if (rcc.return_abs_pos)  {ret["abs_pos"] = mutableListOf(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())}
-        if (rcc.return_hit_pos)  {ret["hit_pos"] = hpos.toArray()}
-        if (rcc.return_distance) {ret["distance"] = res.distance_to}
-        if (rcc.return_block_type) {ret["block_type"] = bs.block.descriptionId.toString()}
+            when (res) {
+                is RaycastBlockReturn       -> makeResponseBlock   (res, ret, rcc)
+                is RaycastEntityReturn      -> makeResponseEntity  (res, ret, rcc)
+                is RaycastVSShipBlockReturn -> makeResponseVSBlock (res, ret, rcc)
+                is RaycastNoResultReturn    -> makeResponseNoResult(res, ret, rcc)
+                is RaycastERROR -> {ret["error"] = res.error_str}
+                else -> {ret["error"] = "Something went very, very wrong, as this should never ever happen"}
+                }
 
-        if (rcc.return_ship_id)  {ret["ship_id"] = res.ship.id.toDouble()}
-        if (rcc.return_shipyard_hit_pos) {ret["hit_pos_ship"] = res.hit_position_ship.toArray()}
-    }
-
-    private fun makeResponseNoResult(
-        res: RaycastNoResultReturn,
-        ret: MutableMap<Any, Any>,
-        rcc: SomePeripheralsConfig.Server.RaycasterSettings
-    ) {
-        ret["is_block"] = true
-        ret["distance"] = res.distance_to
-        ret["block_type"] = "block.minecraft.air"
-    }
-
-    private fun makeRaycastResponse(res: RaycastReturn): MutableMap<Any, Any> {
-        val ret = mutableMapOf<Any, Any>()
-        val rcc = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS
-
-        when (res) {
-            is RaycastBlockReturn       -> makeResponseBlock   (res, ret, rcc)
-            is RaycastEntityReturn      -> makeResponseEntity  (res, ret, rcc)
-            is RaycastVSShipBlockReturn -> makeResponseVSBlock (res, ret, rcc)
-            is RaycastNoResultReturn    -> makeResponseNoResult(res, ret, rcc)
-            is RaycastERROR -> {ret["error"] = res.error_str}
-            else -> {ret["error"] = "Something went very, very wrong, as this should never ever happen"}
-            }
-
-        return ret
+            return ret
+        }
+        @JvmStatic
+        fun makeConfigInfo(): MutableMap<String, Any> {
+            val rc = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS
+            return mutableMapOf(
+                Pair("is_enabled", rc.is_enabled),
+                Pair("vector_rotation_enabled", rc.vector_rotation_enabled),
+                Pair("max_raycast_distance", rc.max_raycast_distance),
+                Pair("max_yaw_angle", rc.max_yaw_angle),
+                Pair("max_pitch_angle", rc.max_pitch_angle),
+                Pair("entity_check_radius", rc.entity_check_radius),
+                Pair("check_for_intersection_with_entities", rc.check_for_intersection_with_entities),
+                Pair("return_abs_pos", rc.return_abs_pos),
+                Pair("return_hit_pos", rc.return_hit_pos),
+                Pair("return_distance", rc.return_distance),
+                Pair("return_block_type", rc.return_block_type),
+                Pair("return_ship_id", rc.return_ship_id),
+                Pair("return_shipyard_hit_pos", rc.return_shipyard_hit_pos),
+                Pair("return_entity_type", rc.return_entity_type),
+                Pair("do_position_caching", rc.do_position_caching),
+                Pair("max_cached_positions", rc.max_cached_positions),
+                Pair("save_cache_for_N_ticks", rc.save_cache_for_N_ticks),
+            )
+        }
     }
 
     @LuaFunction
@@ -112,26 +138,7 @@ class RaycasterPeripheral(private val level: Level, private val pos: BlockPos): 
 
     @LuaFunction
     fun getConfigInfo(): Any {
-        val rc = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS
-        return mutableMapOf(
-            Pair("is_enabled", rc.is_enabled),
-            Pair("vector_rotation_enabled", rc.vector_rotation_enabled),
-            Pair("max_raycast_distance", rc.max_raycast_distance),
-            Pair("max_yaw_angle", rc.max_yaw_angle),
-            Pair("max_pitch_angle", rc.max_pitch_angle),
-            Pair("entity_check_radius", rc.entity_check_radius),
-            Pair("check_for_intersection_with_entities", rc.check_for_intersection_with_entities),
-            Pair("return_abs_pos", rc.return_abs_pos),
-            Pair("return_hit_pos", rc.return_hit_pos),
-            Pair("return_distance", rc.return_distance),
-            Pair("return_block_type", rc.return_block_type),
-            Pair("return_ship_id", rc.return_ship_id),
-            Pair("return_shipyard_hit_pos", rc.return_shipyard_hit_pos),
-            Pair("return_entity_type", rc.return_entity_type),
-            Pair("do_position_caching", rc.do_position_caching),
-            Pair("max_cached_positions", rc.max_cached_positions),
-            Pair("save_cache_for_N_ticks", rc.save_cache_for_N_ticks),
-        )
+        return makeConfigInfo()
     }
 
     override fun equals(p0: IPeripheral?): Boolean = level.getBlockState(pos).`is`(SomePeripheralsCommonBlocks.RAYCASTER.get())

@@ -176,7 +176,7 @@ object VSRaycastFunctions {
     }
 
     @JvmStatic
-    fun vsRaycast(level: Level, pointsIter: RayIter, cache: PosCache, pos: Vector3d, unit_d: Vector3d): RaycastReturn {
+    fun vsRaycast(level: Level, pointsIter: RayIter, ignore_entity:Entity?=null, cache: PosCache, pos: Vector3d, unit_d: Vector3d): RaycastReturn {
         val start = pointsIter.start // starting position
         val stop = pointsIter.stop
 
@@ -205,7 +205,7 @@ object VSRaycastFunctions {
             if (check_for_entities && entity_step_counter % er == 0) {
                 if (intersected_entity != null) { return calculateReturn(world_res, intersected_entity, ship_hit_res, world_unit_rd, start) }
 
-                intersected_entity = checkForIntersectedEntity(start, point, level, d, ray_distance, er)
+                intersected_entity = checkForIntersectedEntity(start, point, level, d, ray_distance, er, ignore_entity)
                 addPossibleShipIntersections(
                     getIntersectingShips(level, point, er.toDouble(), start,  d),
                     future_ship_intersections, ships_already_intersected, shipyard_rays)

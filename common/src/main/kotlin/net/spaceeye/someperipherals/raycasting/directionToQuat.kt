@@ -1,8 +1,9 @@
-package net.spaceeye.someperipherals.util
+package net.spaceeye.someperipherals.raycasting
 
 import com.mojang.math.Quaternion
 import net.minecraft.core.Direction
 
+//I don't remember how i got this, but it works
 fun directionToQuat(dir: Direction): Quaternion {
     return when(dir) {
         Direction.DOWN ->  Quaternion(0.707107f, 0f, -0.707107f, 0f)

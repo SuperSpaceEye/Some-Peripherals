@@ -47,10 +47,14 @@ object SomePeripheralsConfig {
             var save_cache_for_N_ticks: Int by CInt(20, "Will clear raycaster cache after N MC ticks passed", Pair(1, Int.MAX_VALUE))
         }
 
-        class LinkPortSettings: ConfigSubDirectory() {}
+        class LinkPortSettings: ConfigSubDirectory() {
+            var max_connection_timeout_time: Double by CDouble(2.0, "If time between now and previous update is bigger than N, then the connection is treated as terminated. In seconds", Pair(0.0, Double.MAX_VALUE))
+        }
 
         class GogglesSettings: ConfigSubDirectory() {
             val ALLOWED_GOGGLE_DATA = AllowedGoggleData()
+
+            val RANGE_GOGGLES_SETTINGS = RangeGogglesSettings()
 
             class AllowedGoggleData: ConfigSubDirectory() {
                 var pos: Boolean by CBool(true)
@@ -77,6 +81,11 @@ object SomePeripheralsConfig {
                 var experience_level: Boolean by CBool(true)
                 var xp_needed_for_next_level: Boolean by CBool(true)
                 var experience_progress: Boolean by CBool(true)
+            }
+
+            class RangeGogglesSettings: ConfigSubDirectory() {
+                var max_allowed_waiting_time: Double by CDouble(4.0, "In seconds", Pair(0.0, 10.0))
+                var thread_awaiting_sleep_time: Long by CLong(100L, "In milliseconds", Pair(0L, Long.MAX_VALUE))
             }
         }
     }

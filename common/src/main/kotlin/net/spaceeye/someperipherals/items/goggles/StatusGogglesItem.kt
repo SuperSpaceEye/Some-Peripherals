@@ -42,7 +42,7 @@ open class StatusGogglesItem:
     }
 
     protected open fun makeConnectionUpdate(entity: Entity): LinkUpdate {
-        return Server_EntityPhysUpdate(entityToMap(entity))
+        return Server_EntityPhysUpdate(entityToMap(entity), entity)
     }
 
     override fun inventoryTick(stack: ItemStack, level: Level, entity: Entity, slotId: Int, isSelected: Boolean) {
