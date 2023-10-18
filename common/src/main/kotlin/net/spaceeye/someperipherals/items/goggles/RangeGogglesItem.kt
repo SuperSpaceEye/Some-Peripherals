@@ -2,6 +2,7 @@ package net.spaceeye.someperipherals.items.goggles
 
 import kotlinx.coroutines.*
 import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.Level
 import net.spaceeye.someperipherals.LinkPortUtils.*
@@ -27,7 +28,7 @@ class RangeGogglesItem: StatusGogglesItem() {
 
     private fun raycastRequest(entity: Entity, r: LinkRaycastRequest) = runBlocking {
         controller.link_connections.port_requests.remove(uuid.toString())
-        val response = suspendCastRayEntity(entity, r.distance, r.euler_mode, r.do_cache, r.var1, r.var2, r.var3)
+        val response = suspendCastRayEntity(entity as LivingEntity, r.distance, r.euler_mode, r.do_cache, r.var1, r.var2, r.var3)
         controller.link_connections.link_response[uuid.toString()] = LinkRaycastResponse(response)
     }
 
@@ -57,7 +58,7 @@ class RangeGogglesItem: StatusGogglesItem() {
         withTimeoutOrNull(SomePeripheralsConfig.SERVER.GOGGLE_SETTINGS.RANGE_GOGGLES_SETTINGS.max_batch_raycast_time_ms) {
             for (i in start_index until req.data.size) {
                 val item = req.data[i]
-                rsp.results.add(suspendCastRayEntity(entity, req.distance, req.euler_mode, req.do_cache, item[0], item[1], item[2],
+                rsp.results.add(suspendCastRayEntity(entity as LivingEntity, req.distance, req.euler_mode, req.do_cache, item[0], item[1], item[2],
                     SomePeripheralsConfig.SERVER.GOGGLE_SETTINGS.RANGE_GOGGLES_SETTINGS.max_batch_raycast_time_ms/2))
             }
         }

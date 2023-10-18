@@ -5,6 +5,7 @@ import kotlinx.coroutines.*
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.state.BlockState
@@ -203,17 +204,17 @@ object RaycastFunctions {
     }
 
     @JvmStatic
-    suspend fun castRayEntity(entity: Entity, distance: Double, euler_mode: Boolean = true, do_cache:Boolean = false,
-                      var1:Double, var2: Double, var3: Double): RaycastReturn {
+    suspend fun castRayEntity(entity: LivingEntity, distance: Double, euler_mode: Boolean = true, do_cache:Boolean = false,
+                              var1:Double, var2: Double, var3: Double): RaycastReturn {
         val level = entity.getLevel()
 
         val dir = Vector3d(entity.lookAngle)
 
         //https://gamedev.stackexchange.com/questions/190054/how-to-calculate-the-forward-up-right-vectors-using-the-rotation-angles
-        //TODO THIS IS NOT CORRECT
-        val p = entity.rotationVector.x.toDouble()
-        val y = entity.rotationVector.y.toDouble()
-        val up = Vector3d(sin(p) * sin(y), cos(p), sin(p) * cos(y))
+        val r = 0.0
+        val p = entity.yHeadRot.toDouble()
+
+        val up = Vector3d(sin(r) * sin(p), sin(r) * cos(p), cos(r))
 
         val unit_d = if (euler_mode || !SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.vector_rotation_enabled) {
             eulerRotationCalc(vectorsToQuat(dir, up), var1, var2)
@@ -229,7 +230,7 @@ object RaycastFunctions {
     }
 
     @JvmStatic
-    suspend fun suspendCastRayEntity(entity: Entity, distance: Double, euler_mode: Boolean = true, do_cache:Boolean = false,
+    suspend fun suspendCastRayEntity(entity: LivingEntity, distance: Double, euler_mode: Boolean = true, do_cache:Boolean = false,
                              var1:Double, var2: Double, var3: Double,
                              timeout: Long = SomePeripheralsConfig.SERVER.GOGGLE_SETTINGS.RANGE_GOGGLES_SETTINGS.max_allowed_raycast_waiting_time_ms): RaycastReturn {
         try {
