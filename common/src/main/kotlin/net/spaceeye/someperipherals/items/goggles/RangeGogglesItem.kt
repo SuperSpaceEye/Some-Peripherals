@@ -1,16 +1,12 @@
 package net.spaceeye.someperipherals.items.goggles
 
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.*
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.Level
 import net.spaceeye.someperipherals.LinkPortUtils.*
 import net.spaceeye.someperipherals.SomePeripheralsConfig
-import net.spaceeye.someperipherals.raycasting.RaycastERROR
-import net.spaceeye.someperipherals.raycasting.RaycastFunctions
-import net.spaceeye.someperipherals.raycasting.RaycastReturn
+import net.spaceeye.someperipherals.raycasting.RaycastFunctions.suspendCastRayEntity
 
 class RangeGogglesItem: StatusGogglesItem() {
     override val base_name: String = "item.some_peripherals.tootlip.range_goggles"
@@ -29,22 +25,9 @@ class RangeGogglesItem: StatusGogglesItem() {
         }
     }
 
-    suspend private fun suspendRaycast(entity: Entity, distance: Double, euler_mode: Boolean = true, do_cache:Boolean = false,
-                                       var1:Double, var2: Double, var3: Double): RaycastReturn {
-        return withTimeout(SomePeripheralsConfig.SERVER.GOGGLE_SETTINGS.RANGE_GOGGLES_SETTINGS.max_allowed_raycast_waiting_time_ms) {
-            try {
-                RaycastFunctions.castRayEntity(entity, distance, euler_mode, do_cache, var1, var2, var3)
-            } catch (e: CancellationException) {
-                RaycastERROR("raycast took too long")
-            } catch (e: Exception) {
-                RaycastERROR(e.toString())
-            }
-        }
-    }
-
     private fun raycastRequest(entity: Entity, r: LinkRaycastRequest) = runBlocking {
         controller.link_connections.port_requests.remove(uuid.toString())
-        val response = suspendRaycast(entity, r.distance, r.euler_mode, r.do_cache, r.var1, r.var2, r.var3)
+        val response = suspendCastRayEntity(entity, r.distance, r.euler_mode, r.do_cache, r.var1, r.var2, r.var3)
         controller.link_connections.link_response[uuid.toString()] = LinkRaycastResponse(response)
     }
 
@@ -69,18 +52,13 @@ class RangeGogglesItem: StatusGogglesItem() {
             return@runBlocking
         }
 
-        val start_index = rsp.results.size-1
+        val start_index = rsp.results.size
 
-        withTimeout(SomePeripheralsConfig.SERVER.GOGGLE_SETTINGS.RANGE_GOGGLES_SETTINGS.max_batch_raycast_time_ms) {
-            for (i in start_index..req.data.size) {
+        withTimeoutOrNull(SomePeripheralsConfig.SERVER.GOGGLE_SETTINGS.RANGE_GOGGLES_SETTINGS.max_batch_raycast_time_ms) {
+            for (i in start_index until req.data.size) {
                 val item = req.data[i]
-                try {
-                    rsp.results.add(RaycastFunctions.castRayEntity(entity, req.distance, req.euler_mode, req.do_cache, item[0], item[1], item[2]))
-                } catch (e: CancellationException) {
-                    break
-                } catch (e: Exception) {
-                    rsp.results.add(RaycastERROR(e.toString()))
-                }
+                rsp.results.add(suspendCastRayEntity(entity, req.distance, req.euler_mode, req.do_cache, item[0], item[1], item[2],
+                    SomePeripheralsConfig.SERVER.GOGGLE_SETTINGS.RANGE_GOGGLES_SETTINGS.max_batch_raycast_time_ms/2))
             }
         }
 

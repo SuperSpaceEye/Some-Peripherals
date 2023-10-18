@@ -118,7 +118,8 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
             if (port.link_connections.link_response[k] != null) { port.link_connections.link_response.remove(k) }
 
             val data = mutableListOf<Array<Double>>()
-            tableToTableArray(it.getTable(4)).forEach { data.add(tableToDoubleArray(it)) }
+            tableToTableArray(it.getTable(4), "Can't convert to table at ")
+                .forEachIndexed { idx, it -> data.add(tableToDoubleArray(it, "Can't convert to table at index ${idx} item at ")) }
 
             port.link_connections.port_requests[k] = LinkBatchRaycastRequest(
                 it.getDouble(1),
@@ -145,7 +146,8 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
             val data = mutableMapOf<String, Any>()
             data["is_done"] = r.is_done
             val returns = mutableMapOf<Double, Any>()
-            r.results.forEachIndexed { idx, item -> returns[idx.toDouble()] = RaycasterPeripheral.makeRaycastResponse(item) }
+            //this is to avoid concurrent modification exception
+            for (i in 0 until r.results.size) {returns[i.toDouble()] = RaycasterPeripheral.makeRaycastResponse(r.results[i])}
             data["results"] = returns
 
             return@JavaToLuaWrapper data

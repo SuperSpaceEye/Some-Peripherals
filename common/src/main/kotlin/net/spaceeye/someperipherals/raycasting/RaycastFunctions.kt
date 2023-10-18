@@ -1,10 +1,7 @@
 package net.spaceeye.someperipherals.raycasting
 
 import com.mojang.math.Quaternion
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.yield
+import kotlinx.coroutines.*
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.entity.Entity
@@ -205,6 +202,7 @@ object RaycastFunctions {
         return result
     }
 
+    @JvmStatic
     suspend fun castRayEntity(entity: Entity, distance: Double, euler_mode: Boolean = true, do_cache:Boolean = false,
                       var1:Double, var2: Double, var3: Double): RaycastReturn {
         val level = entity.getLevel()
@@ -212,6 +210,7 @@ object RaycastFunctions {
         val dir = Vector3d(entity.lookAngle)
 
         //https://gamedev.stackexchange.com/questions/190054/how-to-calculate-the-forward-up-right-vectors-using-the-rotation-angles
+        //TODO THIS IS NOT CORRECT
         val p = entity.rotationVector.x.toDouble()
         val y = entity.rotationVector.y.toDouble()
         val up = Vector3d(sin(p) * sin(y), cos(p), sin(p) * cos(y))
@@ -227,6 +226,23 @@ object RaycastFunctions {
         cache.do_cache = do_cache
 
         return commonCastRay(level, start, unit_d, distance, cache, start, entity)
+    }
+
+    @JvmStatic
+    suspend fun suspendCastRayEntity(entity: Entity, distance: Double, euler_mode: Boolean = true, do_cache:Boolean = false,
+                             var1:Double, var2: Double, var3: Double,
+                             timeout: Long = SomePeripheralsConfig.SERVER.GOGGLE_SETTINGS.RANGE_GOGGLES_SETTINGS.max_allowed_raycast_waiting_time_ms): RaycastReturn {
+        try {
+            return withTimeout(timeout) {
+                try {
+                    castRayEntity(entity, distance, euler_mode, do_cache, var1, var2, var3)
+                } catch (e: Exception) {
+                    RaycastERROR(e.toString())
+                }
+            }
+        } catch (e: CancellationException) {
+            return RaycastERROR("raycast took too long")
+        }
     }
 
     @JvmStatic
