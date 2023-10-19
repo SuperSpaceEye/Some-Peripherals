@@ -208,13 +208,11 @@ object RaycastFunctions {
                               var1:Double, var2: Double, var3: Double): RaycastReturn {
         val level = entity.getLevel()
 
-//        val dir = Vector3d(entity.lookAngle)
-
         //https://gamedev.stackexchange.com/questions/190054/how-to-calculate-the-forward-up-right-vectors-using-the-rotation-angles
-        val y =-rad(entity.xRot.toDouble())
-        val p =-rad(entity.yHeadRot.toDouble())
+        val p = rad(entity.xRot.toDouble()) // picth
+        val y =-rad(entity.yHeadRot.toDouble()) // yaw
 
-        val up  = Vector3d(sin(p)*sin(y),  cos(p), sin(p)*cos(y))
+        val up  =-Vector3d(sin(p)*sin(y),  cos(p), sin(p)*cos(y))
         val dir = Vector3d(cos(p)*sin(y), -sin(p), cos(p)*cos(y))
         val right = Vector3d(-cos(y), 0, sin(y))
 
