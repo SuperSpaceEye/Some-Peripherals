@@ -76,6 +76,9 @@ object SomePeripheralsConfig {
                 var is_sleeping: Boolean by CBool(true)
                 var is_fall_flying: Boolean by CBool(true)
                 var speed: Boolean by CBool(true)
+                var xRot: Boolean by CBool(true, "pitch. In degrees.")
+                var yHeadRot: Boolean by CBool(true, "yaw. In degrees.")
+                var yBodyRot: Boolean by CBool(true, "yaw. In degrees")
 
                 var nickname: Boolean by CBool(true)
                 var experience_level: Boolean by CBool(true)

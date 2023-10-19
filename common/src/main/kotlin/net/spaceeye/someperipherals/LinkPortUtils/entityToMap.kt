@@ -30,6 +30,9 @@ fun entityToMap(entity: Entity): MutableMap<String, Any> {
         if (s.is_sleeping) item["is_sleeping"] = entity.isSleeping
         if (s.is_fall_flying) item["is_fall_flying"] = entity.isFallFlying
         if (s.speed) item["speed"] = entity.speed.toDouble()
+        if (s.xRot) item["xRot"] = entity.xRot.toDouble() // pitch in degrees
+        if (s.yHeadRot) item["yHeadRot"] = entity.yHeadRot.toDouble()
+        if (s.yBodyRot) item["yBodyRot"] = entity.yBodyRot.toDouble() // yaw in degrees
     }
 
     if (entity is Player) {

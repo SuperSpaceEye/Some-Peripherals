@@ -15,6 +15,7 @@ import net.spaceeye.someperipherals.SomePeripherals
 import net.spaceeye.someperipherals.SomePeripheralsConfig
 import net.spaceeye.someperipherals.blocks.RaycasterBlock
 import net.spaceeye.someperipherals.raycasting.VSRaycastFunctions.vsRaycast
+import net.spaceeye.someperipherals.util.BallisticFunctions.rad
 import net.spaceeye.someperipherals.util.Vector3d
 import org.valkyrienskies.mod.common.getShipManagingPos
 import java.lang.Math.*
@@ -172,20 +173,19 @@ object RaycastFunctions {
     }
 
     @JvmStatic
-    fun vectorRotationCalc(dir_up: Pair<Vector3d, Vector3d>, posY: Double, posX:Double, length: Double): Vector3d {
+    fun vectorRotationCalc(dir_up: Pair<Vector3d, Vector3d>, posY: Double, posX:Double, length: Double,
+                           right:Vector3d? = null): Vector3d {
         val dir = dir_up.first
         val l = max(length, 0.01)
 
         //thanks getitemfromblock for this
 //      dir = dir + posX*right + posY*updir = dir.Normalize();
 
-        val right: Vector3d; val up: Vector3d
-
         dir.snormalize()
-        up = dir_up.second.smul(l)
-        right = up.cross(dir)
+        val up = dir_up.second.smul(l)
+        val right = right ?: -up.cross(dir)
 
-        dir += right * (-posX) + up * posY
+        dir += right * posX + up * posY
         dir.snormalize()
         return dir
     }
@@ -208,18 +208,20 @@ object RaycastFunctions {
                               var1:Double, var2: Double, var3: Double): RaycastReturn {
         val level = entity.getLevel()
 
-        val dir = Vector3d(entity.lookAngle)
+//        val dir = Vector3d(entity.lookAngle)
 
         //https://gamedev.stackexchange.com/questions/190054/how-to-calculate-the-forward-up-right-vectors-using-the-rotation-angles
-        val r = 0.0
-        val p = entity.yHeadRot.toDouble()
+        val y =-rad(entity.xRot.toDouble())
+        val p =-rad(entity.yHeadRot.toDouble())
 
-        val up = Vector3d(sin(r) * sin(p), sin(r) * cos(p), cos(r))
+        val up  = Vector3d(sin(p)*sin(y),  cos(p), sin(p)*cos(y))
+        val dir = Vector3d(cos(p)*sin(y), -sin(p), cos(p)*cos(y))
+        val right = Vector3d(-cos(y), 0, sin(y))
 
         val unit_d = if (euler_mode || !SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.vector_rotation_enabled) {
             eulerRotationCalc(vectorsToQuat(dir, up), var1, var2)
         } else {
-            vectorRotationCalc(Pair(dir, up), var1, var2, var3)
+            vectorRotationCalc(Pair(dir, up), var1, var2, var3, right)
         }
 
         val start = Vector3d(entity.eyePosition)
@@ -261,7 +263,7 @@ object RaycastFunctions {
         } else {
             val dir_en = be.blockState.getValue(BlockStateProperties.FACING)
             val up = when(dir_en) {
-                Direction.DOWN ->  Vector3d(0, 0, 1)
+                Direction.DOWN ->  Vector3d(0, 0,-1)
                 Direction.UP ->    Vector3d(0, 0, 1)
                 Direction.NORTH -> Vector3d(0, 1, 0)
                 Direction.SOUTH -> Vector3d(0, 1, 0)
