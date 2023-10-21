@@ -146,7 +146,7 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
             data["is_done"] = r.is_done
             val returns = mutableMapOf<Double, Any>()
             //this is to avoid concurrent modification exception
-            for (i in 0 until r.results.size) {returns[i.toDouble()] = RaycasterPeripheral.makeRaycastResponse(r.results[i])}
+            for (i in 0 until r.results.size) {returns[i.toDouble()+1.0] = RaycasterPeripheral.makeRaycastResponse(r.results[i])}
             data["results"] = returns
 
             return@FunToLuaWrapper data
