@@ -108,6 +108,12 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
             if (!checkConnection(v)) {
                 return@FunToLuaWrapper mutableMapOf(Pair("error", "Connection has been terminated"))
             }
+            val cur_req = port.link_connections.port_requests[k]
+            if (   cur_req != null
+                && cur_req is LinkBatchRaycastRequest
+                && getNow_ms() - cur_req.start < cur_req.timeout) {
+                return@FunToLuaWrapper mutableMapOf(Pair("error", "Connection already has a batch raycast request"))
+            }
 
             val timeout = min(
                 max(it.getLong(0), 0L),

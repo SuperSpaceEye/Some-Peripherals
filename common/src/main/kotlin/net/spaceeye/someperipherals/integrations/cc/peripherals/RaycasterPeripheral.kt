@@ -14,6 +14,7 @@ import net.spaceeye.someperipherals.integrations.cc.CallbackToLuaWrapper
 import net.spaceeye.someperipherals.integrations.cc.FunToLuaWrapper
 import net.spaceeye.someperipherals.raycasting.*
 import net.spaceeye.someperipherals.raycasting.RaycastFunctions.castRayBlock
+import net.spaceeye.someperipherals.util.tableToDoubleArray
 
 class RaycasterPeripheral(private val level: Level, private val pos: BlockPos): IPeripheral {
     private var be = level.getBlockEntity(pos) as RaycasterBlockEntity
@@ -122,34 +123,21 @@ class RaycasterPeripheral(private val level: Level, private val pos: BlockPos): 
     }
 
     @LuaFunction
-    fun raycast(args: IArguments): MutableMap<Any, Any> {
-        if(!SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.is_enabled) {return mutableMapOf()}
-        val distance    = args.getDouble(0)
-        val euler_mode  = args.optBoolean(1).orElse(false)
-        val do_cache    = args.optBoolean(2).orElse(false)
-        val var1        = args.optDouble(3).orElse(0.0) // Pitch or Y
-        val var2        = args.optDouble(4).orElse(0.0) // Yaw or X
-        val var3        = args.optDouble(5).orElse(1.0) // planar distance or nil
-
-        val response = runBlocking { castRayBlock(level, be, pos, distance, euler_mode, do_cache, var1, var2, var3, null) }
-        if (response is RaycastCtx) {throw LuaException("Raycast returned context")}
-        return makeRaycastResponse( response as RaycastReturn )
-    }
-
-    //Either returns a result immediately (got result under max time) or returns a map of functions "continue", "getCurI"
-    // when continue is called, it will continue iterating until it achieves the result
-    // when getCurI is called, it will return current i of points_iter
-    // when terminate is called, it will terminate raycast
-    @LuaFunction
-    fun yieldableRaycast(args: IArguments): Any {
-        if(!SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.is_enabled) { return mutableMapOf<Any, Any>() }
+    fun raycast(args: IArguments): MethodResult {
+        if(!SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.is_enabled) { return MethodResult.of(mutableMapOf<Any, Any>()) }
 
         val distance    = args.getDouble(0)
-        val euler_mode  = args.optBoolean(1).orElse(false)
-        val do_cache    = args.optBoolean(2).orElse(false)
-        val var1        = args.optDouble(3).orElse(0.0) // Pitch or Y
-        val var2        = args.optDouble(4).orElse(0.0) // Yaw or X
-        val var3        = args.optDouble(5).orElse(1.0) // planar distance or nil
+        val variables   = tableToDoubleArray(args.getTable(1)) // at 0 pitch or y, at 1 yaw or x, at 2 nothing or planar distance
+        val euler_mode  = args.optBoolean(2).orElse(false)
+        val im_execute  = args.optBoolean(3).orElse(true) // execute immediately
+        val do_cache    = args.optBoolean(4).orElse(false)
+
+        if (variables.size < 2 || variables.size > 3) {
+            throw LuaException("Variables table should have 2 or 3 items")
+        }
+        val var1 = variables[0]
+        val var2 = variables[1]
+        val var3 = if (variables.size == 3) {variables[2]} else {1.0}
 
         var ctx: RaycastCtx? = null
         var terminate = false
@@ -175,13 +163,19 @@ class RaycasterPeripheral(private val level: Level, private val pos: BlockPos): 
 
         pull = MethodResult.pullEvent("long_raycast", callback)
 
-        return mutableMapOf(
-            Pair("begin", FunToLuaWrapper{ computer.queueEvent("long_raycast"); return@FunToLuaWrapper pull}),
-            Pair("getCurI", FunToLuaWrapper { return@FunToLuaWrapper ctx?.points_iter?.cur_i ?: 0 }),
-            Pair("terminate", FunToLuaWrapper{ terminate = true; return@FunToLuaWrapper Unit })
-        )
+        if (!im_execute) {
+            return MethodResult.of(mutableMapOf(
+                Pair("begin", FunToLuaWrapper { computer.queueEvent("long_raycast"); return@FunToLuaWrapper pull }),
+                Pair("getCurI", FunToLuaWrapper { return@FunToLuaWrapper ctx?.points_iter?.cur_i ?: 0 }),
+                Pair("terminate", FunToLuaWrapper { terminate = true; return@FunToLuaWrapper Unit })
+            ))
+        } else {
+            computer.queueEvent("long_raycast")
+            return pull
+        }
     }
 
+    //TODO test if i can just do MethodResult.yield()
 //    @LuaFunction
 //    fun testCallback(): MethodResult {
 //        var callback: CallbackToLuaWrapper? = null
