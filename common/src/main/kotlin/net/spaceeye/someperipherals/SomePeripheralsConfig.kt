@@ -16,9 +16,14 @@ object SomePeripheralsConfig {
     class Common: ConfigSubDirectory()
 
     class Server: ConfigSubDirectory() {
+        val RAYCASTING_SETTINGS = RaycastingSettings()
         val RAYCASTER_SETTINGS = RaycasterSettings()
         val LINK_PORT_SETTINGS = LinkPortSettings()
         val GOGGLE_SETTINGS = GogglesSettings()
+
+        class RaycastingSettings: ConfigSubDirectory() {
+            var max_raycast_time_ms: Long by CLong(100L, "Max time before yielding")
+        }
 
         class RaycasterSettings: ConfigSubDirectory() {
             var is_enabled: Boolean by CBool(true, "Disables functionality of the block")

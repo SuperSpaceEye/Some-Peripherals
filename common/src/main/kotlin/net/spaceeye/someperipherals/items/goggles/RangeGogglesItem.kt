@@ -7,7 +7,9 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.Level
 import net.spaceeye.someperipherals.LinkPortUtils.*
 import net.spaceeye.someperipherals.SomePeripheralsConfig
+import net.spaceeye.someperipherals.raycasting.RaycastERROR
 import net.spaceeye.someperipherals.raycasting.RaycastFunctions.suspendCastRayEntity
+import net.spaceeye.someperipherals.raycasting.RaycastReturn
 
 class RangeGogglesItem: StatusGogglesItem() {
     override val base_name: String = "item.some_peripherals.tootlip.range_goggles"
@@ -28,7 +30,8 @@ class RangeGogglesItem: StatusGogglesItem() {
 
     private fun raycastRequest(entity: Entity, r: LinkRaycastRequest) = runBlocking {
         controller.link_connections.port_requests.remove(uuid.toString())
-        val response = suspendCastRayEntity(entity as LivingEntity, r.distance, r.euler_mode, r.do_cache, r.var1, r.var2, r.var3)
+        val r = suspendCastRayEntity(entity as LivingEntity, r.distance, r.euler_mode, r.do_cache, r.var1, r.var2, r.var3)
+        val response = if (r is RaycastReturn) {r} else {RaycastERROR("response is context. shouldn't happen")}
         controller.link_connections.link_response[uuid.toString()] = LinkRaycastResponse(response)
     }
 

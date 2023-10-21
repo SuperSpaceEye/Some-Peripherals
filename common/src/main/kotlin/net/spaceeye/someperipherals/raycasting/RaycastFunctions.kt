@@ -19,6 +19,7 @@ import net.spaceeye.someperipherals.util.BallisticFunctions.rad
 import net.spaceeye.someperipherals.util.Vector3d
 import org.valkyrienskies.mod.common.getShipManagingPos
 import java.lang.Math.*
+import kotlin.coroutines.coroutineContext
 
 object RaycastFunctions {
     private val logger = SomePeripherals.slogger
@@ -98,9 +99,11 @@ object RaycastFunctions {
 
     // returns either Pair<BlockPos, BlockState> or Entity
     @JvmStatic
-    suspend fun normalRaycast(level: Level, pointsIter: RayIter, ignore_entity: Entity?, cache: PosCache): RaycastReturn {
-        val start = pointsIter.start
-        val stop  = pointsIter.stop
+    suspend fun normalRaycast(level: Level, points_iter: RayIter, ignore_entity: Entity?, cache: PosCache, ctx: RaycastCtx?): RaycastReturnOrCtx {
+        val scope = CoroutineScope(coroutineContext)
+
+        val start = points_iter.start
+        val stop  = points_iter.stop
 
         val rd = stop - start
         val d = (rd+eps).srdiv(1.0)
@@ -110,12 +113,10 @@ object RaycastFunctions {
         val check_for_entities = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.check_for_intersection_with_entities
         val er = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.entity_check_radius
 
-        var intersected_entity: Pair<Entity, Double>? = null
-        var entity_step_counter = 0
+        var intersected_entity: Pair<Entity, Double>? = ctx?.intersected_entity ?: null
+        var entity_step_counter = ctx?.entity_step_counter ?: 0
 
-        for (point in pointsIter) {
-            if (!Dispatchers.Default.isActive) { yield() }
-
+        for (point in points_iter) {
             //if ray hits entity and any block wasn't hit before another check, then previous intersected entity is the actual hit place
             if (check_for_entities && entity_step_counter % er == 0) {
                 if (intersected_entity != null) { return RaycastEntityReturn(intersected_entity.first, intersected_entity.second, unit_d * intersected_entity.second+start) }
@@ -135,15 +136,18 @@ object RaycastFunctions {
             else {RaycastEntityReturn(intersected_entity.first, intersected_entity.second, unit_d*intersected_entity.second+start)} }
 
             if (world_res != null) {return RaycastBlockReturn(world_res.first, world_res.second, unit_d*world_res.second+start)}
+
+            if (!scope.isActive) { return RaycastCtx(points_iter, ignore_entity, cache, Vector3d(), unit_d, intersected_entity, entity_step_counter, null) }
         }
 
-        return RaycastNoResultReturn(pointsIter.up_to.toDouble())
+        return RaycastNoResultReturn(points_iter.up_to.toDouble())
     }
 
-    suspend fun raycast(level: Level, pointsIter: RayIter, ignore_entity:Entity?=null, cache: PosCache, pos: Vector3d, unit_d:Vector3d): RaycastReturn {
+    suspend fun raycast(level: Level, pointsIter: RayIter, ignore_entity:Entity?=null, cache: PosCache, ctx: RaycastCtx? = null,
+                        pos: Vector3d, unit_d:Vector3d): RaycastReturnOrCtx {
         return when (SomePeripherals.has_vs) {
-            false -> normalRaycast(level, pointsIter, ignore_entity, cache)
-            true  -> vsRaycast(level, pointsIter, ignore_entity, cache, pos, unit_d)
+            false -> normalRaycast(level, pointsIter, ignore_entity, cache, ctx)
+            true  -> vsRaycast(level, pointsIter, ignore_entity, cache, ctx, pos, unit_d)
         }
     }
 
@@ -191,22 +195,27 @@ object RaycastFunctions {
     }
 
     @JvmStatic
-    suspend fun commonCastRay(level: Level, start: Vector3d, unit_d: Vector3d, distance: Double, cache: PosCache, pos: Vector3d, ignore_entity: Entity?): RaycastReturn {
+    suspend fun commonCastRay(level: Level, start: Vector3d, unit_d: Vector3d, distance: Double, cache: PosCache, ctx: RaycastCtx?, pos: Vector3d, ignore_entity: Entity?): RaycastReturnOrCtx {
         val stop = unit_d * distance + start
 
         val max_dist = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.max_raycast_distance
         val max_iter = if (max_dist <= 0) { distance.toInt() } else { min(distance.toInt(), max_dist) }
         val iter = BresenhamIter(start, stop, max_iter)
 
-        val result = raycast(level, iter, ignore_entity, cache, pos, unit_d)
+        val result = raycast(level, iter, ignore_entity, cache, ctx, pos, unit_d)
 
         return result
     }
 
     @JvmStatic
     suspend fun castRayEntity(entity: LivingEntity, distance: Double, euler_mode: Boolean = true, do_cache:Boolean = false,
-                              var1:Double, var2: Double, var3: Double): RaycastReturn {
+                              var1:Double, var2: Double, var3: Double, ctx: RaycastCtx?=null): RaycastReturnOrCtx {
         val level = entity.getLevel()
+        val cache = PosCache()
+        val start = Vector3d(entity.eyePosition)
+        cache.do_cache = do_cache
+
+        if (ctx != null) { return raycast(level, ctx.points_iter, ctx.ignore_entity, cache, ctx, ctx.pos, ctx.unit_d)}
 
         //https://gamedev.stackexchange.com/questions/190054/how-to-calculate-the-forward-up-right-vectors-using-the-rotation-angles
         val p = rad(entity.xRot.toDouble()) // picth
@@ -217,26 +226,25 @@ object RaycastFunctions {
         val right = Vector3d(-cos(y), 0, sin(y))
 
         val unit_d = if (euler_mode || !SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.vector_rotation_enabled) {
-            eulerRotationCalc(vectorsToQuat(dir, up), var1, var2)
+            //TODO doesn't work correctly
+            eulerRotationCalc(vectorsToQuat(dir, up, right), var1, var2)
         } else {
             vectorRotationCalc(Pair(dir, up), var1, var2, var3, right)
         }
 
-        val start = Vector3d(entity.eyePosition)
-        val cache = PosCache()
-        cache.do_cache = do_cache
-
-        return commonCastRay(level, start, unit_d, distance, cache, start, entity)
+        return commonCastRay(level, start, unit_d, distance, cache, ctx, start, entity)
     }
 
     @JvmStatic
     suspend fun suspendCastRayEntity(entity: LivingEntity, distance: Double, euler_mode: Boolean = true, do_cache:Boolean = false,
                              var1:Double, var2: Double, var3: Double,
-                             timeout: Long = SomePeripheralsConfig.SERVER.GOGGLE_SETTINGS.RANGE_GOGGLES_SETTINGS.max_allowed_raycast_waiting_time_ms): RaycastReturn {
+                             timeout: Long = SomePeripheralsConfig.SERVER.GOGGLE_SETTINGS.RANGE_GOGGLES_SETTINGS.max_allowed_raycast_waiting_time_ms,): RaycastReturn {
+        //TODO raycast probaly doesn't raise CancellationException anymore, but idk
         try {
             return withTimeout(timeout) {
                 try {
-                    castRayEntity(entity, distance, euler_mode, do_cache, var1, var2, var3)
+                    val res = castRayEntity(entity, distance, euler_mode, do_cache, var1, var2, var3)
+                    if (res is RaycastReturn) {res} else {RaycastERROR("raycast took too long")}
                 } catch (e: Exception) {
                     RaycastERROR(e.toString())
                 }
@@ -247,14 +255,16 @@ object RaycastFunctions {
     }
 
     @JvmStatic
-    fun castRayBlock(level: Level, be: BlockEntity, pos: BlockPos,
+    suspend fun castRayBlock(level: Level, be: BlockEntity, pos: BlockPos,
                      distance: Double, euler_mode: Boolean = true, do_cache:Boolean = false,
-                     var1:Double, var2: Double, var3: Double): RaycastReturn {
+                     var1:Double, var2: Double, var3: Double, ctx: RaycastCtx?): RaycastReturnOrCtx {
         if (level.isClientSide) { return RaycastERROR("Level is clientside. how.") }
 
         val cache = (be.blockState.block as RaycasterBlock).pos_cache
         cache.do_cache = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.do_position_caching && do_cache
         cache.max_items = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.max_cached_positions
+
+        if (ctx != null) { return raycast(level, ctx.points_iter, ctx.ignore_entity, cache, ctx, ctx.pos, ctx.unit_d) }
 
         var unit_d = if (euler_mode || !SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.vector_rotation_enabled) {
             eulerRotationCalc(directionToQuat(be.blockState.getValue(BlockStateProperties.FACING)), var1, var2)
@@ -289,6 +299,6 @@ object RaycastFunctions {
         } else {
             Vector3d(pos) + dirToStartingOffset(be.blockState.getValue(BlockStateProperties.FACING))
         }
-        return runBlocking { commonCastRay(level, start, unit_d, distance, cache, Vector3d(pos), null) }
+        return commonCastRay(level, start, unit_d, distance, cache, ctx, Vector3d(pos), null)
     }
 }
