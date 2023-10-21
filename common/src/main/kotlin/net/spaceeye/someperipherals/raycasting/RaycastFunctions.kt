@@ -220,15 +220,12 @@ object RaycastFunctions {
         //https://gamedev.stackexchange.com/questions/190054/how-to-calculate-the-forward-up-right-vectors-using-the-rotation-angles
         val p = rad(entity.xRot.toDouble()) // picth
         val y =-rad(entity.yHeadRot.toDouble()) // yaw
-
-        val up  =-Vector3d(sin(p)*sin(y),  cos(p), sin(p)*cos(y))
-        val dir = Vector3d(cos(p)*sin(y), -sin(p), cos(p)*cos(y))
-        val right = Vector3d(-cos(y), 0, sin(y))
-
         val unit_d = if (euler_mode || !SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.vector_rotation_enabled) {
-            //TODO doesn't work correctly
-            eulerRotationCalc(vectorsToQuat(dir, up, right), var1, var2)
+            eulerRotationCalc(Quaternion.fromXYZ(y.toFloat(), -p.toFloat(), PI.toFloat()), var1, -var2)
         } else {
+            val up  =-Vector3d(sin(p)*sin(y),  cos(p), sin(p)*cos(y))
+            val dir = Vector3d(cos(p)*sin(y), -sin(p), cos(p)*cos(y))
+            val right = Vector3d(-cos(y), 0, sin(y))
             vectorRotationCalc(Pair(dir, up), var1, var2, var3, right)
         }
 
