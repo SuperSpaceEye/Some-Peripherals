@@ -7,21 +7,19 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.Level
 import net.spaceeye.someperipherals.LinkPortUtils.*
 import net.spaceeye.someperipherals.SomePeripheralsConfig
-import net.spaceeye.someperipherals.raycasting.RaycastERROR
 import net.spaceeye.someperipherals.raycasting.RaycastFunctions.suspendCastRayEntity
-import net.spaceeye.someperipherals.raycasting.RaycastReturn
 
 class RangeGogglesItem: StatusGogglesItem() {
     override val base_name: String = "item.some_peripherals.tootlip.range_goggles"
     override val linked_name: String = "text.some_peripherals.linked_range_goggles"
-    override fun makeConnectionUpdate(entity: Entity): LinkUpdate {
-        return Server_RangeGogglesPhysUpdate(entityToMap(entity), entity)
+    override fun makeConnectionPing(entity: Entity): LinkPing {
+        return Server_RangeGogglesPing()
     }
 
     override fun inventoryTick(stack: ItemStack, level: Level, entity: Entity, slotId: Int, isSelected: Boolean) {
         super.inventoryTick(stack, level, entity, slotId, isSelected)
         if (!tick_successful) {return}
-        val r = controller.link_connections.port_requests[uuid.toString()] ?: return
+        val r = controller.link_connections.port_requests[uuid.toString()]?.raycast_request ?: return
         when(r) {
             is LinkRaycastRequest -> raycastRequest(entity, r)
             is LinkBatchRaycastRequest -> raycastBatchRequest(entity, r)
@@ -30,21 +28,20 @@ class RangeGogglesItem: StatusGogglesItem() {
 
     private fun raycastRequest(entity: Entity, r: LinkRaycastRequest) = runBlocking {
         controller.link_connections.port_requests.remove(uuid.toString())
-        val r = suspendCastRayEntity(entity as LivingEntity, r.distance, r.euler_mode, r.do_cache, r.var1, r.var2, r.var3)
-        val response = if (r is RaycastReturn) {r} else {RaycastERROR("response is context. shouldn't happen")}
-        controller.link_connections.link_response[uuid.toString()] = LinkRaycastResponse(response)
+        val resp = suspendCastRayEntity(entity as LivingEntity, r.distance, r.euler_mode, r.do_cache, r.var1, r.var2, r.var3)
+        controller.link_connections.makeResponse(uuid.toString(), LinkRaycastResponse(resp))
     }
 
     private fun raycastBatchRequest(entity: Entity, r: LinkBatchRaycastRequest) = runBlocking {
-        var resp = controller.link_connections.link_response[uuid.toString()]
+        var resp = controller.link_connections.getResponses(uuid.toString()).raycast_response
         if (resp != null && resp is LinkBatchRaycastResponse) {
             if (resp.is_done) {
                 resp = LinkBatchRaycastResponse(mutableListOf())
-                controller.link_connections.link_response[uuid.toString()] = resp
+                controller.link_connections.getResponses(uuid.toString()).raycast_response = resp
             }
         } else {
             resp = LinkBatchRaycastResponse(mutableListOf())
-            controller.link_connections.link_response[uuid.toString()] = resp
+            controller.link_connections.getResponses(uuid.toString()).raycast_response = resp
         }
 
         val rsp = resp as LinkBatchRaycastResponse
@@ -68,7 +65,7 @@ class RangeGogglesItem: StatusGogglesItem() {
 
         if (rsp.results.size >= req.data.size) {
             rsp.is_done = true
-            controller.link_connections.port_requests.remove(uuid.toString())
+            controller.link_connections.getRequests(uuid.toString()).raycast_request = null
         }
     }
 }

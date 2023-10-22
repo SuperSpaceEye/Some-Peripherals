@@ -14,6 +14,7 @@ import net.spaceeye.someperipherals.integrations.cc.CallbackToLuaWrapper
 import net.spaceeye.someperipherals.integrations.cc.FunToLuaWrapper
 import net.spaceeye.someperipherals.raycasting.*
 import net.spaceeye.someperipherals.raycasting.RaycastFunctions.castRayBlock
+import net.spaceeye.someperipherals.util.Constants
 import net.spaceeye.someperipherals.util.tableToDoubleArray
 
 class RaycasterPeripheral(private val level: Level, private val pos: BlockPos): IPeripheral {
@@ -157,21 +158,21 @@ class RaycasterPeripheral(private val level: Level, private val pos: BlockPos): 
 
             if (res is RaycastReturn) { return@CallbackToLuaWrapper makeRaycastResponse(res)} else {
                 ctx = res as RaycastCtx
-                computer.queueEvent("raycast_event")
+                computer.queueEvent(Constants.RAYCASTER_RAYCAST_EVENT_NAME)
                 return@CallbackToLuaWrapper pull!!
             }
         }
 
-        pull = MethodResult.pullEvent("raycast_event", callback)
+        pull = MethodResult.pullEvent(Constants.RAYCASTER_RAYCAST_EVENT_NAME, callback)
 
         if (!im_execute) {
             return MethodResult.of(mutableMapOf(
-                Pair("begin", FunToLuaWrapper { computer.queueEvent("raycast_event"); return@FunToLuaWrapper pull }),
+                Pair("begin", FunToLuaWrapper { computer.queueEvent(Constants.RAYCASTER_RAYCAST_EVENT_NAME); return@FunToLuaWrapper pull }),
                 Pair("getCurI", FunToLuaWrapper { return@FunToLuaWrapper ctx?.points_iter?.cur_i ?: 0 }),
                 Pair("terminate", FunToLuaWrapper { terminate = true; return@FunToLuaWrapper Unit })
             ))
         } else {
-            computer.queueEvent("raycast_event")
+            computer.queueEvent(Constants.RAYCASTER_RAYCAST_EVENT_NAME)
             return pull
         }
     }

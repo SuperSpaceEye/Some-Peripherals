@@ -12,8 +12,9 @@ import net.minecraft.world.item.ArmorMaterials
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.context.UseOnContext
 import net.minecraft.world.level.Level
-import net.spaceeye.someperipherals.LinkPortUtils.LinkUpdate
-import net.spaceeye.someperipherals.LinkPortUtils.Server_EntityPhysUpdate
+import net.spaceeye.someperipherals.LinkPortUtils.LinkPing
+import net.spaceeye.someperipherals.LinkPortUtils.LinkStatusResponse
+import net.spaceeye.someperipherals.LinkPortUtils.Server_StatusGogglesPing
 import net.spaceeye.someperipherals.LinkPortUtils.entityToMap
 import net.spaceeye.someperipherals.SomePeripheralsCommonBlocks
 import net.spaceeye.someperipherals.SomePeripheralsItems
@@ -41,8 +42,8 @@ open class StatusGogglesItem:
         return TranslatableComponent(base_name)
     }
 
-    protected open fun makeConnectionUpdate(entity: Entity): LinkUpdate {
-        return Server_EntityPhysUpdate(entityToMap(entity), entity)
+    protected open fun makeConnectionPing(entity: Entity): LinkPing {
+        return Server_StatusGogglesPing()
     }
 
     override fun inventoryTick(stack: ItemStack, level: Level, entity: Entity, slotId: Int, isSelected: Boolean) {
@@ -70,7 +71,13 @@ open class StatusGogglesItem:
 
         tick_successful = true
 
-        controller.link_connections.constant_updates[uuid.toString()] = makeConnectionUpdate(entity)
+        controller.link_connections.constant_pings[uuid.toString()] = makeConnectionPing(entity)
+
+
+        val r = controller.link_connections.getRequests(uuid.toString())
+        if (r.status_request == null) {return}
+        r.status_request = null
+        controller.link_connections.makeResponse(uuid.toString(), LinkStatusResponse(entityToMap(entity), entity))
     }
 
     override fun useOn(context: UseOnContext): InteractionResult {
