@@ -123,11 +123,12 @@ class RaycasterPeripheral(private val level: Level, private val pos: BlockPos): 
     }
 
     @LuaFunction
-    fun raycast(args: IArguments): MethodResult {
+    fun raycast(computer: IComputerAccess, args: IArguments): MethodResult {
         if(!SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.is_enabled) { return MethodResult.of(mutableMapOf<Any, Any>()) }
 
         val distance    = args.getDouble(0)
-        val variables   = tableToDoubleArray(args.getTable(1)) // at 0 pitch or y, at 1 yaw or x, at 2 nothing or planar distance
+        // at 0 pitch or y, at 1 yaw or x, at 2 nothing or planar distance
+        val variables   = tableToDoubleArray(args.optTable(1).orElse(mutableMapOf(Pair(1.0, 0.0), Pair(2.0, 0.0), Pair(3.0, 1.0))))
         val euler_mode  = args.optBoolean(2).orElse(false)
         val im_execute  = args.optBoolean(3).orElse(true) // execute immediately
         val do_cache    = args.optBoolean(4).orElse(false)
@@ -156,43 +157,41 @@ class RaycasterPeripheral(private val level: Level, private val pos: BlockPos): 
 
             if (res is RaycastReturn) { return@CallbackToLuaWrapper makeRaycastResponse(res)} else {
                 ctx = res as RaycastCtx
-                computer.queueEvent("long_raycast")
+                computer.queueEvent("raycast_event")
                 return@CallbackToLuaWrapper pull!!
             }
         }
 
-        pull = MethodResult.pullEvent("long_raycast", callback)
+        pull = MethodResult.pullEvent("raycast_event", callback)
 
         if (!im_execute) {
             return MethodResult.of(mutableMapOf(
-                Pair("begin", FunToLuaWrapper { computer.queueEvent("long_raycast"); return@FunToLuaWrapper pull }),
+                Pair("begin", FunToLuaWrapper { computer.queueEvent("raycast_event"); return@FunToLuaWrapper pull }),
                 Pair("getCurI", FunToLuaWrapper { return@FunToLuaWrapper ctx?.points_iter?.cur_i ?: 0 }),
                 Pair("terminate", FunToLuaWrapper { terminate = true; return@FunToLuaWrapper Unit })
             ))
         } else {
-            computer.queueEvent("long_raycast")
+            computer.queueEvent("raycast_event")
             return pull
         }
     }
 
-    //TODO test if i can just do MethodResult.yield()
+//    //TODO this doesn't work... why?
 //    @LuaFunction
 //    fun testCallback(): MethodResult {
 //        var callback: CallbackToLuaWrapper? = null
 //        var i = 0;
 //
-//        var pull: MethodResult? = null
+//        var yield: MethodResult? = null
 //
 //        callback = CallbackToLuaWrapper {
 //            if (i >= 10) {return@CallbackToLuaWrapper MethodResult.of(10)}
 //            i++
-//            computer.queueEvent("test_event")
-//            return@CallbackToLuaWrapper pull!!
+//            return@CallbackToLuaWrapper yield!!
 //        }
 //
-//        pull = MethodResult.pullEvent("test_event", callback)
-//        computer.queueEvent("test_event")
-//        return pull
+//        yield = MethodResult.yield(null, callback)
+//        return yield
 //    }
 
     @LuaFunction
@@ -206,12 +205,6 @@ class RaycasterPeripheral(private val level: Level, private val pos: BlockPos): 
         return makeConfigInfo()
     }
 
-    lateinit var computer: IComputerAccess
-
-    override fun attach(computer: IComputerAccess) {
-        super.attach(computer)
-        this.computer = computer
-    }
     override fun equals(p0: IPeripheral?): Boolean = level.getBlockState(pos).`is`(SomePeripheralsCommonBlocks.RAYCASTER.get())
     override fun getType(): String = "raycaster"
 }
