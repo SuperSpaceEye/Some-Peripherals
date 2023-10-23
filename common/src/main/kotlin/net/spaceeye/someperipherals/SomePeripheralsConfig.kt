@@ -26,8 +26,6 @@ object SomePeripheralsConfig {
         }
 
         class RaycasterSettings: ConfigSubDirectory() {
-            var is_enabled: Boolean by CBool(true, "Disables functionality of the block")
-
             var vector_rotation_enabled: Boolean by CBool(true, "If false, only euler rotation is allowed")
 
             var max_raycast_distance: Int by CInt(-1, "Maximum amount of blocks ray can travel. Set to num <=0 for no limit")

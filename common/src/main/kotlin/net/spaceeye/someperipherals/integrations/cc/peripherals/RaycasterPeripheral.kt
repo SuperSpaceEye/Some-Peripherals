@@ -102,20 +102,25 @@ class RaycasterPeripheral(private val level: Level, private val pos: BlockPos): 
         fun makeConfigInfo(): MutableMap<String, Any> {
             val rc = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS
             return mutableMapOf(
-                Pair("is_enabled", rc.is_enabled),
                 Pair("vector_rotation_enabled", rc.vector_rotation_enabled),
+
                 Pair("max_raycast_distance", rc.max_raycast_distance),
                 Pair("max_yaw_angle", rc.max_yaw_angle),
                 Pair("max_pitch_angle", rc.max_pitch_angle),
                 Pair("entity_check_radius", rc.entity_check_radius),
+
                 Pair("check_for_intersection_with_entities", rc.check_for_intersection_with_entities),
+
                 Pair("return_abs_pos", rc.return_abs_pos),
                 Pair("return_hit_pos", rc.return_hit_pos),
                 Pair("return_distance", rc.return_distance),
                 Pair("return_block_type", rc.return_block_type),
+
                 Pair("return_ship_id", rc.return_ship_id),
                 Pair("return_shipyard_hit_pos", rc.return_shipyard_hit_pos),
+
                 Pair("return_entity_type", rc.return_entity_type),
+
                 Pair("do_position_caching", rc.do_position_caching),
                 Pair("max_cached_positions", rc.max_cached_positions),
                 Pair("save_cache_for_N_ticks", rc.save_cache_for_N_ticks),
@@ -125,8 +130,6 @@ class RaycasterPeripheral(private val level: Level, private val pos: BlockPos): 
 
     @LuaFunction
     fun raycast(computer: IComputerAccess, args: IArguments): MethodResult {
-        if(!SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.is_enabled) { return MethodResult.of(mutableMapOf<Any, Any>()) }
-
         val distance    = args.getDouble(0)
         // at 0 pitch or y, at 1 yaw or x, at 2 nothing or planar distance
         val variables   = tableToDoubleArray(args.optTable(1).orElse(mutableMapOf(Pair(1.0, 0.0), Pair(2.0, 0.0), Pair(3.0, 1.0))))
@@ -134,9 +137,7 @@ class RaycasterPeripheral(private val level: Level, private val pos: BlockPos): 
         val im_execute  = args.optBoolean(3).orElse(true) // execute immediately
         val do_cache    = args.optBoolean(4).orElse(false)
 
-        if (variables.size < 2 || variables.size > 3) {
-            throw LuaException("Variables table should have 2 or 3 items")
-        }
+        if (variables.size < 2 || variables.size > 3) { return MethodResult.of(mutableMapOf(Pair("error", "Variables table should have 2 or 3 items"))) }
         val var1 = variables[0]
         val var2 = variables[1]
         val var3 = if (variables.size == 3) {variables[2]} else {1.0}

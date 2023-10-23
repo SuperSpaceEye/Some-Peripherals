@@ -65,31 +65,35 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
         port: GoggleLinkPort,
         k: String
     ) {
-        item["raycast"] = FunToLuaWrapper {
+        item["raycast"] = FunToLuaWrapper {args ->
             val ping = port.link_connections.constant_pings[k]
-            if (!checkConnection(ping)) {
-                return@FunToLuaWrapper mutableMapOf(Pair("error", "Connection has been terminated"))
-            }
+            if (!checkConnection(ping)) { return@FunToLuaWrapper mutableMapOf(Pair("error", "Connection has been terminated")) }
             val requests = port.link_connections.getRequests(k)
 
-            if (requests.raycast_request != null) {
-                return@FunToLuaWrapper mutableMapOf(Pair("error", "Connection already has a raycasting request"))
-            }
+            if (requests.raycast_request != null) { return@FunToLuaWrapper mutableMapOf(Pair("error", "Connection already has a raycasting request")) }
 
             val timeout = min(
-                max(it.getLong(0), 0L),
+                max(args.getLong(0), 0L),
                 SomePeripheralsConfig.SERVER.GOGGLE_SETTINGS.RANGE_GOGGLES_SETTINGS.max_allowed_raycast_waiting_time_ms
             )
             val start = getNow_ms()
 
-            //TODO rework
+            val distance = args.getDouble(0)
+            // at 0 pitch or y, at 1 yaw or x, at 2 nothing or planar distance
+            val variables  = tableToDoubleArray(args.optTable(1).orElse(mutableMapOf(Pair(1.0, 0.0), Pair(2.0, 0.0), Pair(3.0, 1.0))))
+            val euler_mode = args.optBoolean(2).orElse(false)
+            val do_cache   = args.optBoolean(4).orElse(false)
+
+            if (variables.size < 2 || variables.size > 3) { return@FunToLuaWrapper mutableMapOf(Pair("error", "Variables table should have 2 or 3 items")) }
+            val var1 = variables[0]
+            val var2 = variables[1]
+            val var3 = if (variables.size == 3) {variables[2]} else {1.0}
+
             port.link_connections.makeRequest(k, LinkRaycastRequest(
-                it.getDouble(1),
-                it.optBoolean(2).orElse(false),
-                it.optBoolean(3).orElse(false),
-                it.optDouble(4).orElse(0.0), // Pitch or Y
-                it.optDouble(5).orElse(0.0), // Yaw or X
-                it.optDouble(6).orElse(1.0) // planar distance or nil
+                distance,
+                euler_mode,
+                do_cache,
+                var1, var2, var3
             ))
             val sleep_for =
                 SomePeripheralsConfig.SERVER.GOGGLE_SETTINGS.RANGE_GOGGLES_SETTINGS.thread_awaiting_sleep_time_ms
@@ -105,31 +109,27 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
             return@FunToLuaWrapper RaycasterPeripheral.makeRaycastResponse(RaycastERROR("timeout"))
         }
 
-        item["queue_raycasts"] = FunToLuaWrapper {
+        item["queueRaycasts"] = FunToLuaWrapper {args->
             val ping = port.link_connections.constant_pings[k]
-            if (!checkConnection(ping)) {
-                return@FunToLuaWrapper mutableMapOf(Pair("error", "Connection has been terminated"))
-            }
+            if (!checkConnection(ping)) { return@FunToLuaWrapper mutableMapOf(Pair("error", "Connection has been terminated")) }
             val requests = port.link_connections.getRequests(k)
 
-            if (requests.raycast_request != null) {
-                return@FunToLuaWrapper mutableMapOf(Pair("error", "Connection already has a raycasting request"))
-            }
+            if (requests.raycast_request != null) { return@FunToLuaWrapper mutableMapOf(Pair("error", "Connection already has a raycasting request")) }
 
             val timeout = min(
-                max(it.getLong(0), 0L),
+                max(args.getLong(0), 0L),
                 SomePeripheralsConfig.SERVER.GOGGLE_SETTINGS.RANGE_GOGGLES_SETTINGS.max_allowed_raycast_waiting_time_ms
             )
             val start = getNow_ms()
 
             val data = mutableListOf<Array<Double>>()
-            tableToTableArray(it.getTable(4), "Can't convert to table at ")
+            tableToTableArray(args.getTable(2), "Can't convert to table at ")
                 .forEachIndexed { idx, it -> data.add(tableToDoubleArray(it, "Can't convert to table at index ${idx} item at ")) }
 
             port.link_connections.makeRequest(k, LinkBatchRaycastRequest(
-                it.getDouble(1),
-                it.optBoolean(2).orElse(false),
-                it.optBoolean(3).orElse(false),
+                args.getDouble(1),
+                args.optBoolean(3).orElse(false),
+                args.optBoolean(4).orElse(false),
                 data.toTypedArray(),
                 start,
                 timeout
@@ -138,7 +138,7 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
             return@FunToLuaWrapper true
         }
 
-        item["get_queued_data"] = FunToLuaWrapper {
+        item["getQueuedData"] = FunToLuaWrapper {
             val ping = port.link_connections.constant_pings[k]
             if (!checkConnection(ping)) {
                 port.link_connections.getResponses(k).raycast_response = null
@@ -176,7 +176,7 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
         port: GoggleLinkPort,
         k: String
     ) {
-        item["get_info"] = FunToLuaWrapper {args ->
+        item["getInfo"] = FunToLuaWrapper {args ->
             val im_execute = args.optBoolean(0).orElse(true)
 
             var terminate = false
