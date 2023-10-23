@@ -94,7 +94,7 @@ class RaycasterPeripheral(private val level: Level, private val pos: BlockPos): 
                 is RaycastNoResultReturn    -> makeResponseNoResult(res, ret, rcc)
                 is RaycastERROR -> {ret["error"] = res.error_str}
                 else -> {ret["error"] = "Something went very, very wrong, as this should never ever happen"}
-                }
+            }
 
             return ret
         }

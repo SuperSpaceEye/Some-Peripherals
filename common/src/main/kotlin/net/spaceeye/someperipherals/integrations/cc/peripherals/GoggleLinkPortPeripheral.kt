@@ -55,7 +55,7 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
 
             ret[k] = item
         }
-        to_remove.forEach { port.link_connections.constant_pings.remove(it) }
+        to_remove.forEach { port.link_connections.removeAll(it) }
 
         return ret
     }
@@ -116,6 +116,7 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
 
             if (requests.raycast_request != null) { return@FunToLuaWrapper mutableMapOf(Pair("error", "Connection already has a raycasting request")) }
 
+            //TODO remove lol
             val timeout = min(
                 max(args.getLong(0), 0L),
                 SomePeripheralsConfig.SERVER.GOGGLE_SETTINGS.RANGE_GOGGLES_SETTINGS.max_allowed_raycast_waiting_time_ms

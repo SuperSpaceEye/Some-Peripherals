@@ -6,7 +6,7 @@ import net.minecraft.world.level.block.state.BlockState
 import net.spaceeye.someperipherals.util.Vector3d
 import org.valkyrienskies.core.api.ships.ServerShip
 
-interface RaycastReturnOrCtx {}
+interface RaycastReturnOrCtx
 
 abstract class RaycastReturn: RaycastReturnOrCtx
 

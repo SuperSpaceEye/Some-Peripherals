@@ -22,6 +22,6 @@ class GoggleLinkPort(properties: Properties): BaseEntityBlock(properties) {
 
     override fun onRemove(state: BlockState, level: Level, pos: BlockPos, newState: BlockState, isMoving: Boolean) {
         super.onRemove(state, level, pos, newState, isMoving)
-        link_connections.constant_pings.clear()
+        link_connections.clear()
     }
 }

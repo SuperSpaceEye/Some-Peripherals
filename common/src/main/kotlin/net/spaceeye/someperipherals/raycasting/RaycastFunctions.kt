@@ -139,6 +139,7 @@ object RaycastFunctions {
 
             if (!scope.isActive) { return RaycastCtx(points_iter, ignore_entity, cache, Vector3d(), unit_d, intersected_entity, entity_step_counter, null) }
         }
+        if (intersected_entity != null) { return RaycastEntityReturn(intersected_entity.first, intersected_entity.second, unit_d * intersected_entity.second+start) }
 
         return RaycastNoResultReturn(points_iter.up_to.toDouble())
     }
