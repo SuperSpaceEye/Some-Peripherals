@@ -15,8 +15,8 @@ class ResponseHolder {
 class LinkConnectionsManager {
     val constant_pings = ConcurrentHashMap<String, LinkPing>()
 
-    val port_requests = ConcurrentHashMap<String, RequestsHolder>()
-    val link_response = ConcurrentHashMap<String, ResponseHolder>()
+    private val port_requests = ConcurrentHashMap<String, RequestsHolder>()
+    private val link_response = ConcurrentHashMap<String, ResponseHolder>()
 
     fun getRequests(k: String): RequestsHolder {
         var requests = port_requests[k]

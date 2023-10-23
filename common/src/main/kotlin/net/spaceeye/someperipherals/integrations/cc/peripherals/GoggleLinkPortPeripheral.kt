@@ -21,13 +21,6 @@ import net.spaceeye.someperipherals.util.tableToTableArray
 import kotlin.math.max
 import kotlin.math.min
 
-private fun checkConnection(v: LinkPing?): Boolean {
-    if (v == null) {return false}
-    if (getNow_ms() - v.timestamp > SomePeripheralsConfig.SERVER.LINK_PORT_SETTINGS.max_connection_timeout_time_ms) {return false}
-
-    return true
-}
-
 //TODO refactor and simplify logic
 class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockPos):IPeripheral {
     private var be = level.getBlockEntity(pos) as GoggleLinkPortBlockEntity
@@ -38,6 +31,13 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
             is Server_StatusGogglesPing -> "status_goggles"
             else -> throw AssertionError("Unknown goggle type")
         }
+    }
+
+    private fun checkConnection(v: LinkPing?): Boolean {
+        if (v == null) {return false}
+        if (getNow_ms() - v.timestamp > SomePeripheralsConfig.SERVER.LINK_PORT_SETTINGS.max_connection_timeout_time_ms) {return false}
+
+        return true
     }
 
     @LuaFunction
@@ -82,6 +82,7 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
             )
             val start = getNow_ms()
 
+            //TODO rework
             port.link_connections.makeRequest(k, LinkRaycastRequest(
                 it.getDouble(1),
                 it.optBoolean(2).orElse(false),
@@ -93,12 +94,12 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
             val sleep_for =
                 SomePeripheralsConfig.SERVER.GOGGLE_SETTINGS.RANGE_GOGGLES_SETTINGS.thread_awaiting_sleep_time_ms
 
+            //TODO rework
             while (getNow_ms() - start <= timeout) {
-                val res = port.link_connections.link_response[k]
-                if (res == null) {
-                    Thread.sleep(sleep_for); continue
-                }
-                return@FunToLuaWrapper RaycasterPeripheral.makeRaycastResponse((res as LinkRaycastResponse).result)
+                val res = port.link_connections.getResponses(k).raycast_response
+                if (res == null) { Thread.sleep(sleep_for); continue }
+                if (res !is LinkRaycastResponse) {return@FunToLuaWrapper RaycasterPeripheral.makeRaycastResponse(RaycastERROR("Response type is not LinkRaycastResponse"))}
+                return@FunToLuaWrapper RaycasterPeripheral.makeRaycastResponse(res.result)
             }
 
             return@FunToLuaWrapper RaycasterPeripheral.makeRaycastResponse(RaycastERROR("timeout"))
@@ -134,7 +135,7 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
                 timeout
             ))
 
-            return@FunToLuaWrapper mutableMapOf(Pair("queued", true))
+            return@FunToLuaWrapper true
         }
 
         item["get_queued_data"] = FunToLuaWrapper {
@@ -187,7 +188,7 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
             val callback = CallbackToLuaWrapper {
                 if (terminate) {
                     port.link_connections.getRequests(k).status_request = null
-                    return@CallbackToLuaWrapper mutableMapOf(Pair("error", "was_terminated"))}
+                    return@CallbackToLuaWrapper mutableMapOf(Pair("error", "was terminated"))}
 
                 val ping = port.link_connections.constant_pings[k]
                 if (!checkConnection(ping)) {

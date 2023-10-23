@@ -19,7 +19,7 @@ class RangeGogglesItem: StatusGogglesItem() {
     override fun inventoryTick(stack: ItemStack, level: Level, entity: Entity, slotId: Int, isSelected: Boolean) {
         super.inventoryTick(stack, level, entity, slotId, isSelected)
         if (!tick_successful) {return}
-        val r = controller.link_connections.port_requests[uuid.toString()]?.raycast_request ?: return
+        val r = controller.link_connections.getRequests(uuid.toString()).raycast_request ?: return
         when(r) {
             is LinkRaycastRequest -> raycastRequest(entity, r)
             is LinkBatchRaycastRequest -> raycastBatchRequest(entity, r)
@@ -27,29 +27,29 @@ class RangeGogglesItem: StatusGogglesItem() {
     }
 
     private fun raycastRequest(entity: Entity, r: LinkRaycastRequest) = runBlocking {
-        controller.link_connections.port_requests.remove(uuid.toString())
+        controller.link_connections.getRequests(uuid.toString()).raycast_request = null
         val resp = suspendCastRayEntity(entity as LivingEntity, r.distance, r.euler_mode, r.do_cache, r.var1, r.var2, r.var3)
         controller.link_connections.makeResponse(uuid.toString(), LinkRaycastResponse(resp))
     }
 
     private fun raycastBatchRequest(entity: Entity, r: LinkBatchRaycastRequest) = runBlocking {
-        var resp = controller.link_connections.getResponses(uuid.toString()).raycast_response
-        if (resp != null && resp is LinkBatchRaycastResponse) {
-            if (resp.is_done) {
-                resp = LinkBatchRaycastResponse(mutableListOf())
-                controller.link_connections.getResponses(uuid.toString()).raycast_response = resp
+        var rsp = controller.link_connections.getResponses(uuid.toString()).raycast_response
+        if (rsp != null && rsp is LinkBatchRaycastResponse) {
+            if (rsp.is_done) {
+                rsp = LinkBatchRaycastResponse(mutableListOf())
+                controller.link_connections.getResponses(uuid.toString()).raycast_response = rsp
             }
         } else {
-            resp = LinkBatchRaycastResponse(mutableListOf())
-            controller.link_connections.getResponses(uuid.toString()).raycast_response = resp
+            rsp = LinkBatchRaycastResponse(mutableListOf())
+            controller.link_connections.getResponses(uuid.toString()).raycast_response = rsp
         }
 
-        val rsp = resp as LinkBatchRaycastResponse
-        val req = controller.link_connections.port_requests[uuid.toString()] as LinkBatchRaycastRequest? ?: return@runBlocking
+        val req = controller.link_connections.getRequests(uuid.toString()).raycast_request ?: return@runBlocking
+        if (req !is LinkBatchRaycastRequest) {return@runBlocking}
 
         if (req.do_terminate) {
             rsp.is_done = true
-            controller.link_connections.port_requests.remove(uuid.toString())
+            controller.link_connections.getRequests(uuid.toString()).raycast_request = null
             return@runBlocking
         }
 

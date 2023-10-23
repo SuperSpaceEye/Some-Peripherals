@@ -73,9 +73,12 @@ open class StatusGogglesItem:
 
         controller.link_connections.constant_pings[uuid.toString()] = makeConnectionPing(entity)
 
+        tryExecuteStatusRequest(entity)
+    }
 
+    private fun tryExecuteStatusRequest(entity: Entity) {
         val r = controller.link_connections.getRequests(uuid.toString())
-        if (r.status_request == null) {return}
+        if (r.status_request == null) { return }
         r.status_request = null
         controller.link_connections.makeResponse(uuid.toString(), LinkStatusResponse(entityToMap(entity), entity))
     }
