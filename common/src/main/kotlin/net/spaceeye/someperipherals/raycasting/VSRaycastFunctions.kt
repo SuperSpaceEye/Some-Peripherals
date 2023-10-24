@@ -231,7 +231,7 @@ object VSRaycastFunctions {
             if (!scope.isActive) { return RaycastCtx(points_iter, ignore_entity, cache, pos, unit_d, intersected_entity, entity_step_counter, future_ship_intersections) }
         }
 
-        if (intersected_entity != null) {calculateReturn(world_res, intersected_entity, ship_hit_res, world_unit_rd, start)}
+        if (intersected_entity != null) {return calculateReturn(world_res, intersected_entity, ship_hit_res, world_unit_rd, start)}
 
         return RaycastNoResultReturn(points_iter.up_to.toDouble())
     }

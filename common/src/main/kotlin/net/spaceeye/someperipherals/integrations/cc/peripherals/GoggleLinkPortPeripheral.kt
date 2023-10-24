@@ -18,8 +18,6 @@ import net.spaceeye.someperipherals.util.Constants
 import net.spaceeye.someperipherals.util.getNow_ms
 import net.spaceeye.someperipherals.util.tableToDoubleArray
 import net.spaceeye.someperipherals.util.tableToTableArray
-import kotlin.math.max
-import kotlin.math.min
 
 //TODO refactor and simplify logic
 class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockPos):IPeripheral {
@@ -72,10 +70,6 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
 
             if (requests.raycast_request != null) { return@FunToLuaWrapper mutableMapOf(Pair("error", "Connection already has a raycasting request")) }
 
-            val timeout = min(
-                max(args.getLong(0), 0L),
-                SomePeripheralsConfig.SERVER.GOGGLE_SETTINGS.RANGE_GOGGLES_SETTINGS.max_allowed_raycast_waiting_time_ms
-            )
             val start = getNow_ms()
 
             val distance = args.getDouble(0)
@@ -99,7 +93,7 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
                 SomePeripheralsConfig.SERVER.GOGGLE_SETTINGS.RANGE_GOGGLES_SETTINGS.thread_awaiting_sleep_time_ms
 
             //TODO rework
-            while (getNow_ms() - start <= timeout) {
+            while (getNow_ms() - start <= SomePeripheralsConfig.SERVER.LINK_PORT_SETTINGS.max_connection_timeout_time_ms/1000) {
                 val res = port.link_connections.getResponses(k).raycast_response
                 if (res == null) { Thread.sleep(sleep_for); continue }
                 if (res !is LinkRaycastResponse) {return@FunToLuaWrapper RaycasterPeripheral.makeRaycastResponse(RaycastERROR("Response type is not LinkRaycastResponse"))}
@@ -116,24 +110,19 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
 
             if (requests.raycast_request != null) { return@FunToLuaWrapper mutableMapOf(Pair("error", "Connection already has a raycasting request")) }
 
-            //TODO remove lol
-            val timeout = min(
-                max(args.getLong(0), 0L),
-                SomePeripheralsConfig.SERVER.GOGGLE_SETTINGS.RANGE_GOGGLES_SETTINGS.max_allowed_raycast_waiting_time_ms
-            )
             val start = getNow_ms()
 
             val data = mutableListOf<Array<Double>>()
-            tableToTableArray(args.getTable(2), "Can't convert to table at ")
+            tableToTableArray(args.getTable(1), "Can't convert to table at ")
                 .forEachIndexed { idx, it -> data.add(tableToDoubleArray(it, "Can't convert to table at index ${idx} item at ")) }
 
             port.link_connections.makeRequest(k, LinkBatchRaycastRequest(
-                args.getDouble(1),
+                args.getDouble(0),
+                args.optBoolean(2).orElse(false),
                 args.optBoolean(3).orElse(false),
-                args.optBoolean(4).orElse(false),
                 data.toTypedArray(),
                 start,
-                timeout
+                1
             ))
 
             return@FunToLuaWrapper true

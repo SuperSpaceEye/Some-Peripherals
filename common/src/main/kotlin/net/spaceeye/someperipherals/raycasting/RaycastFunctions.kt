@@ -86,6 +86,9 @@ object RaycastFunctions {
 
         val intersecting_entities = mutableListOf<Pair<Entity, Double>>()
         for (entity in entities) {
+            logger.warn("Entity is $entity")
+            logger.warn("Ignore Entity is $ignore_entity")
+            logger.warn("They are ${entity == ignore_entity}")
             if (entity == null || entity == ignore_entity) {continue}
             val (res, t) = rayIntersectsBox(entity.boundingBox, start, d)
             if (!res) {continue}
@@ -203,9 +206,7 @@ object RaycastFunctions {
         val max_iter = if (max_dist <= 0) { distance.toInt() } else { min(distance.toInt(), max_dist) }
         val iter = BresenhamIter(start, stop, max_iter)
 
-        val result = raycast(level, iter, ignore_entity, cache, ctx, pos, unit_d)
-
-        return result
+        return raycast(level, iter, ignore_entity, cache, ctx, pos, unit_d)
     }
 
     @JvmStatic
@@ -237,7 +238,7 @@ object RaycastFunctions {
     suspend fun suspendCastRayEntity(entity: LivingEntity, distance: Double, euler_mode: Boolean = true, do_cache:Boolean = false,
                              var1:Double, var2: Double, var3: Double,
                              timeout: Long = SomePeripheralsConfig.SERVER.GOGGLE_SETTINGS.RANGE_GOGGLES_SETTINGS.max_allowed_raycast_waiting_time_ms,): RaycastReturn {
-        //TODO raycast probaly doesn't raise CancellationException anymore, but idk
+        //TODO raycast probably doesn't raise CancellationException anymore, but idk
         try {
             return withTimeout(timeout) {
                 try {
