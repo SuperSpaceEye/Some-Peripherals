@@ -238,18 +238,9 @@ object RaycastFunctions {
     suspend fun suspendCastRayEntity(entity: LivingEntity, distance: Double, euler_mode: Boolean = true, do_cache:Boolean = false,
                              var1:Double, var2: Double, var3: Double,
                              timeout: Long = SomePeripheralsConfig.SERVER.GOGGLE_SETTINGS.RANGE_GOGGLES_SETTINGS.max_allowed_raycast_waiting_time_ms,): RaycastReturn {
-        //TODO raycast probably doesn't raise CancellationException anymore, but idk
-        try {
-            return withTimeout(timeout) {
-                try {
-                    val res = castRayEntity(entity, distance, euler_mode, do_cache, var1, var2, var3)
-                    if (res is RaycastReturn) {res} else {RaycastERROR("raycast took too long")}
-                } catch (e: Exception) {
-                    RaycastERROR(e.toString())
-                }
-            }
-        } catch (e: CancellationException) {
-            return RaycastERROR("raycast took too long")
+        return withTimeout(timeout) {
+            val res = castRayEntity(entity, distance, euler_mode, do_cache, var1, var2, var3)
+            if (res is RaycastReturn) {res} else {RaycastERROR("raycast took too long")}
         }
     }
 

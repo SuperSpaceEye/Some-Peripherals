@@ -16,6 +16,6 @@ class LinkRaycastRequest(var distance: Double, var euler_mode: Boolean, var do_c
 class LinkRaycastResponse(var result: RaycastReturn): LinkResponse()
 
 class LinkBatchRaycastRequest(
-    var distance: Double, var euler_mode: Boolean, var do_cache:Boolean,
-    var data: Array<Array<Double>>, var start: Long, var timeout: Long, var do_terminate: Boolean=false): LinkRequest()
+    var distance: Double, var euler_mode: Boolean, var do_cache: Boolean,
+    var data: Array<Array<Double>>, var do_terminate: Boolean = false): LinkRequest()
 class LinkBatchRaycastResponse(var results: MutableList<RaycastReturn>, var is_done:Boolean=false): LinkResponse()

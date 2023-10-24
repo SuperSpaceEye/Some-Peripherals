@@ -42,8 +42,8 @@ open class StatusGogglesItem:
         return TranslatableComponent(base_name)
     }
 
-    protected open fun makeConnectionPing(entity: Entity): LinkPing {
-        return Server_StatusGogglesPing()
+    protected open fun makeConnectionPing(controller: GoggleLinkPort): LinkPing {
+        return Server_StatusGogglesPing(controller.link_connections.tick)
     }
 
     override fun inventoryTick(stack: ItemStack, level: Level, entity: Entity, slotId: Int, isSelected: Boolean) {
@@ -71,7 +71,7 @@ open class StatusGogglesItem:
 
         tick_successful = true
 
-        controller.link_connections.constant_pings[uuid.toString()] = makeConnectionPing(entity)
+        controller.link_connections.constant_pings[uuid.toString()] = makeConnectionPing(controller)
 
         tryExecuteStatusRequest(entity)
     }
@@ -86,21 +86,25 @@ open class StatusGogglesItem:
     override fun useOn(context: UseOnContext): InteractionResult {
         val bpos = context.clickedPos
         val level = context.level
+
         if (!level.getBlockState(bpos).`is`(SomePeripheralsCommonBlocks.GOGGLE_LINK_PORT.get())) { return super.useOn(context) }
-        val entity = level.getBlockEntity(bpos)
-        if (entity !is GoggleLinkPortBlockEntity) {return super.useOn(context)}
+        val be = level.getBlockEntity(bpos)
+        if (be !is GoggleLinkPortBlockEntity) {return super.useOn(context)}
         if (level.isClientSide) {
             context.player!!.displayClientMessage(TranslatableComponent(linked_name), true)
             return InteractionResult.SUCCESS
         }
-        val controller: GoggleLinkPortBlockEntity = entity
+
+        val controller: GoggleLinkPortBlockEntity = be
         val item = context.itemInHand
+        val pos = controller.blockPos
         if (!item.hasTag()) { item.tag = CompoundTag() }
         val nbt = item.tag
-        val pos = controller.blockPos
+
         nbt!!.putIntArray(CONTROLLER_POS, intArrayOf(pos.x, pos.y, pos.z))
         nbt.putString(CONTROLLER_LEVEL, controller.getLevel()?.dimension().toString());
         nbt.putUUID(_UUID, UUID.randomUUID())
+
         item.setTag(nbt)
 
         context.player!!.displayClientMessage(TranslatableComponent(linked_name), true)

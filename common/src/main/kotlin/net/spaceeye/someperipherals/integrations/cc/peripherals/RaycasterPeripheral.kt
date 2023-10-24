@@ -15,6 +15,7 @@ import net.spaceeye.someperipherals.integrations.cc.FunToLuaWrapper
 import net.spaceeye.someperipherals.raycasting.*
 import net.spaceeye.someperipherals.raycasting.RaycastFunctions.castRayBlock
 import net.spaceeye.someperipherals.util.Constants
+import net.spaceeye.someperipherals.util.makeCCErrorReturn
 import net.spaceeye.someperipherals.util.tableToDoubleArray
 
 class RaycasterPeripheral(private val level: Level, private val pos: BlockPos): IPeripheral {
@@ -137,7 +138,7 @@ class RaycasterPeripheral(private val level: Level, private val pos: BlockPos): 
         val im_execute  = args.optBoolean(3).orElse(true) // execute immediately
         val do_cache    = args.optBoolean(4).orElse(false)
 
-        if (variables.size < 2 || variables.size > 3) { return MethodResult.of(mutableMapOf(Pair("error", "Variables table should have 2 or 3 items"))) }
+        if (variables.size < 2 || variables.size > 3) { return MethodResult.of(makeCCErrorReturn("Variables table should have 2 or 3 items")) }
         val var1 = variables[0]
         val var2 = variables[1]
         val var3 = if (variables.size == 3) {variables[2]} else {1.0}
@@ -147,7 +148,7 @@ class RaycasterPeripheral(private val level: Level, private val pos: BlockPos): 
         var pull: MethodResult? = null
 
         val callback = CallbackToLuaWrapper {
-            if (terminate) {return@CallbackToLuaWrapper makeRaycastResponse(RaycastERROR("Was terminated"))}
+            if (terminate) {return@CallbackToLuaWrapper makeCCErrorReturn("Was terminated")}
 
             val res = if (ctx == null) { runBlocking { withTimeoutOrNull(SomePeripheralsConfig.SERVER.RAYCASTING_SETTINGS.max_raycast_time_ms) {
                 castRayBlock(level, be, pos, distance, euler_mode, do_cache, var1, var2, var3, null)
@@ -155,7 +156,7 @@ class RaycasterPeripheral(private val level: Level, private val pos: BlockPos): 
                 RaycastFunctions.raycast(level, ctx!!.points_iter, ctx!!.ignore_entity, ctx!!.cache, ctx, ctx!!.pos, ctx!!.unit_d)
             }}}
 
-            if (res == null) {return@CallbackToLuaWrapper makeRaycastResponse(RaycastERROR("how"))}
+            if (res == null) {return@CallbackToLuaWrapper makeCCErrorReturn("how")}
 
             if (res is RaycastReturn) { return@CallbackToLuaWrapper makeRaycastResponse(res)} else {
                 ctx = res as RaycastCtx
@@ -168,8 +169,8 @@ class RaycasterPeripheral(private val level: Level, private val pos: BlockPos): 
 
         if (!im_execute) {
             return MethodResult.of(mutableMapOf(
-                Pair("begin", FunToLuaWrapper { computer.queueEvent(Constants.RAYCASTER_RAYCAST_EVENT_NAME); return@FunToLuaWrapper pull }),
-                Pair("getCurI", FunToLuaWrapper { return@FunToLuaWrapper ctx?.points_iter?.cur_i ?: 0 }),
+                Pair("begin",     FunToLuaWrapper { computer.queueEvent(Constants.RAYCASTER_RAYCAST_EVENT_NAME); return@FunToLuaWrapper pull }),
+                Pair("getCurI",   FunToLuaWrapper { return@FunToLuaWrapper ctx?.points_iter?.cur_i ?: 0 }),
                 Pair("terminate", FunToLuaWrapper { terminate = true; return@FunToLuaWrapper Unit })
             ))
         } else {

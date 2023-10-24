@@ -48,7 +48,7 @@ class RaycasterBlock(properties: Properties): BaseEntityBlock(properties) {
         return RenderShape.MODEL
     }
 
-    fun doTick(state: BlockState, level: ServerLevel, pos: BlockPos) {
+    private fun doTick(state: BlockState, level: ServerLevel, pos: BlockPos) {
         if (level.isClientSide || !SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.do_position_caching) {return}
         if (ticks >= SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.save_cache_for_N_ticks) {
             pos_cache.clear()

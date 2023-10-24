@@ -18,6 +18,8 @@ class LinkConnectionsManager {
     private val port_requests = ConcurrentHashMap<String, RequestsHolder>()
     private val link_response = ConcurrentHashMap<String, ResponseHolder>()
 
+    var tick: Long = 0L
+
     fun clear() {
         constant_pings.clear()
         port_requests.clear()
