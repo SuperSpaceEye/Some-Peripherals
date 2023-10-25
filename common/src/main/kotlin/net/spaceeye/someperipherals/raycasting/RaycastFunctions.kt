@@ -100,6 +100,25 @@ object RaycastFunctions {
             pow(it.first.x - cur.x, 2.0) + pow(it.first.y - cur.y, 2.0)+ pow(it.first.z - cur.z, 2.0) }
     }
 
+    fun makeResult(
+        world_res: Pair<Pair<BlockPos, BlockState>, Double>?,
+        entity_res: Pair<Entity, Double>?,
+        unit_d: Vector3d,
+        start: Vector3d,
+        cache: PosCache
+    ): RaycastReturn {
+        cache.cleanup()
+        return if (world_res != null && entity_res != null) {
+            if (world_res.second < entity_res.second) {RaycastBlockReturn(world_res.first, world_res.second, unit_d*world_res.second+start)} else {RaycastEntityReturn(entity_res.first, entity_res.second, unit_d*entity_res.second+start)}
+        } else if (world_res != null) {
+            RaycastBlockReturn(world_res.first, world_res.second, unit_d*world_res.second+start)
+        } else if (entity_res != null) {
+            RaycastEntityReturn(entity_res.first, entity_res.second, unit_d * entity_res.second+start)
+        } else {
+            throw AssertionError("makeResult was called but both entity_res and world_res are nil")
+        }
+    }
+
     // returns either Pair<BlockPos, BlockState> or Entity
     @JvmStatic
     suspend fun normalRaycast(level: Level, points_iter: RayIter, ignore_entity: Entity?, cache: PosCache, ctx: RaycastCtx?): RaycastReturnOrCtx {
@@ -116,16 +135,16 @@ object RaycastFunctions {
         val check_for_entities = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.check_for_intersection_with_entities
         val er = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.entity_check_radius
 
-        var intersected_entity: Pair<Entity, Double>? = ctx?.intersected_entity ?: null
+        var entity_res: Pair<Entity, Double>? = ctx?.intersected_entity
         var entity_step_counter = ctx?.entity_step_counter ?: 0
 
         for (point in points_iter) {
             //if ray hits entity and any block wasn't hit before another check, then previous intersected entity is the actual hit place
             if (check_for_entities && entity_step_counter % er == 0) {
-                if (intersected_entity != null) { return RaycastEntityReturn(intersected_entity.first, intersected_entity.second, unit_d * intersected_entity.second+start) }
+                if (entity_res != null) { return makeResult(null, entity_res, unit_d, start, cache) }
 
                 // Pair of Entity, t
-                intersected_entity = checkForIntersectedEntity(start, point, level, d, ray_distance, er, ignore_entity)
+                entity_res = checkForIntersectedEntity(start, point, level, d, ray_distance, er, ignore_entity)
                 entity_step_counter = 0
             }
             entity_step_counter++
@@ -134,15 +153,11 @@ object RaycastFunctions {
 
             //if the block and intersected entity are both hit, then we need to find out actual intersection as
             // checkForIntersectedEntity checks "er" block radius
-            if (world_res != null && intersected_entity != null) { return if (world_res.second < intersected_entity.second)
-            {RaycastBlockReturn(world_res.first, world_res.second, unit_d*world_res.second+start)}
-            else {RaycastEntityReturn(intersected_entity.first, intersected_entity.second, unit_d*intersected_entity.second+start)} }
+            if (world_res != null) {return makeResult(world_res, entity_res, unit_d, start, cache)}
 
-            if (world_res != null) {return RaycastBlockReturn(world_res.first, world_res.second, unit_d*world_res.second+start)}
-
-            if (!scope.isActive) { return RaycastCtx(points_iter, ignore_entity, cache, Vector3d(), unit_d, intersected_entity, entity_step_counter, null) }
+            if (!scope.isActive) { return RaycastCtx(points_iter, ignore_entity, cache, Vector3d(), unit_d, entity_res, entity_step_counter, null) }
         }
-        if (intersected_entity != null) { return RaycastEntityReturn(intersected_entity.first, intersected_entity.second, unit_d * intersected_entity.second+start) }
+        if (entity_res != null) { return makeResult(null, entity_res, unit_d, start, cache) }
 
         return RaycastNoResultReturn(points_iter.up_to.toDouble())
     }

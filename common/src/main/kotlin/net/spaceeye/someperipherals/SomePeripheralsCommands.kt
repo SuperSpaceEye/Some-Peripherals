@@ -106,11 +106,9 @@ object SomePeripheralsCommands {
 
     private fun getNewOrPreviousChunk(level: ServerLevel, chunk: LevelChunk, pos: BlockPos): LevelChunk {
         val cpos = chunk.pos
-
         if (pos.x > cpos.maxBlockX || pos.x < cpos.minBlockX || pos.z > cpos.maxBlockZ || pos.z < cpos.minBlockZ) {
             return level.getChunkAt(pos)
         }
-
         return chunk
     }
 

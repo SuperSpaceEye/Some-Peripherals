@@ -3,6 +3,7 @@ package net.spaceeye.someperipherals.raycasting
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.chunk.LevelChunk
 import net.spaceeye.someperipherals.SomePeripheralsConfig
 import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.ReentrantLock
@@ -19,6 +20,7 @@ class PosCache {
     private var data = HashMap<Int, HashMap<Int, HashMap<Int, CachedObject>>>()
     private var cached = mutableListOf<CachedObject>()
     private val mutex: Lock = ReentrantLock(true)
+    var chunk: LevelChunk? = null
     var do_cache = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.do_position_caching
     var max_items: Int = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.max_cached_positions
 
@@ -67,6 +69,14 @@ class PosCache {
         setItem(bpos.x, bpos.y, bpos.z, newCache)
     }
 
+    private fun getNewOrPreviousChunk(level: Level, chunk: LevelChunk, pos: BlockPos): LevelChunk {
+        val cpos = chunk.pos
+        if (pos.x > cpos.maxBlockX || pos.x < cpos.minBlockX || pos.z > cpos.maxBlockZ || pos.z < cpos.minBlockZ) { return level.getChunkAt(pos) }
+        return chunk
+    }
+
+    fun cleanup() {chunk = null}
+
     fun clear() {
         if (!mutex.tryLock()) {return}
         data.clear()
@@ -75,7 +85,10 @@ class PosCache {
     }
 
     fun getBlockState(level: Level, bpos: BlockPos): BlockState {
-        if (!do_cache) {return level.getBlockState(bpos)}
+        if (chunk == null) {chunk = level.getChunkAt(bpos)}
+        chunk = getNewOrPreviousChunk(level, chunk!!, bpos)
+
+        if (!do_cache) {return chunk!!.getBlockState(bpos)}
 
         mutex.lock()
         val item = getItem(bpos)
@@ -86,7 +99,7 @@ class PosCache {
             return state
         }
 
-        val new_state = level.getBlockState(bpos)
+        val new_state = chunk!!.getBlockState(bpos)
         cacheNew(bpos, new_state, max_items)
         mutex.unlock()
         return new_state
