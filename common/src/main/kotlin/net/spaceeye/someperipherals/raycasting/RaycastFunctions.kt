@@ -86,9 +86,6 @@ object RaycastFunctions {
 
         val intersecting_entities = mutableListOf<Pair<Entity, Double>>()
         for (entity in entities) {
-            logger.warn("Entity is $entity")
-            logger.warn("Ignore Entity is $ignore_entity")
-            logger.warn("They are ${entity == ignore_entity}")
             if (entity == null || entity == ignore_entity) {continue}
             val (res, t) = rayIntersectsBox(entity.boundingBox, start, d)
             if (!res) {continue}

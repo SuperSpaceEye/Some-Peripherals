@@ -143,6 +143,8 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
             if (!checkConnection(ping))         { port.link_connections.getResponses(k).raycast_response = null; return@FunToLuaWrapper makeCCErrorReturn("Connection has been terminated") }
             if (r !is LinkBatchRaycastResponse) {                                                                return@FunToLuaWrapper makeCCErrorReturn("Response is not LinkBatchRaycastResponse")}
 
+            if (r.is_done) {port.link_connections.getResponses(k).raycast_response = null}
+
             val data = mutableMapOf<String, Any>()
             data["is_done"] = r.is_done
             val returns = mutableMapOf<Double, Any>()
