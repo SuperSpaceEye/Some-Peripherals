@@ -1,9 +1,9 @@
-package net.spaceeye.someperipherals.raycasting
+package net.spaceeye.someperipherals.utils.raycasting
 
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.level.block.state.BlockState
-import net.spaceeye.someperipherals.util.Vector3d
+import net.spaceeye.someperipherals.utils.mix.Vector3d
 import org.valkyrienskies.core.api.ships.ServerShip
 
 interface RaycastReturnOrCtx

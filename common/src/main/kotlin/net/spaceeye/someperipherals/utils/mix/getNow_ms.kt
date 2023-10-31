@@ -1,4 +1,4 @@
-package net.spaceeye.someperipherals.util
+package net.spaceeye.someperipherals.utils.mix
 
 import java.util.*
 

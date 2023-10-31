@@ -1,4 +1,4 @@
-package net.spaceeye.someperipherals.raycasting
+package net.spaceeye.someperipherals.utils.raycasting
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.isActive
@@ -9,10 +9,10 @@ import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.state.BlockState
 import net.spaceeye.someperipherals.SomePeripherals
 import net.spaceeye.someperipherals.SomePeripheralsConfig
-import net.spaceeye.someperipherals.raycasting.RaycastFunctions.checkForBlockInWorld
-import net.spaceeye.someperipherals.raycasting.RaycastFunctions.checkForIntersectedEntity
-import net.spaceeye.someperipherals.raycasting.RaycastFunctions.rayIntersectsBox
-import net.spaceeye.someperipherals.util.Vector3d
+import net.spaceeye.someperipherals.utils.raycasting.RaycastFunctions.checkForBlockInWorld
+import net.spaceeye.someperipherals.utils.raycasting.RaycastFunctions.checkForIntersectedEntity
+import net.spaceeye.someperipherals.utils.raycasting.RaycastFunctions.rayIntersectsBox
+import net.spaceeye.someperipherals.utils.mix.Vector3d
 import org.valkyrienskies.core.api.ships.ServerShip
 import org.valkyrienskies.mod.common.getShipManagingPos
 import org.valkyrienskies.mod.common.transformToNearbyShipsAndWorld
@@ -106,7 +106,7 @@ object VSRaycastFunctions {
     // when ship is added to future intersections, its t is also saved, and as collision is calculated from starting point,
     // you can just calculate euclidean distance of diff between starting point and current pos, and compare it with t*ray_distance
     @JvmStatic
-    fun checkRayPassedShip(start: Vector3d, ship: Pair<ServerShip, Double>, point:Vector3d, ray_distance: Double): Boolean
+    fun checkRayPassedShip(start: Vector3d, ship: Pair<ServerShip, Double>, point: Vector3d, ray_distance: Double): Boolean
     = ship.second * ray_distance <= (point - start).dist()
 
     @JvmStatic

@@ -9,7 +9,7 @@ import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityTicker
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.level.block.state.BlockState
-import net.spaceeye.someperipherals.LinkPortUtils.LinkConnectionsManager
+import net.spaceeye.someperipherals.utils.linkPort.LinkConnectionsManager
 import net.spaceeye.someperipherals.blockentities.GoggleLinkPortBlockEntity
 
 class GoggleLinkPort(properties: Properties): BaseEntityBlock(properties) {

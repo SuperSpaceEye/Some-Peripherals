@@ -6,21 +6,19 @@ import dan200.computercraft.api.peripheral.IPeripheral
 import kotlinx.coroutines.*
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
+import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.spaceeye.someperipherals.SomePeripheralsCommonBlocks
 import net.spaceeye.someperipherals.SomePeripheralsConfig
-import net.spaceeye.someperipherals.blockentities.RaycasterBlockEntity
 import net.spaceeye.someperipherals.integrations.cc.CallbackToLuaWrapper
 import net.spaceeye.someperipherals.integrations.cc.FunToLuaWrapper
-import net.spaceeye.someperipherals.raycasting.*
-import net.spaceeye.someperipherals.raycasting.RaycastFunctions.castRayBlock
-import net.spaceeye.someperipherals.util.Constants
-import net.spaceeye.someperipherals.util.makeCCErrorReturn
-import net.spaceeye.someperipherals.util.tableToDoubleArray
+import net.spaceeye.someperipherals.utils.raycasting.RaycastFunctions.castRayBlock
+import net.spaceeye.someperipherals.utils.mix.Constants
+import net.spaceeye.someperipherals.integrations.cc.makeErrorReturn
+import net.spaceeye.someperipherals.integrations.cc.tableToDoubleArray
+import net.spaceeye.someperipherals.utils.raycasting.*
 
-class RaycasterPeripheral(private val level: Level, private val pos: BlockPos): IPeripheral {
-    private var be = level.getBlockEntity(pos) as RaycasterBlockEntity
-
+class RaycasterPeripheral(private val level: Level, private val pos: BlockPos, private var be: BlockEntity): IPeripheral {
     companion object {
         @JvmStatic
         private fun makeResponseBlock(
@@ -103,11 +101,7 @@ class RaycasterPeripheral(private val level: Level, private val pos: BlockPos): 
         fun makeConfigInfo(): MutableMap<String, Any> {
             val rc = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS
             return mutableMapOf(
-                Pair("vector_rotation_enabled", rc.vector_rotation_enabled),
-
                 Pair("max_raycast_distance", rc.max_raycast_distance),
-                Pair("max_yaw_angle", rc.max_yaw_angle),
-                Pair("max_pitch_angle", rc.max_pitch_angle),
                 Pair("entity_check_radius", rc.entity_check_radius),
 
                 Pair("check_for_intersection_with_entities", rc.check_for_intersection_with_entities),
@@ -138,7 +132,7 @@ class RaycasterPeripheral(private val level: Level, private val pos: BlockPos): 
         val im_execute  = args.optBoolean(3).orElse(true) // execute immediately
         val do_cache    = args.optBoolean(4).orElse(false)
 
-        if (variables.size < 2 || variables.size > 3) { return MethodResult.of(makeCCErrorReturn("Variables table should have 2 or 3 items")) }
+        if (variables.size < 2 || variables.size > 3) { return MethodResult.of(makeErrorReturn("Variables table should have 2 or 3 items")) }
         val var1 = variables[0]
         val var2 = variables[1]
         val var3 = if (variables.size == 3) {variables[2]} else {1.0}
@@ -148,7 +142,7 @@ class RaycasterPeripheral(private val level: Level, private val pos: BlockPos): 
         var pull: MethodResult? = null
 
         val callback = CallbackToLuaWrapper {
-            if (terminate) {return@CallbackToLuaWrapper makeCCErrorReturn("Was terminated")}
+            if (terminate) {return@CallbackToLuaWrapper makeErrorReturn("Was terminated") }
 
             val res = if (ctx == null) { runBlocking { withTimeoutOrNull(SomePeripheralsConfig.SERVER.RAYCASTING_SETTINGS.max_raycast_time_ms) {
                 castRayBlock(level, be, pos, distance, euler_mode, do_cache, var1, var2, var3, null)
@@ -156,7 +150,7 @@ class RaycasterPeripheral(private val level: Level, private val pos: BlockPos): 
                 RaycastFunctions.raycast(level, ctx!!.points_iter, ctx!!.ignore_entity, ctx!!.cache, ctx, ctx!!.pos, ctx!!.unit_d)
             }}}
 
-            if (res == null) {return@CallbackToLuaWrapper makeCCErrorReturn("how")}
+            if (res == null) {return@CallbackToLuaWrapper makeErrorReturn("how") }
 
             if (res is RaycastReturn) { return@CallbackToLuaWrapper makeRaycastResponse(res)} else {
                 ctx = res as RaycastCtx

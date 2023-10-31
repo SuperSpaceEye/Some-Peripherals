@@ -12,15 +12,15 @@ import net.minecraft.world.item.ArmorMaterials
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.context.UseOnContext
 import net.minecraft.world.level.Level
-import net.spaceeye.someperipherals.LinkPortUtils.LinkPing
-import net.spaceeye.someperipherals.LinkPortUtils.LinkStatusResponse
-import net.spaceeye.someperipherals.LinkPortUtils.Server_StatusGogglesPing
-import net.spaceeye.someperipherals.LinkPortUtils.entityToMap
+import net.spaceeye.someperipherals.utils.linkPort.LinkPing
+import net.spaceeye.someperipherals.utils.linkPort.LinkStatusResponse
+import net.spaceeye.someperipherals.utils.linkPort.Server_StatusGogglesPing
+import net.spaceeye.someperipherals.utils.linkPort.entityToMap
 import net.spaceeye.someperipherals.SomePeripheralsCommonBlocks
 import net.spaceeye.someperipherals.SomePeripheralsItems
 import net.spaceeye.someperipherals.blockentities.GoggleLinkPortBlockEntity
 import net.spaceeye.someperipherals.blocks.GoggleLinkPort
-import net.spaceeye.someperipherals.util.Constants
+import net.spaceeye.someperipherals.utils.mix.Constants
 import java.util.UUID
 
 open class StatusGogglesItem:

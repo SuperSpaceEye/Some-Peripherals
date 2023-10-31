@@ -1,4 +1,4 @@
-package net.spaceeye.someperipherals.raycasting
+package net.spaceeye.someperipherals.utils.raycasting
 
 import com.mojang.math.Quaternion
 import kotlinx.coroutines.*
@@ -14,9 +14,9 @@ import net.minecraft.world.phys.AABB
 import net.spaceeye.someperipherals.SomePeripherals
 import net.spaceeye.someperipherals.SomePeripheralsConfig
 import net.spaceeye.someperipherals.blocks.RaycasterBlock
-import net.spaceeye.someperipherals.raycasting.VSRaycastFunctions.vsRaycast
-import net.spaceeye.someperipherals.util.BallisticFunctions.rad
-import net.spaceeye.someperipherals.util.Vector3d
+import net.spaceeye.someperipherals.utils.raycasting.VSRaycastFunctions.vsRaycast
+import net.spaceeye.someperipherals.utils.mix.BallisticFunctions.rad
+import net.spaceeye.someperipherals.utils.mix.Vector3d
 import org.valkyrienskies.mod.common.getShipManagingPos
 import java.lang.Math.*
 import kotlin.coroutines.coroutineContext
@@ -24,7 +24,7 @@ import kotlin.coroutines.coroutineContext
 object RaycastFunctions {
     private val logger = SomePeripherals.slogger
     const val eps  = 1e-200
-    const val heps = 1/eps
+    const val heps = 1/ eps
 
     //https://gamedev.stackexchange.com/questions/18436/most-efficient-aabb-vs-ray-collision-algorithms
     @JvmStatic
@@ -62,7 +62,8 @@ object RaycastFunctions {
         d: Vector3d,
         ray_distance: Double,
         level: Level,
-        cache: PosCache): Pair<Pair<BlockPos, BlockState>, Double>? {
+        cache: PosCache
+    ): Pair<Pair<BlockPos, BlockState>, Double>? {
         val bpos = BlockPos(point.x, point.y, point.z)
         val res = cache.getBlockState(level, bpos)
 
@@ -164,7 +165,7 @@ object RaycastFunctions {
     }
 
     suspend fun raycast(level: Level, pointsIter: RayIter, ignore_entity:Entity?=null, cache: PosCache, ctx: RaycastCtx? = null,
-                        pos: Vector3d, unit_d:Vector3d): RaycastReturnOrCtx {
+                        pos: Vector3d, unit_d: Vector3d): RaycastReturnOrCtx {
         return when (SomePeripherals.has_vs) {
             false -> normalRaycast(level, pointsIter, ignore_entity, cache, ctx)
             true  -> vsRaycast(level, pointsIter, ignore_entity, cache, ctx, pos, unit_d)
@@ -187,8 +188,8 @@ object RaycastFunctions {
 
     @JvmStatic
     fun eulerRotationCalc(direction: Quaternion, pitch_: Double, yaw_: Double): Vector3d {
-        val pitch = (if (pitch_ < 0) { pitch_.coerceAtLeast(-SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.max_pitch_angle) } else { pitch_.coerceAtMost(SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.max_pitch_angle) })
-        val yaw   = (if (yaw_ < 0)   { yaw_  .coerceAtLeast(-SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.max_yaw_angle  ) } else { yaw_  .coerceAtMost(SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.max_yaw_angle  ) })
+        val pitch = (if (pitch_ < 0) { pitch_.coerceAtLeast(-PI/2) } else { pitch_.coerceAtMost(PI/2) })
+        val yaw   = (if (yaw_ < 0)   { yaw_  .coerceAtLeast(-PI/2) } else { yaw_  .coerceAtMost(PI/2) })
 
         //idk why roll is yaw, and it needs to be inverted so that +yaw is right and -yaw is left
         val rotation = Quaternion(-yaw.toFloat(), pitch.toFloat(), 0f, false)
@@ -198,7 +199,7 @@ object RaycastFunctions {
 
     @JvmStatic
     fun vectorRotationCalc(dir_up: Pair<Vector3d, Vector3d>, posY: Double, posX:Double, length: Double,
-                           right:Vector3d? = null): Vector3d {
+                           right: Vector3d? = null): Vector3d {
         val dir = dir_up.first
         val l = max(length, 0.01)
 
@@ -233,12 +234,12 @@ object RaycastFunctions {
         val start = Vector3d(entity.eyePosition)
         cache.do_cache = do_cache
 
-        if (ctx != null) { return raycast(level, ctx.points_iter, ctx.ignore_entity, cache, ctx, ctx.pos, ctx.unit_d)}
+        if (ctx != null) { return raycast(level, ctx.points_iter, ctx.ignore_entity, cache, ctx, ctx.pos, ctx.unit_d) }
 
         //https://gamedev.stackexchange.com/questions/190054/how-to-calculate-the-forward-up-right-vectors-using-the-rotation-angles
         val p = rad(entity.xRot.toDouble()) // picth
         val y =-rad(entity.yHeadRot.toDouble()) // yaw
-        val unit_d = if (euler_mode || !SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.vector_rotation_enabled) {
+        val unit_d = if (euler_mode) {
             eulerRotationCalc(Quaternion.fromXYZ(y.toFloat(), -p.toFloat(), PI.toFloat()), var1, var2)
         } else {
             val up  = Vector3d(sin(p)*sin(y),  cos(p), sin(p)*cos(y))
@@ -272,7 +273,7 @@ object RaycastFunctions {
 
         if (ctx != null) { return raycast(level, ctx.points_iter, ctx.ignore_entity, cache, ctx, ctx.pos, ctx.unit_d) }
 
-        var unit_d = if (euler_mode || !SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.vector_rotation_enabled) {
+        var unit_d = if (euler_mode) {
             eulerRotationCalc(directionToQuat(be.blockState.getValue(BlockStateProperties.FACING)), var1, var2)
         } else {
             val dir_en = be.blockState.getValue(BlockStateProperties.FACING)

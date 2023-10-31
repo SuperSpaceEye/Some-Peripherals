@@ -1,4 +1,4 @@
-package net.spaceeye.someperipherals.util
+package net.spaceeye.someperipherals.utils.mix
 
 import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.Vec3
@@ -179,7 +179,7 @@ class Vector3d(x:Number, y:Number, z:Number) {
     inline fun srdiv(x:Number, y: Number, z: Number):  Vector3d {return rdiv(Vector3d(x,y,z), this)}
     inline fun srdiv(other:Double): Vector3d {return rdiv(other, this)}
 
-    inline operator fun unaryPlus():Vector3d {return this}
+    inline operator fun unaryPlus():  Vector3d {return this}
     inline operator fun unaryMinus(): Vector3d {return Vector3d(-x, -y, -z)}
     inline operator fun inc(): Vector3d {x++; y++; z++; return this}
     inline operator fun dec(): Vector3d {x--; y--; z--; return this}

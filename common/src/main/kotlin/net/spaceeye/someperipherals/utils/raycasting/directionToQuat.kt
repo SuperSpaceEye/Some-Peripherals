@@ -1,4 +1,4 @@
-package net.spaceeye.someperipherals.raycasting
+package net.spaceeye.someperipherals.utils.raycasting
 
 import com.mojang.math.Quaternion
 import net.minecraft.core.Direction

@@ -1,4 +1,4 @@
-package net.spaceeye.someperipherals.LinkPortUtils
+package net.spaceeye.someperipherals.utils.linkPort
 
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity

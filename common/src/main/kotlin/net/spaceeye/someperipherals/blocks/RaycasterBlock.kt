@@ -16,7 +16,7 @@ import net.minecraft.world.level.block.state.StateDefinition
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.spaceeye.someperipherals.SomePeripheralsConfig
 import net.spaceeye.someperipherals.blockentities.RaycasterBlockEntity
-import net.spaceeye.someperipherals.raycasting.PosCache
+import net.spaceeye.someperipherals.utils.raycasting.PosCache
 
 class RaycasterBlock(properties: Properties): BaseEntityBlock(properties) {
     val pos_cache = PosCache()

@@ -1,4 +1,4 @@
-package net.spaceeye.someperipherals.raycasting
+package net.spaceeye.someperipherals.utils.raycasting
 
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level

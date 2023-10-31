@@ -26,11 +26,7 @@ object SomePeripheralsConfig {
         }
 
         class RaycasterSettings: ConfigSubDirectory() {
-            var vector_rotation_enabled: Boolean by CBool(true, "If false, only euler rotation is allowed")
-
             var max_raycast_distance: Int by CInt(-1, "Maximum amount of blocks ray can travel. Set to num <=0 for no limit")
-            var max_yaw_angle: Double by CDouble(Math.PI / 2, "Only for euler rotation. Angle in radians", Pair(0.0, Double.MAX_VALUE))
-            var max_pitch_angle: Double by CDouble(Math.PI / 2, "Only for euler rotation. angle in radians", Pair(0.0, Double.MAX_VALUE))
             var entity_check_radius: Int by CInt(16, "Will check for intersections with entities every N blocks traveled in N radius", Pair(1, Int.MAX_VALUE))
 
             var check_for_intersection_with_entities: Boolean by CBool(true, "Includes Valkyrien Skies ships if VS is installed")

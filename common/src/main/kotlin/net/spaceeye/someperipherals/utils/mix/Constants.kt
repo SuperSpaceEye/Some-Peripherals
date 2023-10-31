@@ -1,4 +1,4 @@
-package net.spaceeye.someperipherals.util
+package net.spaceeye.someperipherals.utils.mix
 
 object Constants {
     const val HELMET_ARMOR_SLOT_ID = 3

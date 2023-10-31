@@ -1,4 +1,4 @@
-package net.spaceeye.someperipherals.LinkPortUtils
+package net.spaceeye.someperipherals.utils.linkPort
 
 abstract class LinkPing(var timestamp: Long)
 

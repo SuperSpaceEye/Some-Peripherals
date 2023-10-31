@@ -1,10 +1,10 @@
 // The one doing a request should remove previous response first (if it exists)
 // The one executing request should remove it after completing it.
 
-package net.spaceeye.someperipherals.LinkPortUtils
+package net.spaceeye.someperipherals.utils.linkPort
 
 import net.minecraft.world.entity.Entity
-import net.spaceeye.someperipherals.raycasting.RaycastReturn
+import net.spaceeye.someperipherals.utils.raycasting.RaycastReturn
 
 abstract class LinkRequest
 abstract class LinkResponse

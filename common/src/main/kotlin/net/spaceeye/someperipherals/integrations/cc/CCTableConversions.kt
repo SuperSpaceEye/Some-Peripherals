@@ -1,4 +1,4 @@
-package net.spaceeye.someperipherals.util
+package net.spaceeye.someperipherals.integrations.cc
 
 import dan200.computercraft.api.lua.LuaException
 

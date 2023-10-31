@@ -1,13 +1,13 @@
-package net.spaceeye.someperipherals.raycasting
+package net.spaceeye.someperipherals.utils.raycasting
 
-import net.spaceeye.someperipherals.util.Vector3d
+import net.spaceeye.someperipherals.utils.mix.Vector3d
 import kotlin.math.floor
 
 //https://www.shadertoy.com/view/4dX3zl
 
 //https://lodev.org/cgtutor/raycasting.html
 //https://stackoverflow.com/questions/55263298/draw-all-voxels-that-pass-through-a-3d-line-in-3d-voxel-space
-class BresenhamIter(start: Vector3d, stop: Vector3d, up_to: Int):RayIter(start, stop, up_to) {
+class BresenhamIter(start: Vector3d, stop: Vector3d, up_to: Int): RayIter(start, stop, up_to) {
     private var tMax : Vector3d
     private var tDelta : Vector3d
     private var step : Vector3d

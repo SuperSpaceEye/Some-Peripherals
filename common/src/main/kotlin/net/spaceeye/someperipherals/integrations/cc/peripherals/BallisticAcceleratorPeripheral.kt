@@ -7,9 +7,9 @@ import dan200.computercraft.api.peripheral.IPeripheral
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
 import net.spaceeye.someperipherals.SomePeripheralsCommonBlocks
-import net.spaceeye.someperipherals.util.BallisticFunctions
-import net.spaceeye.someperipherals.util.tableToDoubleArray
-import net.spaceeye.someperipherals.util.tableToTableArray
+import net.spaceeye.someperipherals.utils.mix.BallisticFunctions
+import net.spaceeye.someperipherals.integrations.cc.tableToDoubleArray
+import net.spaceeye.someperipherals.integrations.cc.tableToTableArray
 
 class BallisticAcceleratorPeripheral(private val level: Level, private val pos: BlockPos): IPeripheral {
     @LuaFunction

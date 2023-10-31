@@ -6,17 +6,19 @@ import dan200.computercraft.api.peripheral.IComputerAccess
 import dan200.computercraft.api.peripheral.IPeripheral
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
-import net.spaceeye.someperipherals.LinkPortUtils.*
+import net.minecraft.world.level.block.entity.BlockEntity
 import net.spaceeye.someperipherals.SomePeripheralsCommonBlocks
 import net.spaceeye.someperipherals.SomePeripheralsConfig
-import net.spaceeye.someperipherals.blockentities.GoggleLinkPortBlockEntity
 import net.spaceeye.someperipherals.blocks.GoggleLinkPort
 import net.spaceeye.someperipherals.integrations.cc.CallbackToLuaWrapper
 import net.spaceeye.someperipherals.integrations.cc.FunToLuaWrapper
-import net.spaceeye.someperipherals.util.*
+import net.spaceeye.someperipherals.utils.linkPort.*
+import net.spaceeye.someperipherals.utils.mix.Constants
+import net.spaceeye.someperipherals.integrations.cc.makeErrorReturn
+import net.spaceeye.someperipherals.integrations.cc.tableToDoubleArray
+import net.spaceeye.someperipherals.integrations.cc.tableToTableArray
 
-class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockPos):IPeripheral {
-    private var be = level.getBlockEntity(pos) as GoggleLinkPortBlockEntity
+class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockPos, private var be:BlockEntity):IPeripheral {
     private var block = (be.blockState.block as GoggleLinkPort)
 
     private fun goggleType(connection: LinkPing): String {
@@ -64,8 +66,8 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
             val ping = port.link_connections.constant_pings[k]
             val requests = port.link_connections.getRequests(k)
 
-            if (!checkConnection(ping))           { return@FunToLuaWrapper makeCCErrorReturn("Connection has been terminated") }
-            if (requests.raycast_request != null) { return@FunToLuaWrapper makeCCErrorReturn("Connection already has a raycasting request") }
+            if (!checkConnection(ping))           { return@FunToLuaWrapper makeErrorReturn("Connection has been terminated") }
+            if (requests.raycast_request != null) { return@FunToLuaWrapper makeErrorReturn("Connection already has a raycasting request") }
 
             val start = block.link_connections.tick
 
@@ -76,7 +78,7 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
             val do_cache   = args.optBoolean(3).orElse(false)
             val im_execute = args.optBoolean(4).orElse(true)
 
-            if (variables.size < 2 || variables.size > 3) { return@FunToLuaWrapper makeCCErrorReturn("Variables table should have 2 or 3 items") }
+            if (variables.size < 2 || variables.size > 3) { return@FunToLuaWrapper makeErrorReturn("Variables table should have 2 or 3 items") }
             val var1 = variables[0]
             val var2 = variables[1]
             val var3 = if (variables.size == 3) {variables[2]} else {1.0}
@@ -91,13 +93,13 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
                 val ping = port.link_connections.constant_pings[k]
                 val timeout = SomePeripheralsConfig.SERVER.LINK_PORT_SETTINGS.max_connection_timeout_time_ticks
 
-                if (terminate)                  { port.link_connections.getRequests(k).raycast_request = null; return@CallbackToLuaWrapper makeCCErrorReturn("Was terminated")}
-                if (cur_tick - start > timeout) { port.link_connections.getRequests(k).raycast_request = null; return@CallbackToLuaWrapper makeCCErrorReturn("Timeout") }
-                if (!checkConnection(ping))     { port.link_connections.getRequests(k).raycast_request = null; return@CallbackToLuaWrapper makeCCErrorReturn("Timeout") }
+                if (terminate)                  { port.link_connections.getRequests(k).raycast_request = null; return@CallbackToLuaWrapper makeErrorReturn("Was terminated") }
+                if (cur_tick - start > timeout) { port.link_connections.getRequests(k).raycast_request = null; return@CallbackToLuaWrapper makeErrorReturn("Timeout") }
+                if (!checkConnection(ping))     { port.link_connections.getRequests(k).raycast_request = null; return@CallbackToLuaWrapper makeErrorReturn("Timeout") }
 
                 val res = port.link_connections.getResponses(k).raycast_response
                 if (res == null) {computer.queueEvent(Constants.GOGGLES_RAYCAST_EVENT_NAME); return@CallbackToLuaWrapper pull!!}
-                if (res !is LinkRaycastResponse) {return@CallbackToLuaWrapper makeCCErrorReturn("res not a LinkRaycastResponse")}
+                if (res !is LinkRaycastResponse) {return@CallbackToLuaWrapper makeErrorReturn("res not a LinkRaycastResponse") }
 
                 return@CallbackToLuaWrapper RaycasterPeripheral.makeRaycastResponse(res.result)
             }
@@ -119,8 +121,8 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
             val ping = port.link_connections.constant_pings[k]
             val requests = port.link_connections.getRequests(k)
 
-            if (!checkConnection(ping))           { return@FunToLuaWrapper makeCCErrorReturn("Connection has been terminated") }
-            if (requests.raycast_request != null) { return@FunToLuaWrapper makeCCErrorReturn("Connection already has a raycasting request") }
+            if (!checkConnection(ping))           { return@FunToLuaWrapper makeErrorReturn("Connection has been terminated") }
+            if (requests.raycast_request != null) { return@FunToLuaWrapper makeErrorReturn("Connection already has a raycasting request") }
 
             val data = mutableListOf<Array<Double>>()
             tableToTableArray(args.getTable(1), "Can't convert to table at ")
@@ -137,12 +139,12 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
 
             return@FunToLuaWrapper mutableMapOf(
         Pair("getQueuedData", FunToLuaWrapper {
-            if (terminated) { return@FunToLuaWrapper makeCCErrorReturn("Connection has been terminated") }
+            if (terminated) { return@FunToLuaWrapper makeErrorReturn("Connection has been terminated") }
             val ping = port.link_connections.constant_pings[k]
             val r = port.link_connections.getResponses(k).raycast_response
 
-            if (!checkConnection(ping))         { port.link_connections.getResponses(k).raycast_response = null; return@FunToLuaWrapper makeCCErrorReturn("Connection has been terminated") }
-            if (r !is LinkBatchRaycastResponse) {                                                                return@FunToLuaWrapper makeCCErrorReturn("Response is not LinkBatchRaycastResponse")}
+            if (!checkConnection(ping))         { port.link_connections.getResponses(k).raycast_response = null; return@FunToLuaWrapper makeErrorReturn("Connection has been terminated") }
+            if (r !is LinkBatchRaycastResponse) {                                                                return@FunToLuaWrapper makeErrorReturn("Response is not LinkBatchRaycastResponse") }
 
             if (r.is_done) {port.link_connections.getResponses(k).raycast_response = null}
 
@@ -156,12 +158,12 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
             return@FunToLuaWrapper data
         }),
         Pair("terminate", FunToLuaWrapper{
-            if (terminated) { return@FunToLuaWrapper makeCCErrorReturn("Connection has been terminated") }
+            if (terminated) { return@FunToLuaWrapper makeErrorReturn("Connection has been terminated") }
             val ping = port.link_connections.constant_pings[k]
             val r = port.link_connections.getRequests(k).raycast_request
 
-            if (!checkConnection(ping))        { port.link_connections.getResponses(k).raycast_response = null; return@FunToLuaWrapper makeCCErrorReturn("Connection has been terminated") }
-            if (r !is LinkBatchRaycastRequest) {                                                                return@FunToLuaWrapper makeCCErrorReturn("Response is not LinkBatchRaycastResponse")}
+            if (!checkConnection(ping))        { port.link_connections.getResponses(k).raycast_response = null; return@FunToLuaWrapper makeErrorReturn("Connection has been terminated") }
+            if (r !is LinkBatchRaycastRequest) {                                                                return@FunToLuaWrapper makeErrorReturn("Response is not LinkBatchRaycastResponse") }
 
             r.do_terminate = true
             terminated = true
@@ -200,8 +202,8 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
             val callback = CallbackToLuaWrapper {
                 val ping = port.link_connections.constant_pings[k]
 
-                if (terminate)              { port.link_connections.getRequests(k).status_request = null; return@CallbackToLuaWrapper makeCCErrorReturn("was terminated")}
-                if (!checkConnection(ping)) { port.link_connections.getRequests(k).status_request = null; return@CallbackToLuaWrapper makeCCErrorReturn("Connection has been terminated")}
+                if (terminate)              { port.link_connections.getRequests(k).status_request = null; return@CallbackToLuaWrapper makeErrorReturn("was terminated") }
+                if (!checkConnection(ping)) { port.link_connections.getRequests(k).status_request = null; return@CallbackToLuaWrapper makeErrorReturn("Connection has been terminated") }
 
                 val r = port.link_connections.getResponses(k).status_response
                 if (r == null) {computer.queueEvent(Constants.GOGGLES_GET_INFO_EVENT_NAME); return@CallbackToLuaWrapper pull!!}
