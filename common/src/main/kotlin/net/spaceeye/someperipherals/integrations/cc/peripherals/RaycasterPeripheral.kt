@@ -179,24 +179,6 @@ class RaycasterPeripheral(private val level: Level, private val pos: BlockPos): 
         }
     }
 
-//    //TODO this doesn't work... why?
-//    @LuaFunction
-//    fun testCallback(): MethodResult {
-//        var callback: CallbackToLuaWrapper? = null
-//        var i = 0;
-//
-//        var yield: MethodResult? = null
-//
-//        callback = CallbackToLuaWrapper {
-//            if (i >= 10) {return@CallbackToLuaWrapper MethodResult.of(10)}
-//            i++
-//            return@CallbackToLuaWrapper yield!!
-//        }
-//
-//        yield = MethodResult.yield(null, callback)
-//        return yield
-//    }
-
     @LuaFunction
     fun addStickers(state: Boolean) {
         //dont question it

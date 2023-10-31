@@ -133,10 +133,11 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
                 data.toTypedArray()
             ))
 
-            return@FunToLuaWrapper true
-        }
+            var terminated = false
 
-        item["getQueuedData"] = FunToLuaWrapper {
+            return@FunToLuaWrapper mutableMapOf(
+        Pair("getQueuedData", FunToLuaWrapper {
+            if (terminated) { return@FunToLuaWrapper makeCCErrorReturn("Connection has been terminated") }
             val ping = port.link_connections.constant_pings[k]
             val r = port.link_connections.getResponses(k).raycast_response
 
@@ -153,6 +154,21 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
             data["results"] = returns
 
             return@FunToLuaWrapper data
+        }),
+        Pair("terminate", FunToLuaWrapper{
+            if (terminated) { return@FunToLuaWrapper makeCCErrorReturn("Connection has been terminated") }
+            val ping = port.link_connections.constant_pings[k]
+            val r = port.link_connections.getRequests(k).raycast_request
+
+            if (!checkConnection(ping))        { port.link_connections.getResponses(k).raycast_response = null; return@FunToLuaWrapper makeCCErrorReturn("Connection has been terminated") }
+            if (r !is LinkBatchRaycastRequest) {                                                                return@FunToLuaWrapper makeCCErrorReturn("Response is not LinkBatchRaycastResponse")}
+
+            r.do_terminate = true
+            terminated = true
+
+            return@FunToLuaWrapper true
+        })
+            )
         }
 
         item["getConfigInfo"] = FunToLuaWrapper {
@@ -210,6 +226,17 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
             }
         }
         item["type"] = port.link_connections.constant_pings[k]?.let { goggleType(it) } ?: "terminated"
+        item["terminateAll"] = FunToLuaWrapper {
+            val reqs = port.link_connections.getRequests(k)
+            reqs.status_request = null
+            reqs.raycast_request = null
+
+            val rsps = port.link_connections.getResponses(k)
+            rsps.status_response = null
+            rsps.raycast_response = null
+
+            return@FunToLuaWrapper Unit
+        }
     }
 
     override fun equals(p0: IPeripheral?): Boolean = level.getBlockState(pos).`is`(SomePeripheralsCommonBlocks.GOGGLE_LINK_PORT.get())

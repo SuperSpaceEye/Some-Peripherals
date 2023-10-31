@@ -118,7 +118,9 @@ object RaycastFunctions {
 
     // returns either Pair<BlockPos, BlockState> or Entity
     @JvmStatic
-    suspend fun normalRaycast(level: Level, points_iter: RayIter, ignore_entity: Entity?, cache: PosCache, ctx: RaycastCtx?): RaycastReturnOrCtx {
+    suspend fun normalRaycast(
+        level: Level, points_iter: RayIter, ignore_entity: Entity?, cache: PosCache, ctx: RaycastCtx?,
+        check_for_blocks_in_world:Boolean=true): RaycastReturnOrCtx {
         val scope = CoroutineScope(coroutineContext)
 
         val start = points_iter.start
@@ -135,6 +137,8 @@ object RaycastFunctions {
         var entity_res: Pair<Entity, Double>? = ctx?.intersected_entity
         var entity_step_counter = ctx?.entity_step_counter ?: 0
 
+        var world_res: Pair<Pair<BlockPos, BlockState>, Double>? = null
+
         for (point in points_iter) {
             //if ray hits entity and any block wasn't hit before another check, then previous intersected entity is the actual hit place
             if (check_for_entities && entity_step_counter % er == 0) {
@@ -146,7 +150,7 @@ object RaycastFunctions {
             }
             entity_step_counter++
 
-            val world_res = checkForBlockInWorld(start, point, d, ray_distance, level, cache)
+            if (check_for_blocks_in_world) {world_res = checkForBlockInWorld(start, point, d, ray_distance, level, cache)}
 
             //if the block and intersected entity are both hit, then we need to find out actual intersection as
             // checkForIntersectedEntity checks "er" block radius
@@ -154,7 +158,7 @@ object RaycastFunctions {
 
             if (!scope.isActive) { return RaycastCtx(points_iter, ignore_entity, cache, Vector3d(), unit_d, entity_res, entity_step_counter, null) }
         }
-        if (entity_res != null) { return makeResult(null, entity_res, unit_d, start, cache) }
+        if (entity_res != null && entity_res.second <= points_iter.up_to) { return makeResult(null, entity_res, unit_d, start, cache) }
 
         return RaycastNoResultReturn(points_iter.up_to.toDouble())
     }

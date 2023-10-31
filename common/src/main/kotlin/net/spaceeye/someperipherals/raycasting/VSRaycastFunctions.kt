@@ -182,7 +182,8 @@ object VSRaycastFunctions {
 
     @JvmStatic
     suspend fun vsRaycast(level: Level, points_iter: RayIter, ignore_entity:Entity?=null, cache: PosCache, ctx: RaycastCtx?,
-                          pos: Vector3d, unit_d: Vector3d): RaycastReturnOrCtx {
+                          pos: Vector3d, unit_d: Vector3d,
+                          check_for_blocks_in_world:Boolean=true): RaycastReturnOrCtx {
         val scope = CoroutineScope(coroutineContext)
 
         val start = points_iter.start // starting position
@@ -226,14 +227,14 @@ object VSRaycastFunctions {
             checkForShipIntersections(start, point+unit_d, ray_distance, d, rd, points_iter.up_to, future_ship_intersections, shipyard_rays)
 
             ship_hit_res = iterateShipRays(level, shipyard_rays, ships_already_intersected, start, shipyard_start, cache)
-            world_res = checkForBlockInWorld(start, point, d, ray_distance, level, cache)
+            if (check_for_blocks_in_world) {world_res = checkForBlockInWorld(start, point, d, ray_distance, level, cache) }
 
             if (world_res != null || !ship_hit_res.isEmpty()) {return calculateReturn(world_res, entity_res, ship_hit_res, world_unit_rd, start, cache) }
 
             if (!scope.isActive) { return RaycastCtx(points_iter, ignore_entity, cache, pos, unit_d, entity_res, entity_step_counter, future_ship_intersections) }
         }
 
-        if (entity_res != null) {return calculateReturn(world_res, entity_res, ship_hit_res, world_unit_rd, start, cache)}
+        if (entity_res != null && entity_res.second <= points_iter.up_to) {return calculateReturn(world_res, entity_res, ship_hit_res, world_unit_rd, start, cache)}
 
         return RaycastNoResultReturn(points_iter.up_to.toDouble())
     }
