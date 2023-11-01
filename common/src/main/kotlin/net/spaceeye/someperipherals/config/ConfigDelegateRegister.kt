@@ -1,7 +1,6 @@
 package net.spaceeye.someperipherals.config
 
 import net.spaceeye.someperipherals.PlatformUtils
-import net.spaceeye.someperipherals.SomePeripherals
 import net.spaceeye.someperipherals.SomePeripheralsConfig
 import kotlin.reflect.KProperty
 import kotlin.reflect.KProperty1

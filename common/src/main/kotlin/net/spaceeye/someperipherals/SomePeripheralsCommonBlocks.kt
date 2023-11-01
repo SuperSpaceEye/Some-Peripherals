@@ -15,14 +15,10 @@ import net.spaceeye.someperipherals.blocks.RaycasterBlock
 object SomePeripheralsCommonBlocks {
     private val BLOCKS = DeferredRegister.create(SomePeripherals.MOD_ID, Registry.BLOCK_REGISTRY)
 
-    @JvmField
-    var BALLISTIC_ACCELERATOR = BLOCKS.register("ballistic_accelerator") {Block(BlockBehaviour.Properties.of(Material.METAL).strength(2.0f))}
-    @JvmField
-    var RAYCASTER = BLOCKS.register<Block>("raycaster") { RaycasterBlock(BlockBehaviour.Properties.of(Material.METAL).strength(2.0f)) }
-    @JvmField
-    var GOGGLE_LINK_PORT = BLOCKS.register<Block>("goggle_link_port") {GoggleLinkPort(BlockBehaviour.Properties.of(Material.METAL).strength(2.0f))}
-    @JvmField
-    var RADAR = BLOCKS.register("radar") {Block(BlockBehaviour.Properties.of(Material.METAL).strength(2.0f))}
+    @JvmField var BALLISTIC_ACCELERATOR = BLOCKS.register("ballistic_accelerator") {Block(BlockBehaviour.Properties.of(Material.METAL).strength(2.0f))}
+    @JvmField var RAYCASTER = BLOCKS.register<Block>("raycaster") { RaycasterBlock(BlockBehaviour.Properties.of(Material.METAL).strength(2.0f)) }
+    @JvmField var GOGGLE_LINK_PORT = BLOCKS.register<Block>("goggle_link_port") {GoggleLinkPort(BlockBehaviour.Properties.of(Material.METAL).strength(2.0f))}
+    @JvmField var RADAR = BLOCKS.register("radar") {Block(BlockBehaviour.Properties.of(Material.METAL).strength(2.0f))}
 
     fun registerBaseBlocks() {
         BLOCKS.register()

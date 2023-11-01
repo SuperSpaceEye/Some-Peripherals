@@ -22,7 +22,7 @@ fun getPeripheralCommon(level: Level, blockPos: BlockPos, direction: Direction):
         c(s, SomePeripheralsCommonBlocks.BALLISTIC_ACCELERATOR.get()) -> BallisticAcceleratorPeripheral(level, blockPos)
         c(s, SomePeripheralsCommonBlocks.RAYCASTER.get()) -> RaycasterPeripheral(level, blockPos, be!!)
         c(s, SomePeripheralsCommonBlocks.GOGGLE_LINK_PORT.get()) -> GoggleLinkPortPeripheral(level, blockPos, be!!)
-        c(s, SomePeripheralsCommonBlocks.RADAR.get()) -> RadarPeripheral(level, blockPos, be!!)
+        c(s, SomePeripheralsCommonBlocks.RADAR.get()) -> RadarPeripheral(level, blockPos)
         else -> null
     }
 }

@@ -2,6 +2,7 @@
   "block.some_peripherals.ballistic_accelerator": "Ballistic Accelerator",
   "block.some_peripherals.raycaster": "Raycaster",
   "block.some_peripherals.goggle_link_port": "Goggle Link Port",
+  "block.some_peripherals.radar": "Radar",
 
   "item.some_peripherals.status_goggles": "Status Goggles",
   "item.some_peripherals.range_goggles": "Range Goggles",

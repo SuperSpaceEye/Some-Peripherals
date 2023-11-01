@@ -1,14 +1,14 @@
-package net.spaceeye.someperipherals.utils.linkPort
+package net.spaceeye.someperipherals.utils.mix
 
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.player.Player
 import net.spaceeye.someperipherals.SomePeripheralsConfig
 
-fun entityToMap(entity: Entity): MutableMap<String, Any> {
+fun entityToMap(entity: Entity, s: SomePeripheralsConfig.Server.AllowedEntityData): MutableMap<String, Any> {
     val item = mutableMapOf<String, Any>()
-    val s = SomePeripheralsConfig.SERVER.GOGGLE_SETTINGS.ALLOWED_GOGGLE_DATA
 
+    item["is_entity"] = true
     if(s.pos) item["pos"] = listOf(entity.x, entity.y, entity.z)
     if(s.eye_pos) item["eye_pos"] = listOf(entity.eyePosition.x, entity.eyePosition.y, entity.eyePosition.z)
     if(s.eye_height) item["eye_height"] = entity.eyeHeight.toDouble()
