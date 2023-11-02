@@ -52,41 +52,41 @@ object SomePeripheralsConfig {
         }
 
         class RadarSettings: ConfigSubDirectory() {
-            val ALLOWED_ENTITY_DATA_SETTINGS = AllowedEntityData()
+            class RadarAllowedEntityData: ConfigSubDirectory() {
+                var pos: Boolean by CBool(true)
+                var eye_pos: Boolean by CBool(true)
+                var eye_height: Boolean by CBool(true)
+                var look_angle: Boolean by CBool(true)
+                var dimension: Boolean by CBool(true)
+                var entity_type: Boolean by CBool(true)
+                var air_supply: Boolean by CBool(true)
+                var max_air_supply: Boolean by CBool(true)
+
+                var health: Boolean by CBool(true)
+                var max_health: Boolean by CBool(true)
+                var armor_value: Boolean by CBool(true)
+                var armor_cover_percentage: Boolean by CBool(true)
+                var absorption_amount: Boolean by CBool(true)
+                var is_baby: Boolean by CBool(true)
+                var is_blocking: Boolean by CBool(true)
+                var is_sleeping: Boolean by CBool(true)
+                var is_fall_flying: Boolean by CBool(true)
+                var speed: Boolean by CBool(true)
+                var xRot: Boolean by CBool(true, "pitch. In degrees.")
+                var yHeadRot: Boolean by CBool(true, "yaw. In degrees.")
+                var yBodyRot: Boolean by CBool(true, "yaw. In degrees")
+
+                var nickname: Boolean by CBool(true)
+                var experience_level: Boolean by CBool(true)
+                var xp_needed_for_next_level: Boolean by CBool(true)
+                var experience_progress: Boolean by CBool(true)
+            }
+
+            val ALLOWED_ENTITY_DATA_SETTINGS = RadarAllowedEntityData()
             val ALLOWED_SHIP_DATA_SETTINGS = AllowedShipData()
 
             var max_entity_search_radius: Double by CDouble(-1.0, "Max radius of a scan for entities. If <=0 then unlimited.")
             var max_ship_search_radius: Double by CDouble(-1.0, "Max radius of a scan for ships. <=0 for unlimited.", do_show = SomePeripherals.has_vs)
-        }
-
-        class AllowedEntityData: ConfigSubDirectory() {
-            var pos: Boolean by CBool(true)
-            var eye_pos: Boolean by CBool(true)
-            var eye_height: Boolean by CBool(true)
-            var look_angle: Boolean by CBool(true)
-            var dimension: Boolean by CBool(true)
-            var entity_type: Boolean by CBool(true)
-            var air_supply: Boolean by CBool(true)
-            var max_air_supply: Boolean by CBool(true)
-
-            var health: Boolean by CBool(true)
-            var max_health: Boolean by CBool(true)
-            var armor_value: Boolean by CBool(true)
-            var armor_cover_percentage: Boolean by CBool(true)
-            var absorption_amount: Boolean by CBool(true)
-            var is_baby: Boolean by CBool(true)
-            var is_blocking: Boolean by CBool(true)
-            var is_sleeping: Boolean by CBool(true)
-            var is_fall_flying: Boolean by CBool(true)
-            var speed: Boolean by CBool(true)
-            var xRot: Boolean by CBool(true, "pitch. In degrees.")
-            var yHeadRot: Boolean by CBool(true, "yaw. In degrees.")
-            var yBodyRot: Boolean by CBool(true, "yaw. In degrees")
-
-            var nickname: Boolean by CBool(true)
-            var experience_level: Boolean by CBool(true)
-            var xp_needed_for_next_level: Boolean by CBool(true)
-            var experience_progress: Boolean by CBool(true)
         }
 
         class AllowedShipData: ConfigSubDirectory() {
@@ -98,12 +98,41 @@ object SomePeripheralsConfig {
             var size: Boolean by CBool(true)
             var scale: Boolean by CBool(true)
             var moment_of_inertia_tensor: Boolean by CBool(true)
-
         }
 
         class GogglesSettings: ConfigSubDirectory() {
+            class GogglesAllowedEntityData: ConfigSubDirectory() {
+                var pos: Boolean by CBool(true)
+                var eye_pos: Boolean by CBool(true)
+                var eye_height: Boolean by CBool(true)
+                var look_angle: Boolean by CBool(true)
+                var dimension: Boolean by CBool(true)
+                var entity_type: Boolean by CBool(true)
+                var air_supply: Boolean by CBool(true)
+                var max_air_supply: Boolean by CBool(true)
+
+                var health: Boolean by CBool(true)
+                var max_health: Boolean by CBool(true)
+                var armor_value: Boolean by CBool(true)
+                var armor_cover_percentage: Boolean by CBool(true)
+                var absorption_amount: Boolean by CBool(true)
+                var is_baby: Boolean by CBool(true)
+                var is_blocking: Boolean by CBool(true)
+                var is_sleeping: Boolean by CBool(true)
+                var is_fall_flying: Boolean by CBool(true)
+                var speed: Boolean by CBool(true)
+                var xRot: Boolean by CBool(true, "pitch. In degrees.")
+                var yHeadRot: Boolean by CBool(true, "yaw. In degrees.")
+                var yBodyRot: Boolean by CBool(true, "yaw. In degrees")
+
+                var nickname: Boolean by CBool(true)
+                var experience_level: Boolean by CBool(true)
+                var xp_needed_for_next_level: Boolean by CBool(true)
+                var experience_progress: Boolean by CBool(true)
+            }
+
             val RANGE_GOGGLES_SETTINGS = RangeGogglesSettings()
-            val ALLOWED_ENTITY_DATA_SETTINGS = AllowedEntityData()
+            val ALLOWED_ENTITY_DATA_SETTINGS = GogglesAllowedEntityData()
 
             class RangeGogglesSettings: ConfigSubDirectory() {
                 var max_allowed_raycast_waiting_time_ms: Long by CLong(4000L, "In milliseconds", Pair(0L, Long.MAX_VALUE))

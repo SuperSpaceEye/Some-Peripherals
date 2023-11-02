@@ -7,7 +7,7 @@ import net.minecraft.world.phys.AABB
 import net.spaceeye.someperipherals.SomePeripherals
 import net.spaceeye.someperipherals.SomePeripheralsConfig
 import net.spaceeye.someperipherals.integrations.cc.makeErrorReturn
-import net.spaceeye.someperipherals.utils.mix.entityToMap
+import net.spaceeye.someperipherals.utils.mix.entityToMapRadar
 import org.valkyrienskies.mod.common.getShipManagingPos
 import org.valkyrienskies.mod.common.toWorldCoordinates
 import org.valkyrienskies.mod.common.transformToNearbyShipsAndWorld
@@ -34,7 +34,8 @@ private fun scanForEntities(r: Double, level: ServerLevel, pos: BlockPos): Mutab
         spos.x-r, spos.y-r, spos.z-r,
         spos.x+r, spos.y+r, spos.z+r
     ))) {
-        res.add(entityToMap(entity, SomePeripheralsConfig.SERVER.RADAR_SETTINGS.ALLOWED_ENTITY_DATA_SETTINGS))
+        if (entity == null) {continue;}
+        res.add(entityToMapRadar(entity, SomePeripheralsConfig.SERVER.RADAR_SETTINGS.ALLOWED_ENTITY_DATA_SETTINGS))
     }
 
     return res

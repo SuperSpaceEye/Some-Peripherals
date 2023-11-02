@@ -7,6 +7,8 @@ import kotlin.reflect.KProperty1
 import kotlin.reflect.KVisibility
 import kotlin.reflect.full.declaredMemberProperties
 
+//TODO rework how this works
+
 private var GLOBAL_DelegateRegisterItemCount = 0
 data class DelegateRegisterItem(
     val parentReg: Any?,

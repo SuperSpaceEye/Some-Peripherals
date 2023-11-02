@@ -15,7 +15,7 @@ import net.minecraft.world.level.Level
 import net.spaceeye.someperipherals.utils.linkPort.LinkPing
 import net.spaceeye.someperipherals.utils.linkPort.LinkStatusResponse
 import net.spaceeye.someperipherals.utils.linkPort.Server_StatusGogglesPing
-import net.spaceeye.someperipherals.utils.mix.entityToMap
+import net.spaceeye.someperipherals.utils.mix.entityToMapGoggles
 import net.spaceeye.someperipherals.SomePeripheralsCommonBlocks
 import net.spaceeye.someperipherals.SomePeripheralsConfig
 import net.spaceeye.someperipherals.SomePeripheralsItems
@@ -81,7 +81,7 @@ open class StatusGogglesItem:
         val r = controller.link_connections.getRequests(uuid.toString())
         if (r.status_request == null) { return }
         r.status_request = null
-        controller.link_connections.makeResponse(uuid.toString(), LinkStatusResponse(entityToMap(entity, SomePeripheralsConfig.SERVER.GOGGLE_SETTINGS.ALLOWED_ENTITY_DATA_SETTINGS), entity))
+        controller.link_connections.makeResponse(uuid.toString(), LinkStatusResponse(entityToMapGoggles(entity, SomePeripheralsConfig.SERVER.GOGGLE_SETTINGS.ALLOWED_ENTITY_DATA_SETTINGS), entity))
     }
 
     override fun useOn(context: UseOnContext): InteractionResult {
