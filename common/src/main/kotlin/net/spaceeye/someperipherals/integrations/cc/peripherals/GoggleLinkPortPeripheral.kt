@@ -17,6 +17,7 @@ import net.spaceeye.someperipherals.utils.mix.Constants
 import net.spaceeye.someperipherals.integrations.cc.makeErrorReturn
 import net.spaceeye.someperipherals.integrations.cc.tableToDoubleArray
 import net.spaceeye.someperipherals.integrations.cc.tableToTableArray
+import net.spaceeye.someperipherals.utils.configToMap.makeRaycastingConfigInfo
 
 class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockPos, private var be:BlockEntity):IPeripheral {
     private var block = (be.blockState.block as GoggleLinkPort)
@@ -174,7 +175,7 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
         }
 
         item["getConfigInfo"] = FunToLuaWrapper {
-            val data = RaycasterPeripheral.makeConfigInfo()
+            val data = makeRaycastingConfigInfo()
             val rgc = SomePeripheralsConfig.SERVER.GOGGLE_SETTINGS.RANGE_GOGGLES_SETTINGS
 
             data["max_allowed_waiting_time"] = rgc.max_allowed_raycast_waiting_time_ms

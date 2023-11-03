@@ -30,6 +30,4 @@ object SomePeripheralsItems {
         SomePeripheralsCommonBlocks.registerItems(ITEMS)
         ITEMS.register()
     }
-
-    private infix fun Item.byName(name: String) = ITEMS.register(name) { this }
 }

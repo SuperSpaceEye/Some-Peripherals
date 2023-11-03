@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "some_peripherals:block/BallisticAcceleratorTexture"
+  }
+}

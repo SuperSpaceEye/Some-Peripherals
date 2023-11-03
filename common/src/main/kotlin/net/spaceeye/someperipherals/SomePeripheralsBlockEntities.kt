@@ -4,6 +4,6 @@ import net.spaceeye.someperipherals.blockentities.CommonBlockEntities
 
 object SomePeripheralsBlockEntities {
     fun register() {
-            CommonBlockEntities.registerBlockEntities()
+        CommonBlockEntities.registerBlockEntities()
     }
 }
