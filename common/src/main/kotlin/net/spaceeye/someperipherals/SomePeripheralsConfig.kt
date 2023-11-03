@@ -24,11 +24,12 @@ object SomePeripheralsConfig {
 
         class RaycastingSettings: ConfigSubDirectory() {
             var max_raycast_time_ms: Long by CLong(100L, "Max time before yielding")
+            var allow_raycasting_for_entities_only: Boolean by CBool(true, "Includes Valkyrien Skies ships.")
         }
 
         class RaycasterSettings: ConfigSubDirectory() {
             var max_raycast_distance: Int by CInt(-1, "Maximum amount of blocks ray can travel. Set to num <=0 for no limit")
-            var entity_check_radius: Int by CInt(16, "Will check for intersections with entities every N blocks traveled in N radius", Pair(1, Int.MAX_VALUE))
+            var entity_check_radius: Int by CInt(32, "Will check for intersections with entities every N blocks traveled in N radius", Pair(1, Int.MAX_VALUE))
 
             var check_for_intersection_with_entities: Boolean by CBool(true, "Includes Valkyrien Skies ships if VS is installed")
 

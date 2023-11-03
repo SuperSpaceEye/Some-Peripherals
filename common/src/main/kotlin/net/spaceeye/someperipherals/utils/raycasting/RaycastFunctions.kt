@@ -165,10 +165,10 @@ object RaycastFunctions {
     }
 
     suspend fun raycast(level: Level, pointsIter: RayIter, ignore_entity:Entity?=null, cache: PosCache, ctx: RaycastCtx? = null,
-                        pos: Vector3d, unit_d: Vector3d): RaycastReturnOrCtx {
+                        pos: Vector3d, unit_d: Vector3d, check_for_blocks_in_world: Boolean=true): RaycastReturnOrCtx {
         return when (SomePeripherals.has_vs) {
-            false -> normalRaycast(level, pointsIter, ignore_entity, cache, ctx)
-            true  -> vsRaycast(level, pointsIter, ignore_entity, cache, ctx, pos, unit_d)
+            false -> normalRaycast(level, pointsIter, ignore_entity, cache, ctx, check_for_blocks_in_world)
+            true  -> vsRaycast(level, pointsIter, ignore_entity, cache, ctx, pos, unit_d, check_for_blocks_in_world)
         }
     }
 
@@ -201,7 +201,7 @@ object RaycastFunctions {
     fun vectorRotationCalc(dir_up: Pair<Vector3d, Vector3d>, posY: Double, posX:Double, length: Double,
                            right: Vector3d? = null): Vector3d {
         val dir = dir_up.first
-        val l = max(length, 0.01)
+        val l = max(length, 1e-200)
 
         //thanks getitemfromblock for this
 //      dir = dir + posX*right + posY*updir = dir.Normalize();
@@ -216,14 +216,15 @@ object RaycastFunctions {
     }
 
     @JvmStatic
-    suspend fun commonCastRay(level: Level, start: Vector3d, unit_d: Vector3d, distance: Double, cache: PosCache, ctx: RaycastCtx?, pos: Vector3d, ignore_entity: Entity?): RaycastReturnOrCtx {
+    suspend fun commonCastRay(level: Level, start: Vector3d, unit_d: Vector3d, distance: Double, cache: PosCache, ctx: RaycastCtx?,
+                              pos: Vector3d, ignore_entity: Entity?, check_for_blocks_in_world: Boolean=true): RaycastReturnOrCtx {
         val stop = unit_d * distance + start
 
         val max_dist = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.max_raycast_distance
         val max_iter = if (max_dist <= 0) { distance.toInt() } else { min(distance.toInt(), max_dist) }
         val iter = BresenhamIter(start, stop, max_iter)
 
-        return raycast(level, iter, ignore_entity, cache, ctx, pos, unit_d)
+        return raycast(level, iter, ignore_entity, cache, ctx, pos, unit_d, check_for_blocks_in_world)
     }
 
     @JvmStatic
@@ -264,7 +265,7 @@ object RaycastFunctions {
     @JvmStatic
     suspend fun castRayBlock(level: Level, be: BlockEntity, pos: BlockPos,
                      distance: Double, euler_mode: Boolean = true, do_cache:Boolean = false,
-                     var1:Double, var2: Double, var3: Double, ctx: RaycastCtx?): RaycastReturnOrCtx {
+                     var1:Double, var2: Double, var3: Double, ctx: RaycastCtx?, check_for_blocks_in_world: Boolean=true): RaycastReturnOrCtx {
         if (level.isClientSide) { return RaycastERROR("Level is clientside. how.") }
 
         val cache = (be.blockState.block as RaycasterBlock).pos_cache
@@ -306,6 +307,6 @@ object RaycastFunctions {
         } else {
             Vector3d(pos) + dirToStartingOffset(be.blockState.getValue(BlockStateProperties.FACING))
         }
-        return commonCastRay(level, start, unit_d, distance, cache, ctx, Vector3d(pos), null)
+        return commonCastRay(level, start, unit_d, distance, cache, ctx, Vector3d(pos), null, check_for_blocks_in_world)
     }
 }

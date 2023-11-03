@@ -108,6 +108,9 @@ class RaycasterPeripheral(private val level: Level, private val pos: BlockPos, p
         val euler_mode  = args.optBoolean(2).orElse(false)
         val im_execute  = args.optBoolean(3).orElse(true) // execute immediately
         val do_cache    = args.optBoolean(4).orElse(false)
+        var check_for_blocks_in_world = args.optBoolean(5).orElse(true)
+
+        check_for_blocks_in_world = check_for_blocks_in_world && SomePeripheralsConfig.SERVER.RAYCASTING_SETTINGS.allow_raycasting_for_entities_only
 
         if (variables.size < 2 || variables.size > 3) { return MethodResult.of(makeErrorReturn("Variables table should have 2 or 3 items")) }
         val var1 = variables[0]
@@ -122,9 +125,9 @@ class RaycasterPeripheral(private val level: Level, private val pos: BlockPos, p
             if (terminate) {return@CallbackToLuaWrapper makeErrorReturn("Was terminated") }
 
             val res = if (ctx == null) { runBlocking { withTimeoutOrNull(SomePeripheralsConfig.SERVER.RAYCASTING_SETTINGS.max_raycast_time_ms) {
-                castRayBlock(level, be, pos, distance, euler_mode, do_cache, var1, var2, var3, null)
+                castRayBlock(level, be, pos, distance, euler_mode, do_cache, var1, var2, var3, null, check_for_blocks_in_world)
             }}} else { runBlocking{ withTimeoutOrNull(SomePeripheralsConfig.SERVER.RAYCASTING_SETTINGS.max_raycast_time_ms) {
-                RaycastFunctions.raycast(level, ctx!!.points_iter, ctx!!.ignore_entity, ctx!!.cache, ctx, ctx!!.pos, ctx!!.unit_d)
+                RaycastFunctions.raycast(level, ctx!!.points_iter, ctx!!.ignore_entity, ctx!!.cache, ctx, ctx!!.pos, ctx!!.unit_d, check_for_blocks_in_world)
             }}}
 
             if (res == null) {return@CallbackToLuaWrapper makeErrorReturn("how") }
