@@ -31,6 +31,9 @@ object SomePeripheralsConfig {
             var max_raycast_distance: Int by CInt(-1, "Maximum amount of blocks ray can travel. Set to num <=0 for no limit")
             var entity_check_radius: Int by CInt(32, "Will check for intersections with entities every N blocks traveled in N radius", Pair(1, Int.MAX_VALUE))
 
+            var max_raycast_no_worldcheking_distance: Int by CInt(-1, "Maximum amount of blocks ray can travel when raycasting without checking for blocks in world. Set to num <=0 for no limit")
+            var entity_check_radius_no_worldchecking: Int by CInt(512, "Will check for intersections with entities every N blocks traveled in N radius when raycasting without checking for blocks in world")
+
             var check_for_intersection_with_entities: Boolean by CBool(true, "Includes Valkyrien Skies ships if VS is installed")
 
             var return_abs_pos: Boolean by CBool(true)

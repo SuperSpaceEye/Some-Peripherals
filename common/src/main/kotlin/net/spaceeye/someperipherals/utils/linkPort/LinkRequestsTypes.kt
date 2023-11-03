@@ -12,10 +12,10 @@ abstract class LinkResponse
 class LinkStatusRequest : LinkRequest()
 class LinkStatusResponse(var data: MutableMap<String, Any>, var entity: Entity): LinkResponse()
 
-class LinkRaycastRequest(var distance: Double, var euler_mode: Boolean, var do_cache:Boolean, var var1:Double, var var2: Double, var var3: Double): LinkRequest() {}
+class LinkRaycastRequest(var distance: Double, var euler_mode: Boolean, var do_cache:Boolean, var var1:Double, var var2: Double, var var3: Double, var check_for_blocks_in_world:Boolean): LinkRequest() {}
 class LinkRaycastResponse(var result: RaycastReturn): LinkResponse()
 
 class LinkBatchRaycastRequest(
     var distance: Double, var euler_mode: Boolean, var do_cache: Boolean,
-    var data: Array<Array<Double>>, var do_terminate: Boolean = false): LinkRequest()
+    var check_for_blocks_in_world:Boolean, var data: Array<Array<Double>>, var do_terminate: Boolean = false): LinkRequest()
 class LinkBatchRaycastResponse(var results: MutableList<RaycastReturn>, var is_done:Boolean=false): LinkResponse()

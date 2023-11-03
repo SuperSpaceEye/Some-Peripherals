@@ -17,7 +17,8 @@ import net.spaceeye.someperipherals.utils.mix.Constants
 import net.spaceeye.someperipherals.integrations.cc.makeErrorReturn
 import net.spaceeye.someperipherals.integrations.cc.tableToDoubleArray
 import net.spaceeye.someperipherals.integrations.cc.tableToTableArray
-import net.spaceeye.someperipherals.utils.configToMap.makeRaycastingConfigInfo
+import net.spaceeye.someperipherals.utils.configToMap.makeGoggleLinkPortConfigInfoBase
+import net.spaceeye.someperipherals.utils.configToMap.makeGoggleLinkPortConfigInfoRange
 
 class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockPos, private var be:BlockEntity):IPeripheral {
     private var block = (be.blockState.block as GoggleLinkPort)
@@ -76,15 +77,16 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
             // at 0 pitch or y, at 1 yaw or x, at 2 nothing or planar distance
             val variables  = tableToDoubleArray(args.optTable(1).orElse(mutableMapOf(Pair(1.0, 0.0), Pair(2.0, 0.0), Pair(3.0, 1.0))))
             val euler_mode = args.optBoolean(2).orElse(false)
-            val do_cache   = args.optBoolean(3).orElse(false)
-            val im_execute = args.optBoolean(4).orElse(true)
+            val im_execute = args.optBoolean(3).orElse(true)
+            val do_cache   = args.optBoolean(4).orElse(false)
+            var check_for_blocks_in_world = args.optBoolean(5).orElse(true)
 
             if (variables.size < 2 || variables.size > 3) { return@FunToLuaWrapper makeErrorReturn("Variables table should have 2 or 3 items") }
             val var1 = variables[0]
             val var2 = variables[1]
             val var3 = if (variables.size == 3) {variables[2]} else {1.0}
 
-            port.link_connections.makeRequest(k, LinkRaycastRequest(distance, euler_mode, do_cache, var1, var2, var3))
+            port.link_connections.makeRequest(k, LinkRaycastRequest(distance, euler_mode, do_cache, var1, var2, var3, check_for_blocks_in_world))
 
             var terminate = false
             var pull: MethodResult? = null
@@ -133,6 +135,7 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
                 args.getDouble(0),
                 args.optBoolean(2).orElse(false),
                 args.optBoolean(3).orElse(false),
+                args.optBoolean(4).orElse(true),
                 data.toTypedArray()
             ))
 
@@ -174,15 +177,7 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
             )
         }
 
-        item["getConfigInfo"] = FunToLuaWrapper {
-            val data = makeRaycastingConfigInfo()
-            val rgc = SomePeripheralsConfig.SERVER.GOGGLE_SETTINGS.RANGE_GOGGLES_SETTINGS
-
-            data["max_allowed_waiting_time"] = rgc.max_allowed_raycast_waiting_time_ms
-            data["max_connection_timeout_time"] = SomePeripheralsConfig.SERVER.LINK_PORT_SETTINGS.max_connection_timeout_time_ticks
-
-            data
-        }
+        item["getConfigInfo"] = FunToLuaWrapper { makeGoggleLinkPortConfigInfoRange() }
     }
 
     private fun makeBaseGoggleFunctions(
@@ -211,7 +206,6 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
 
                 val item = (r as LinkStatusResponse).data
                 item["timestamp"] = ping!!.timestamp
-                item["goggle_type"] = goggleType(ping)
 
                 return@CallbackToLuaWrapper item
             }
@@ -240,6 +234,7 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
 
             return@FunToLuaWrapper Unit
         }
+        item["getConfigInfo"] = FunToLuaWrapper { makeGoggleLinkPortConfigInfoBase() }
     }
 
     override fun equals(p0: IPeripheral?): Boolean = level.getBlockState(pos).`is`(SomePeripheralsCommonBlocks.GOGGLE_LINK_PORT.get())

@@ -133,7 +133,7 @@ object RaycastFunctions {
         val unit_d = rd.normalize()
 
         val check_for_entities = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.check_for_intersection_with_entities
-        val er = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.entity_check_radius
+        val er = if (check_for_blocks_in_world) SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.entity_check_radius else SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.entity_check_radius_no_worldchecking
 
         var entity_res: Pair<Entity, Double>? = ctx?.intersected_entity
         var entity_step_counter = ctx?.entity_step_counter ?: 0
@@ -220,7 +220,7 @@ object RaycastFunctions {
                               pos: Vector3d, ignore_entity: Entity?, check_for_blocks_in_world: Boolean=true): RaycastReturnOrCtx {
         val stop = unit_d * distance + start
 
-        val max_dist = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.max_raycast_distance
+        val max_dist = if (check_for_blocks_in_world) SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.max_raycast_distance else SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.max_raycast_no_worldcheking_distance
         val max_iter = if (max_dist <= 0) { distance.toInt() } else { min(distance.toInt(), max_dist) }
         val iter = BresenhamIter(start, stop, max_iter)
 
@@ -229,7 +229,7 @@ object RaycastFunctions {
 
     @JvmStatic
     suspend fun castRayEntity(entity: LivingEntity, distance: Double, euler_mode: Boolean = true, do_cache:Boolean = false,
-                              var1:Double, var2: Double, var3: Double, ctx: RaycastCtx?=null): RaycastReturnOrCtx {
+                              var1:Double, var2: Double, var3: Double, check_for_blocks_in_world: Boolean, ctx: RaycastCtx?=null): RaycastReturnOrCtx {
         val level = entity.getLevel()
         val cache = PosCache()
         val start = Vector3d(entity.eyePosition)
@@ -249,15 +249,15 @@ object RaycastFunctions {
             vectorRotationCalc(Pair(dir, up), var1, var2, var3, right)
         }
 
-        return commonCastRay(level, start, unit_d, distance, cache, ctx, start, entity)
+        return commonCastRay(level, start, unit_d, distance, cache, ctx, start, entity, check_for_blocks_in_world)
     }
 
     @JvmStatic
     suspend fun suspendCastRayEntity(entity: LivingEntity, distance: Double, euler_mode: Boolean = true, do_cache:Boolean = false,
-                             var1:Double, var2: Double, var3: Double,
+                             var1:Double, var2: Double, var3: Double, check_for_blocks_in_world:Boolean,
                              timeout: Long = SomePeripheralsConfig.SERVER.GOGGLE_SETTINGS.RANGE_GOGGLES_SETTINGS.max_allowed_raycast_waiting_time_ms,): RaycastReturn {
         return withTimeout(timeout) {
-            val res = castRayEntity(entity, distance, euler_mode, do_cache, var1, var2, var3)
+            val res = castRayEntity(entity, distance, euler_mode, do_cache, var1, var2, var3, check_for_blocks_in_world)
             if (res is RaycastReturn) {res} else {RaycastERROR("raycast took too long")}
         }
     }

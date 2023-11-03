@@ -29,7 +29,7 @@ class RangeGogglesItem: StatusGogglesItem() {
 
     private fun raycastRequest(entity: Entity, r: LinkRaycastRequest) = runBlocking {
         controller.link_connections.getRequests(uuid.toString()).raycast_request = null
-        val rsp = suspendCastRayEntity(entity as LivingEntity, r.distance, r.euler_mode, r.do_cache, r.var1, r.var2, r.var3)
+        val rsp = suspendCastRayEntity(entity as LivingEntity, r.distance, r.euler_mode, r.do_cache, r.var1, r.var2, r.var3, r.check_for_blocks_in_world)
         controller.link_connections.makeResponse(uuid.toString(), LinkRaycastResponse(rsp))
     }
 
@@ -52,7 +52,7 @@ class RangeGogglesItem: StatusGogglesItem() {
         withTimeoutOrNull(SomePeripheralsConfig.SERVER.GOGGLE_SETTINGS.RANGE_GOGGLES_SETTINGS.max_batch_raycast_time_ms) {
             for (i in start_index until req.data.size) {
                 val item = req.data[i]
-                rsp.results.add(suspendCastRayEntity(entity as LivingEntity, req.distance, req.euler_mode, req.do_cache, item[0], item[1], item[2],
+                rsp.results.add(suspendCastRayEntity(entity as LivingEntity, req.distance, req.euler_mode, req.do_cache, item[0], item[1], item[2], req.check_for_blocks_in_world,
                     SomePeripheralsConfig.SERVER.GOGGLE_SETTINGS.RANGE_GOGGLES_SETTINGS.max_batch_raycast_time_ms))
             }
         }

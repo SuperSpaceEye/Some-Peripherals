@@ -143,13 +143,12 @@ class RaycasterPeripheral(private val level: Level, private val pos: BlockPos, p
 
         if (!im_execute) {
             return MethodResult.of(mutableMapOf(
-                Pair("begin",     FunToLuaWrapper { computer.queueEvent(Constants.RAYCASTER_RAYCAST_EVENT_NAME); return@FunToLuaWrapper pull }),
+                Pair("begin",     FunToLuaWrapper { return@FunToLuaWrapper callback.resume(null) }),
                 Pair("getCurI",   FunToLuaWrapper { return@FunToLuaWrapper ctx?.points_iter?.cur_i ?: 0 }),
                 Pair("terminate", FunToLuaWrapper { terminate = true; return@FunToLuaWrapper Unit })
             ))
         } else {
-            computer.queueEvent(Constants.RAYCASTER_RAYCAST_EVENT_NAME)
-            return pull
+            return callback.resume(null)
         }
     }
 
@@ -161,6 +160,9 @@ class RaycasterPeripheral(private val level: Level, private val pos: BlockPos, p
 
     @LuaFunction
     fun getConfigInfo(): Any = makeRaycastingConfigInfo()
+
+    @LuaFunction
+    fun getFacingDirection(): Any = be.blockState.getValue(BlockStateProperties.FACING).getName()
 
     override fun equals(p0: IPeripheral?): Boolean = level.getBlockState(pos).`is`(SomePeripheralsCommonBlocks.RAYCASTER.get())
     override fun getType(): String = "raycaster"

@@ -106,7 +106,7 @@ object VSRaycastFunctions {
     // when ship is added to future intersections, its t is also saved, and as collision is calculated from starting point,
     // you can just calculate euclidean distance of diff between starting point and current pos, and compare it with t*ray_distance
     @JvmStatic
-    fun checkRayPassedShip(start: Vector3d, ship: Pair<ServerShip, Double>, point: Vector3d, ray_distance: Double): Boolean
+    inline fun checkRayPassedShip(start: Vector3d, ship: Pair<ServerShip, Double>, point: Vector3d, ray_distance: Double): Boolean
     = ship.second * ray_distance <= (point - start).dist()
 
     @JvmStatic
@@ -143,9 +143,19 @@ object VSRaycastFunctions {
                         shipyard_start: Vector3d,
                         cache: PosCache): MutableList<Pair<RaycastReturn, Double>> {
         val hits = mutableListOf<Pair<RaycastReturn, Double>>()
-        val to_remove = mutableListOf<Ray>()
-        for (ray in rays) {
-            if (!ray.iter.hasNext()) { to_remove.add(ray); continue }
+        var size = rays.size
+        var i = 0
+        while (i < size) {
+            val ray = rays[i]
+
+            if (!ray.iter.hasNext()) {
+                ships_already_intersected.add(ray.ship)
+                rays[i] = rays.last()
+                rays.removeLast()
+                size--
+                continue
+            }
+
             val point = ray.iter.next()
 
             // if ray has started from shipyard, then don't check starting pos (ray can clip into raycaster)
@@ -157,9 +167,9 @@ object VSRaycastFunctions {
                 ray.world_unit_rd.normalize()*distance_to+start,
                 ray.d.rdiv(1.0).snormalize()*world_res.second+ray.iter.start // norm_shipyard_rd * dist_to_shipyard_block
                 ), distance_to))
+
+            i++
         }
-        rays.removeAll(to_remove)
-        ships_already_intersected.addAll(to_remove.map { it.ship })
         return hits
     }
 
@@ -197,7 +207,7 @@ object VSRaycastFunctions {
         val world_unit_rd = rd.normalize()
 
         val check_for_entities = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.check_for_intersection_with_entities
-        val er = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.entity_check_radius
+        val er = if (check_for_blocks_in_world) SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.entity_check_radius else SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.entity_check_radius_no_worldchecking
 
         var entity_res: Pair<Entity, Double>? = ctx?.intersected_entity ?: null
         var entity_step_counter = ctx?.entity_step_counter ?: 0
