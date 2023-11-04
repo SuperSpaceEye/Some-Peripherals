@@ -93,7 +93,7 @@ object VSRaycastFunctions {
         val sp_end = sp_start + s_dir * ss.dist()
 
         val ray = Ray(
-            BresenhamIter(sp_start, sp_end, max_iter_num),
+            DDAIter(sp_start, sp_end, max_iter_num),
             ship, sd, s_dir.dist(),
             initial_t * initial_ray_distance,
             initial_t < 1e-60, // if ray started from shipyard, t to intersection will be 0

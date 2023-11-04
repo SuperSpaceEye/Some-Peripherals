@@ -222,7 +222,7 @@ object RaycastFunctions {
 
         val max_dist = if (check_for_blocks_in_world) SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.max_raycast_distance else SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.max_raycast_no_worldcheking_distance
         val max_iter = if (max_dist <= 0) { distance.toInt() } else { min(distance.toInt(), max_dist) }
-        val iter = BresenhamIter(start, stop, max_iter)
+        val iter = DDAIter(start, stop, max_iter)
 
         return raycast(level, iter, ignore_entity, cache, ctx, pos, unit_d, check_for_blocks_in_world)
     }

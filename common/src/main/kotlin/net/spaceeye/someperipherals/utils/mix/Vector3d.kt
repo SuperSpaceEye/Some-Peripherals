@@ -27,8 +27,7 @@ class Vector3d(x:Number, y:Number, z:Number) {
     inline fun toMCVector3d(): MCVector3d {return MCVector3d(x, y, z) }
     inline fun toJomlVector3d(): JVector3d {return JVector3d(x, y, z) }
     inline fun toArray(): Array<Double> {return arrayOf(x, y, z) }
-    inline fun toBlockPos(): BlockPos {return BlockPos(x, y, z)
-    }
+    inline fun toBlockPos(): BlockPos {return BlockPos(x, y, z) }
 
     inline override fun toString(): String = "{${x} ${y} ${z}}"
 
@@ -65,6 +64,13 @@ class Vector3d(x:Number, y:Number, z:Number) {
 
     inline fun sqrDist(): Double {return x*x + y*y + z*z}
     inline fun dist(): Double {return Math.sqrt(x*x + y*y + z*z)}
+
+    inline fun sign(): Vector3d {
+        return Vector3d(
+        if (x < 0) {-1.0} else {1.0},
+        if (y < 0) {-1.0} else {1.0},
+        if (z < 0) {-1.0} else {1.0})
+    }
 
     inline fun normalize(length: Number, dest: Vector3d): Vector3d {
         val length = length.toDouble()
