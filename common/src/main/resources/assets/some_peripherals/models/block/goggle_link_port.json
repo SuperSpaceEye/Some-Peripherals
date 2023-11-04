@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:block/cube_all",
   "textures": {
-    "all": "some_peripherals:block/GogglePortTexture"
+    "all": "some_peripherals:block/goggle_port_texture"
   }
 }
