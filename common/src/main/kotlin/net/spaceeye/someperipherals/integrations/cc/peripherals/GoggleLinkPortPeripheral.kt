@@ -139,11 +139,10 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
                 data.toTypedArray()
             ))
 
-            var terminated = false
+            return@FunToLuaWrapper true
+        }
 
-            return@FunToLuaWrapper mutableMapOf(
-        Pair("getQueuedData", FunToLuaWrapper {
-            if (terminated) { return@FunToLuaWrapper makeErrorReturn("Connection has been terminated") }
+        item["getQueuedData"] = FunToLuaWrapper {
             val ping = port.link_connections.constant_pings[k]
             val r = port.link_connections.getResponses(k).raycast_response
 
@@ -160,21 +159,6 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
             data["results"] = returns
 
             return@FunToLuaWrapper data
-        }),
-        Pair("terminate", FunToLuaWrapper{
-            if (terminated) { return@FunToLuaWrapper makeErrorReturn("Connection has been terminated") }
-            val ping = port.link_connections.constant_pings[k]
-            val r = port.link_connections.getRequests(k).raycast_request
-
-            if (!checkConnection(ping))        { port.link_connections.getResponses(k).raycast_response = null; return@FunToLuaWrapper makeErrorReturn("Connection has been terminated") }
-            if (r !is LinkBatchRaycastRequest) {                                                                return@FunToLuaWrapper makeErrorReturn("Response is not LinkBatchRaycastResponse") }
-
-            r.do_terminate = true
-            terminated = true
-
-            return@FunToLuaWrapper true
-        })
-            )
         }
 
         item["getConfigInfo"] = FunToLuaWrapper { makeGoggleLinkPortConfigInfoRange() }
