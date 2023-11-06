@@ -1,6 +1,5 @@
 package net.spaceeye.someperipherals.items.goggles
 
-import net.minecraft.core.BlockPos
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.TranslatableComponent
@@ -12,39 +11,32 @@ import net.minecraft.world.item.ArmorMaterials
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.context.UseOnContext
 import net.minecraft.world.level.Level
-import net.spaceeye.someperipherals.utils.linkPort.LinkPing
-import net.spaceeye.someperipherals.utils.linkPort.LinkStatusResponse
-import net.spaceeye.someperipherals.utils.linkPort.Server_StatusGogglesPing
 import net.spaceeye.someperipherals.utils.mix.entityToMapGoggles
 import net.spaceeye.someperipherals.SomePeripheralsCommonBlocks
 import net.spaceeye.someperipherals.SomePeripheralsConfig
 import net.spaceeye.someperipherals.SomePeripheralsItems
 import net.spaceeye.someperipherals.blockentities.GoggleLinkPortBlockEntity
-import net.spaceeye.someperipherals.blocks.GoggleLinkPort
+import net.spaceeye.someperipherals.utils.linkPort.*
 import net.spaceeye.someperipherals.utils.mix.Constants
 import java.util.UUID
 
 open class StatusGogglesItem:
     ArmorItem(ArmorMaterials.LEATHER, EquipmentSlot.HEAD, Properties().tab(SomePeripheralsItems.TAB).stacksTo(1)) {
 
-    private val CONTROLLER_POS = "controller_pos"
-    private val CONTROLLER_LEVEL = "controller_level"
-    private val _UUID = "uuid"
-
     protected open val base_name = "item.some_peripherals.tootlip.status_goggles"
     protected open val linked_name = "text.some_peripherals.linked_status_goggles"
 
     protected var tick_successful = false
-    protected lateinit var pos: BlockPos
     protected lateinit var uuid: UUID
-    protected lateinit var controller: GoggleLinkPort
+    protected lateinit var connection_key: UUID
+    protected var connection: LinkConnectionsManager? = null
 
     override fun getDescription(): Component {
         return TranslatableComponent(base_name)
     }
 
-    protected open fun makeConnectionPing(controller: GoggleLinkPort): LinkPing {
-        return Server_StatusGogglesPing(controller.link_connections.tick)
+    protected open fun makeConnectionPing(): LinkPing {
+        return Server_StatusGogglesPing(connection!!.tick)
     }
 
     override fun inventoryTick(stack: ItemStack, level: Level, entity: Entity, slotId: Int, isSelected: Boolean) {
@@ -52,36 +44,27 @@ open class StatusGogglesItem:
         if (level.isClientSide) {return}
         if (slotId != Constants.HELMET_ARMOR_SLOT_ID) {return}
         if (!stack.hasTag()
-            || !stack.tag!!.contains(CONTROLLER_POS)
-            || !stack.tag!!.contains(CONTROLLER_LEVEL)
-            || !stack.tag!!.contains(_UUID)) {return}
-        val dimension = stack.tag!!.getString(CONTROLLER_LEVEL)
-        if (dimension != level.dimension().toString()) {return}
+            || !stack.tag!!.contains(Constants.LINK_UUID_NAME)
+            || !stack.tag!!.contains(Constants.GLASSES_UUID_NAME)) {return}
 
-        val arr = stack.tag!!.getIntArray(CONTROLLER_POS)
-        if (arr.size < 3) {return}
-        pos = BlockPos(arr[0], arr[1], arr[2])
-
-        val be = level.getBlockEntity(pos)?: return
-        if (be.blockState.block !is GoggleLinkPort) {return}
-
-        //All checks have successfully passed
-
-        uuid = stack.tag!!.getUUID(_UUID)
-        controller = be.blockState.block as GoggleLinkPort
+        uuid           = stack.tag!!.getUUID(Constants.GLASSES_UUID_NAME)
+        connection_key = stack.tag!!.getUUID(Constants.LINK_UUID_NAME)
+        connection = GlobalLinkConnections.links[connection_key] ?: return
 
         tick_successful = true
 
-        controller.link_connections.constant_pings[uuid.toString()] = makeConnectionPing(controller)
+        connection!!.constant_pings[uuid.toString()] = makeConnectionPing()
 
         tryExecuteStatusRequest(entity)
     }
 
     private fun tryExecuteStatusRequest(entity: Entity) {
-        val r = controller.link_connections.getRequests(uuid.toString())
+        val link = GlobalLinkConnections.links[connection_key] ?: return
+
+        val r = link.getRequests(uuid.toString())
         if (r.status_request == null) { return }
         r.status_request = null
-        controller.link_connections.makeResponse(uuid.toString(), LinkStatusResponse(entityToMapGoggles(entity, SomePeripheralsConfig.SERVER.GOGGLE_SETTINGS.ALLOWED_ENTITY_DATA_SETTINGS), entity))
+        link.makeResponse(uuid.toString(), LinkStatusResponse(entityToMapGoggles(entity, SomePeripheralsConfig.SERVER.GOGGLE_SETTINGS.ALLOWED_ENTITY_DATA_SETTINGS), entity))
     }
 
     override fun useOn(context: UseOnContext): InteractionResult {
@@ -98,13 +81,13 @@ open class StatusGogglesItem:
 
         val controller: GoggleLinkPortBlockEntity = be
         val item = context.itemInHand
-        val pos = controller.blockPos
         if (!item.hasTag()) { item.tag = CompoundTag() }
         val nbt = item.tag
 
-        nbt!!.putIntArray(CONTROLLER_POS, intArrayOf(pos.x, pos.y, pos.z))
-        nbt.putString(CONTROLLER_LEVEL, controller.getLevel()?.dimension().toString());
-        nbt.putUUID(_UUID, UUID.randomUUID())
+        connection_key = UUID.fromString(controller.this_manager_key.toString())
+
+        nbt!!.putUUID(Constants.GLASSES_UUID_NAME, UUID.randomUUID())
+        nbt  .putUUID(Constants.LINK_UUID_NAME, connection_key)
 
         item.setTag(nbt)
 

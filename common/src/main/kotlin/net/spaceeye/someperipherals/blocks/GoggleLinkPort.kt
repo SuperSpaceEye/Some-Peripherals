@@ -9,12 +9,10 @@ import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.entity.BlockEntityTicker
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.level.block.state.BlockState
-import net.spaceeye.someperipherals.utils.linkPort.LinkConnectionsManager
 import net.spaceeye.someperipherals.blockentities.GoggleLinkPortBlockEntity
+import net.spaceeye.someperipherals.utils.linkPort.GlobalLinkConnections
 
 class GoggleLinkPort(properties: Properties): BaseEntityBlock(properties) {
-    val link_connections = LinkConnectionsManager()
-
     override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? {
         return GoggleLinkPortBlockEntity(pos, state)
     }
@@ -25,10 +23,11 @@ class GoggleLinkPort(properties: Properties): BaseEntityBlock(properties) {
 
     override fun onRemove(state: BlockState, level: Level, pos: BlockPos, newState: BlockState, isMoving: Boolean) {
         super.onRemove(state, level, pos, newState, isMoving)
-        link_connections.clear()
     }
 
     private fun doTick(state: BlockState, level: ServerLevel, pos: BlockPos) {
+        val key = (level.getBlockEntity(pos) as GoggleLinkPortBlockEntity).this_manager_key
+        val link_connections = GlobalLinkConnections.links[key] ?: return
         link_connections.tick++
     }
 
