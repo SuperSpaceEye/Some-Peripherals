@@ -46,8 +46,12 @@ private fun scanForShips(radius: Double, level: ServerLevel, pos: BlockPos): Mut
 
     val res = mutableListOf<Any>()
 
+    val cur_ship = level.getShipManagingPos(pos)
+    if (cur_ship != null) {res.add(cur_ship)}
+
     for (ship_pos in level.transformToNearbyShipsAndWorld(spos.x.toDouble(), spos.y.toDouble(), spos.z.toDouble(), radius)) {
         val ship = level.getShipManagingPos(ship_pos) ?: continue
+        if (ship == cur_ship) {continue}
         res.add(shipToMap(ship))
     }
 
@@ -68,7 +72,7 @@ fun scanInRadius(radius: Double, level: Level, pos: BlockPos): Any {
     val results = mutableListOf<Any>()
 
     results.addAll(scanForEntities(entity_radius, level as ServerLevel, pos))
-    results.addAll(scanForShips(ship_radius, level, pos))
+    if (SomePeripherals.has_vs) results.addAll(scanForShips(ship_radius, level, pos))
 
     return results
 }

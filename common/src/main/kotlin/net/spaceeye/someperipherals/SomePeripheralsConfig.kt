@@ -102,6 +102,7 @@ object SomePeripheralsConfig {
             var size: Boolean by CBool(true)
             var scale: Boolean by CBool(true)
             var moment_of_inertia_tensor: Boolean by CBool(true)
+            var center_of_mass_in_a_ship: Boolean by CBool(true)
         }
 
         class GogglesSettings: ConfigSubDirectory() {

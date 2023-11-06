@@ -46,6 +46,12 @@ private inline fun getMomentOfInertiaTensor(ship: ServerShip): List<List<Double>
     )
 }
 
+private inline fun getCenterOfMassInAShip(ship: ServerShip) = mapOf(
+    Pair("x", ship.inertiaData.centerOfMassInShip.x()),
+    Pair("y", ship.inertiaData.centerOfMassInShip.y()),
+    Pair("z", ship.inertiaData.centerOfMassInShip.z()),
+)
+
 fun shipToMap(ship: ServerShip): MutableMap<String, Any> {
     val res = mutableMapOf<String, Any>()
     val s = SomePeripheralsConfig.SERVER.RADAR_SETTINGS.ALLOWED_SHIP_DATA_SETTINGS
@@ -59,6 +65,7 @@ fun shipToMap(ship: ServerShip): MutableMap<String, Any> {
     if (s.size) res["size"] = getSize(ship)
     if (s.scale) res["scale"] = getScale(ship)
     if (s.moment_of_inertia_tensor) res["moment_of_inertia_tensor"] = getMomentOfInertiaTensor(ship)
+    if (s.center_of_mass_in_a_ship) res["center_of_mass_in_a_ship"] = getCenterOfMassInAShip(ship)
 
     return res
 }
