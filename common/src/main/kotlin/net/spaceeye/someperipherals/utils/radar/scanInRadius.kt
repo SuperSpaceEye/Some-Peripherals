@@ -47,7 +47,7 @@ private fun scanForShips(radius: Double, level: ServerLevel, pos: BlockPos): Mut
     val res = mutableListOf<Any>()
 
     val cur_ship = level.getShipManagingPos(pos)
-    if (cur_ship != null) {res.add(cur_ship)}
+    if (cur_ship != null) {res.add(shipToMap(cur_ship))}
 
     for (ship_pos in level.transformToNearbyShipsAndWorld(spos.x.toDouble(), spos.y.toDouble(), spos.z.toDouble(), radius)) {
         val ship = level.getShipManagingPos(ship_pos) ?: continue
