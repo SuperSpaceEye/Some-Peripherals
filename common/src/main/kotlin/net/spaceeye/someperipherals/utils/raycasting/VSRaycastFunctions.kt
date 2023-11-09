@@ -1,23 +1,18 @@
 package net.spaceeye.someperipherals.utils.raycasting
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.isActive
 import net.minecraft.core.BlockPos
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.state.BlockState
 import net.spaceeye.someperipherals.SomePeripherals
-import net.spaceeye.someperipherals.SomePeripheralsConfig
 import net.spaceeye.someperipherals.utils.raycasting.RaycastFunctions.checkForBlockInWorld
-import net.spaceeye.someperipherals.utils.raycasting.RaycastFunctions.checkForIntersectedEntity
 import net.spaceeye.someperipherals.utils.raycasting.RaycastFunctions.rayIntersectsBox
 import net.spaceeye.someperipherals.utils.mix.Vector3d
 import org.valkyrienskies.core.api.ships.ServerShip
 import org.valkyrienskies.mod.common.getShipManagingPos
 import org.valkyrienskies.mod.common.transformToNearbyShipsAndWorld
 import org.valkyrienskies.mod.common.util.toMinecraft
-import kotlin.coroutines.coroutineContext
 
 data class Ray(
     var iter: RayIter,
@@ -190,62 +185,46 @@ object VSRaycastFunctions {
         return results.minBy { it.second }.first
     }
 
-    @JvmStatic
-    suspend fun vsRaycast(level: Level, points_iter: RayIter, ignore_entity:Entity?=null, cache: PosCache, ctx: RaycastCtx?,
-                          pos: Vector3d, unit_d: Vector3d,
-                          check_for_blocks_in_world:Boolean=true): RaycastReturnOrCtx {
-        val scope = CoroutineScope(coroutineContext)
-
-        val start = points_iter.start // starting position
-        val stop = points_iter.stop
+    class VSRaycastObj(start: Vector3d, stop: Vector3d, ignore_entity: Entity?,
+                       cache: PosCache, points_iter: RayIter, val pos: Vector3d, val world_unit_rd: Vector3d, val level: Level, check_for_blocks_in_world: Boolean=true)
+        : RaycastFunctions.RaycastObj(start, stop, ignore_entity, cache, points_iter, check_for_blocks_in_world){
 
         val shipyard_start = if (level.getShipManagingPos(pos.toBlockPos()) != null) { pos } else { start }
 
-        val rd = stop - start
-        val d = (rd+RaycastFunctions.eps).srdiv(1.0)
-        val ray_distance = rd.dist()
-        val world_unit_rd = rd.normalize()
-
-        val check_for_entities = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.check_for_intersection_with_entities
-        val er = if (check_for_blocks_in_world) SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.entity_check_radius else SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.entity_check_radius_no_worldchecking
-
-        var entity_res: Pair<Entity, Double>? = ctx?.intersected_entity ?: null
-        var entity_step_counter = ctx?.entity_step_counter ?: 0
-
-        val future_ship_intersections = ctx?.future_ship_intersections ?: mutableListOf<Pair<ServerShip, Double>>()
+        val future_ship_intersections = mutableListOf<Pair<ServerShip, Double>>()
         val ships_already_intersected = mutableListOf<ServerShip>()
-        val shipyard_rays = ctx?.shipyard_rays ?: mutableListOf<Ray>()
+        val shipyard_rays = mutableListOf<Ray>()
 
-        var ship_hit_res: MutableList<Pair<RaycastReturn, Double>> = ctx?.ship_hit_res ?: mutableListOf()
-        var world_res: Pair<Pair<BlockPos, BlockState>, Double>? = ctx?.world_res ?: null
+        var ship_step_counter = 0
 
-        for (point in points_iter) {
-            //if ray hits entity and any block wasn't hit before another check, then previous intersected entity is the actual hit place
-            if (check_for_entities && entity_step_counter % er == 0) {
-                if (entity_res != null) { return calculateReturn(world_res, entity_res, ship_hit_res, world_unit_rd, start, cache) }
+        var ship_hit_res: MutableList<Pair<RaycastReturn, Double>> = mutableListOf()
 
-                entity_res = checkForIntersectedEntity(start, point, level, d, ray_distance, er, ignore_entity)
+        override fun iterate(point: Vector3d, level: Level): RaycastReturn? {
+            val res = super.iterate(point, level)
+
+            if (check_for_entities && ship_step_counter % er == 0) {
                 addPossibleShipIntersections(
                     getIntersectingShips(level, point, er.toDouble(), start,  d),
                     future_ship_intersections, ships_already_intersected, shipyard_rays)
-                entity_step_counter = 0
+                ship_step_counter = 0
             }
-            entity_step_counter++
+            ship_step_counter++
 
             //if you don't add unit_d to point, it incorrectly calculates that ray hits world block instead of ship block.
             // why? idfk, but this fixes it, i think. Idk what will happen if ship touches another ship though.
             checkForShipIntersections(start, point+unit_d, ray_distance, d, rd, points_iter.up_to, future_ship_intersections, shipyard_rays)
 
             ship_hit_res = iterateShipRays(level, shipyard_rays, ships_already_intersected, start, shipyard_start, cache)
-            if (check_for_blocks_in_world) {world_res = checkForBlockInWorld(start, point, d, ray_distance, level, cache) }
 
-            if (world_res != null || !ship_hit_res.isEmpty()) {return calculateReturn(world_res, entity_res, ship_hit_res, world_unit_rd, start, cache) }
+            //TODO double calculation of result but idfc
+            if (res != null || !ship_hit_res.isEmpty()) {return calculateReturn(world_res, entity_res, ship_hit_res, world_unit_rd, start, cache)}
 
-            if (!scope.isActive) { return RaycastCtx(points_iter, ignore_entity, cache, pos, unit_d, entity_res, entity_step_counter, future_ship_intersections) }
+            return null
         }
 
-        if (entity_res != null && entity_res.second <= points_iter.up_to) {return calculateReturn(world_res, entity_res, ship_hit_res, world_unit_rd, start, cache)}
-
-        return RaycastNoResultReturn(points_iter.up_to.toDouble())
+        override fun post_check(): RaycastReturn? {
+            if (entity_res != null && entity_res!!.second <= points_iter.up_to) {return calculateReturn(world_res, entity_res, ship_hit_res, world_unit_rd, start, cache)}
+            return null
+        }
     }
 }
