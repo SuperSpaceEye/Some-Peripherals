@@ -14,7 +14,7 @@ import org.valkyrienskies.mod.common.getShipManagingPos
 import org.valkyrienskies.mod.common.transformToNearbyShipsAndWorld
 import org.valkyrienskies.mod.common.util.toMinecraft
 
-data class Ray(
+class Ray(
     var iter: RayIter,
     var ship: ServerShip,
     var d: Vector3d,
@@ -22,7 +22,32 @@ data class Ray(
     var dist_to_ray_start: Double,
     var started_from_shipyard: Boolean,
     var world_unit_rd: Vector3d
-)
+) {
+    var has_entered = false
+    var can_iterate = true
+    operator fun hasNext() = iter.hasNext() && can_iterate
+    operator fun iterator() = this
+    operator fun next(): Vector3d {
+        val cpos = iter.cpos
+        val aabb = ship.shipAABB!!
+        if (!has_entered) {
+            if (   cpos.x >= aabb.minX() && cpos.x <= aabb.maxX()
+                && cpos.y >= aabb.minY() && cpos.y <= aabb.maxY()
+                && cpos.z >= aabb.minZ() && cpos.z <= aabb.maxZ()) {
+                has_entered = true
+            }
+        }
+
+        if (has_entered && !(
+               cpos.x >= aabb.minX() && cpos.x <= aabb.maxX()
+            && cpos.y >= aabb.minY() && cpos.y <= aabb.maxY()
+            && cpos.z >= aabb.minZ() && cpos.z <= aabb.maxZ()) ) {
+            can_iterate = false
+        }
+
+        return iter.next()
+    }
+}
 
 object VSRaycastFunctions {
     private val logger = SomePeripherals.slogger
@@ -78,7 +103,6 @@ object VSRaycastFunctions {
 
         val sd = s_dir.rdiv(1.0, Vector3d()) // make d again
 
-        //TODO find how to actually find necessary length
         //ship size
         val ss = Vector3d(
             (ship.shipAABB!!.maxX() - ship.shipAABB!!.minX()).toDouble(),
@@ -143,7 +167,7 @@ object VSRaycastFunctions {
         while (i < size) {
             val ray = rays[i]
 
-            if (!ray.iter.hasNext()) {
+            if (!ray.hasNext()) {
                 ships_already_intersected.add(ray.ship)
                 rays[i] = rays.last()
                 rays.removeLast()
@@ -151,7 +175,7 @@ object VSRaycastFunctions {
                 continue
             }
 
-            val point = ray.iter.next()
+            val point = ray.next()
 
             // if ray has started from shipyard, then don't check starting pos (ray can clip into raycaster)
             if (ray.started_from_shipyard && point.floorCompare(shipyard_start)) {continue}
