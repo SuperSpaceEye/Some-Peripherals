@@ -6,9 +6,10 @@ local chat = peripheral.find("chatBox")
 local euler_mode = false
 local depth_map = false
 local do_cache = false
+local show_partial = false
 
 local do_shade_color = false
-local shading_offset = 0.2
+local shading_offset = 0.0
 
 local width_roll_range = math.rad(45)
 local height_pitch_range = math.rad(45)
@@ -174,6 +175,7 @@ local function try_yield() if os.epoch("utc") - yield_point >= 100 then yield() 
 
 local qdata
 local draw_image = false
+local did_draw_image = false
 
 local pause = false
 local paused = false
@@ -185,8 +187,8 @@ local function write_data()
     while not qdata.is_done do
         qdata.results = qdata.results or {}
         at = write_pixels(at, qdata)
-        try_yield()
         qdata = dt.getQueuedData()
+        try_yield()
     end
     write_pixels(at, qdata)
 end
@@ -201,19 +203,24 @@ local function raycasting_thread()
         toggle_current_image()
         draw_image = true
 
-        if pause then
-            paused = true
-            while pause do
-                yield()
+        while not did_draw_image do
+            if pause then
+                paused = true
+                while pause do
+                    yield()
+                end
+                paused = false
             end
-            paused = false
+            yield()
         end
+        did_draw_image = false
     end
 end
 
 local function drawing_thread()
     local fps = 0
     local point = os.epoch("utc")
+    local last_update = point
     while true do
         if draw_image then
             gpu.drawImage(1, 1, get_current_image().ref())
@@ -221,11 +228,17 @@ local function drawing_thread()
 
             fps = fps + 1
 
+            last_update = os.epoch("utc")
+            did_draw_image = true
             if os.epoch("utc") - point > 1000 then
                 print("FPS "..fps)
                 fps = 0
                 point = os.epoch("utc")
             end
+        end
+        if show_partial and os.epoch("utc") - last_update > 1000 then
+            gpu.drawImage(1, 1, get_current_image().ref())
+            gpu.sync()
         end
         sleep()
     end
@@ -238,6 +251,8 @@ local function message_events_thread()
         local num = tonumber(message)
         if num ~= nil then
             new_distance = num
+            dt.terminateAll()
+            qdata.is_done = true
         end
         if message == "shade" then
             if do_shade_color then do_shade_color = false else do_shade_color = true end
@@ -264,7 +279,10 @@ local function message_events_thread()
             end
         end
         if message == "depthmap" then
-            if depth_map then depth_map = false else depth_map = true end
+            depth_map = not depth_map
+        end
+        if message == "show_partial" then
+            show_partial = not show_partial
         end
     end
 end
