@@ -20,9 +20,9 @@ class BallisticAcceleratorPeripheral(private val level: Level, private val pos: 
         val projectile_y_velocity:Double = args.getDouble(2)
         val gravity:Double               = args.optDouble(3).orElse(0.05)
         val drag:Double                  = args.optDouble(4).orElse(0.99)
-        val max_steps                    = args.optDouble(5).orElse(1000000.0)
+        val max_steps                    = args.optInt   (5).orElse(1000000)
 
-        val res = BallisticFunctions.timeInAir(y_projectile_pos ,y_target_pos, projectile_y_velocity, gravity, drag, max_steps.toInt())
+        val res = BallisticFunctions.timeInAir(y_projectile_pos, y_target_pos, projectile_y_velocity, gravity, drag, max_steps)
         return mutableListOf(res.first.toDouble(), res.second.toDouble())
     }
 
@@ -31,7 +31,7 @@ class BallisticAcceleratorPeripheral(private val level: Level, private val pos: 
     fun tryPitch(args: IArguments): MutableList<Any> {
         val pitch_to_try  = args.getDouble(0)
         val initial_speed = args.getDouble(1)
-        val length        = args.getInt   (2)
+        val length        = args.getDouble(2)
         val distance      = args.getDouble(3)
         val cannon        = tableToDoubleArray(args.getTable (4), "Can't convert cannon item at ")
         val target        = tableToDoubleArray(args.getTable (5), "Can't convert target item at ")
@@ -50,7 +50,7 @@ class BallisticAcceleratorPeripheral(private val level: Level, private val pos: 
         val cannon = tableToDoubleArray(args.getTable (0), "Can't convert cannon item at ")
         val target = tableToDoubleArray(args.getTable (1), "Can't convert target item at ")
         val initial_speed     = args.getDouble(2)
-        val length            = args.getInt(3)
+        val length            = args.getDouble(3)
         val amin              = args.optInt(4)     .orElse(-30)
         val amax              = args.optInt(5)     .orElse(60)
         val gravity           = args.optDouble(6)  .orElse(0.05)
@@ -71,7 +71,7 @@ class BallisticAcceleratorPeripheral(private val level: Level, private val pos: 
         val cannon  = tableToDoubleArray(args.getTable (0), "Can't convert cannon item at ")
         val targets = tableToTableArray(args.getTable (1), "Can't convert targets at ")
         val initial_speed     = args.getDouble(2)
-        val length            = args.getInt(3)
+        val length            = args.getDouble(3)
         val amin              = args.optInt(4)     .orElse(-30)
         val amax              = args.optInt(5)     .orElse(60)
         val gravity           = args.optDouble(6)  .orElse(0.05)

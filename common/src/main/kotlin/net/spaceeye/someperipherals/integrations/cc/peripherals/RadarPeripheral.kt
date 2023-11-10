@@ -18,6 +18,6 @@ class RadarPeripheral(private val level: Level, private val pos: BlockPos): IPer
     @LuaFunction
     fun getConfigInfo() = makeRadarConfigInfo()
 
-    override fun equals(p0: IPeripheral?): Boolean = level.getBlockState(pos).`is`(SomePeripheralsCommonBlocks.RADAR.get())
-    override fun getType(): String = "sp_radar"
+    override fun equals(p0: IPeripheral?) = level.getBlockState(pos).`is`(SomePeripheralsCommonBlocks.RADAR.get())
+    override fun getType() = "sp_radar"
 }

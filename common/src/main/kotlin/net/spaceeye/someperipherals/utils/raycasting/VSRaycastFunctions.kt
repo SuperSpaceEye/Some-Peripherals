@@ -1,7 +1,6 @@
 package net.spaceeye.someperipherals.utils.raycasting
 
 import net.minecraft.core.BlockPos
-import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.state.BlockState
@@ -9,14 +8,14 @@ import net.spaceeye.someperipherals.SomePeripherals
 import net.spaceeye.someperipherals.utils.raycasting.RaycastFunctions.checkForBlockInWorld
 import net.spaceeye.someperipherals.utils.raycasting.RaycastFunctions.rayIntersectsBox
 import net.spaceeye.someperipherals.utils.mix.Vector3d
-import org.valkyrienskies.core.api.ships.ServerShip
+import org.valkyrienskies.core.api.ships.Ship
 import org.valkyrienskies.mod.common.getShipManagingPos
 import org.valkyrienskies.mod.common.transformToNearbyShipsAndWorld
 import org.valkyrienskies.mod.common.util.toMinecraft
 
 class Ray(
     var iter: RayIter,
-    var ship: ServerShip,
+    var ship: Ship,
     var d: Vector3d,
     var ray_distance: Double,
     var dist_to_ray_start: Double,
@@ -52,12 +51,11 @@ class Ray(
 object VSRaycastFunctions {
     private val logger = SomePeripherals.slogger
     @JvmStatic
-    fun getIntersectingShips(level: Level, pos: Vector3d, radius: Double, start: Vector3d, d: Vector3d): MutableList<Pair<ServerShip, Double>> {
-        if (level.isClientSide) {return mutableListOf()}
+    fun getIntersectingShips(level: Level, pos: Vector3d, radius: Double, start: Vector3d, d: Vector3d): MutableList<Pair<Ship, Double>> {
         val ship_pos = level.transformToNearbyShipsAndWorld(pos.x, pos.y, pos.z, radius)
-        val ret = mutableListOf<Pair<ServerShip, Double>>()
+        val ret = mutableListOf<Pair<Ship, Double>>()
         for (spos in ship_pos) {
-            val data = (level as ServerLevel).getShipManagingPos(spos) ?: continue
+            val data = level.getShipManagingPos(spos) ?: continue
             val (res, t) = rayIntersectsBox(data.worldAABB.toMinecraft(), start, d)
             if (!res) {continue}
             ret.add(Pair(data, t))
@@ -67,12 +65,12 @@ object VSRaycastFunctions {
 
     @JvmStatic
     fun addPossibleShipIntersections(
-        possible_ship_intersections: MutableList<Pair<ServerShip, Double>>,
-        future_ship_intersections:   MutableList<Pair<ServerShip, Double>>,
-        ships_already_intersected:   MutableList<ServerShip>,
+        possible_ship_intersections: MutableList<Pair<Ship, Double>>,
+        future_ship_intersections:   MutableList<Pair<Ship, Double>>,
+        ships_already_intersected:   MutableList<Ship>,
         shipyard_rays: MutableList<Ray>
         ) {
-        val new_items = mutableListOf<Pair<ServerShip, Double>>()
+        val new_items = mutableListOf<Pair<Ship, Double>>()
         for (item in possible_ship_intersections) {
             if (future_ship_intersections.firstOrNull { it.first.id == item.first.id } != null) {continue}
             if (shipyard_rays            .firstOrNull { it.ship.id  == item.first.id } != null) {continue}
@@ -89,7 +87,7 @@ object VSRaycastFunctions {
         max_iter_num: Int,
         initial_ray_distance: Double,
         initial_t: Double,
-        ship: ServerShip,
+        ship: Ship,
     ): Ray {
         val ship_wp = ship.transform.positionInWorld
         val ship_sp = ship.transform.positionInShip
@@ -125,7 +123,7 @@ object VSRaycastFunctions {
     // when ship is added to future intersections, its t is also saved, and as collision is calculated from starting point,
     // you can just calculate euclidean distance of diff between starting point and current pos, and compare it with t*ray_distance
     @JvmStatic
-    inline fun checkRayPassedShip(start: Vector3d, ship: Pair<ServerShip, Double>, point: Vector3d, ray_distance: Double): Boolean
+    inline fun checkRayPassedShip(start: Vector3d, ship: Pair<Ship, Double>, point: Vector3d, ray_distance: Double): Boolean
     = ship.second * ray_distance <= (point - start).dist()
 
     @JvmStatic
@@ -136,7 +134,7 @@ object VSRaycastFunctions {
         d: Vector3d,
         rd: Vector3d,
         max_iter_num: Int,
-        future_ship_intersections: MutableList<Pair<ServerShip, Double>>,
+        future_ship_intersections: MutableList<Pair<Ship, Double>>,
         shipyard_rays: MutableList<Ray>
     ) {
         // i've probably overcomplicated it, but who cares. not me
@@ -157,7 +155,7 @@ object VSRaycastFunctions {
     @JvmStatic
     fun iterateShipRays(level: Level,
                         rays: MutableList<Ray>,
-                        ships_already_intersected: MutableList<ServerShip>,
+                        ships_already_intersected: MutableList<Ship>,
                         start: Vector3d,
                         shipyard_start: Vector3d,
                         cache: PosCache): MutableList<Pair<RaycastReturn, Double>> {
@@ -215,8 +213,8 @@ object VSRaycastFunctions {
 
         val shipyard_start = if (level.getShipManagingPos(pos.toBlockPos()) != null) { pos } else { start }
 
-        val future_ship_intersections = mutableListOf<Pair<ServerShip, Double>>()
-        val ships_already_intersected = mutableListOf<ServerShip>()
+        val future_ship_intersections = mutableListOf<Pair<Ship, Double>>()
+        val ships_already_intersected = mutableListOf<Ship>()
         val shipyard_rays = mutableListOf<Ray>()
 
         var ship_step_counter = 0
@@ -241,7 +239,7 @@ object VSRaycastFunctions {
             ship_hit_res = iterateShipRays(level, shipyard_rays, ships_already_intersected, start, shipyard_start, cache)
 
             //TODO double calculation of result but idfc
-            if (res != null || !ship_hit_res.isEmpty()) {return calculateReturn(world_res, entity_res, ship_hit_res, world_unit_rd, start, cache)}
+            if (res != null || ship_hit_res.isNotEmpty()) {return calculateReturn(world_res, entity_res, ship_hit_res, world_unit_rd, start, cache)}
 
             return null
         }

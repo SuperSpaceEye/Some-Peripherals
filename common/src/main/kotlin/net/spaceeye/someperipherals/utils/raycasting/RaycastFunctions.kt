@@ -71,13 +71,15 @@ object RaycastFunctions {
         return Pair(Pair(bpos, res), t * ray_distance)
     }
     @JvmStatic
-    fun checkForIntersectedEntity(start: Vector3d,
-                                  cur: Vector3d,
-                                  level: Level,
-                                  d: Vector3d,
-                                  ray_distance: Double,
-                                  er: Int,
-                                  ignore_entity: Entity?): Pair<Entity, Double>? {
+    fun checkForIntersectedEntity(
+        start: Vector3d,
+        cur: Vector3d,
+        level: Level,
+        d: Vector3d,
+        ray_distance: Double,
+        er: Int,
+        ignore_entity: Entity?
+    ): Pair<Entity, Double>? {
         //null for any entity
         val entities = level.getEntities(null, AABB(
             cur.x-er, cur.y-er, cur.z-er,
@@ -116,8 +118,10 @@ object RaycastFunctions {
     }
 
 
-    open class RaycastObj(val start: Vector3d, val stop: Vector3d, val ignore_entity: Entity?,
-                     val cache: PosCache, val points_iter: RayIter, val check_for_blocks_in_world: Boolean=true): RaycastObjOrError {
+    open class RaycastObj(
+        val start: Vector3d, stop: Vector3d, val ignore_entity: Entity?,
+        val cache: PosCache, val points_iter: RayIter, val check_for_blocks_in_world: Boolean=true
+    ): RaycastObjOrError {
         val rd = stop - start
         val d = (rd+eps).srdiv(1.0)
         val ray_distance = rd.dist()
@@ -180,17 +184,15 @@ object RaycastFunctions {
     }
 
     @JvmStatic
-    fun dirToStartingOffset(direction: Direction): Vector3d {
-        val e = -1e-4 //if its just zero, then the blockpos will floor into raycaster, so small (but too small) negative offset
-        return when(direction) { //Looks better in IDEA
-            Direction.DOWN ->  Vector3d(0.5, e     , 0.5)
-            Direction.UP ->    Vector3d(0.5, 1  , 0.5)
-            Direction.NORTH -> Vector3d(0.5, 0.5, e     )
-            Direction.EAST ->  Vector3d(1  , 0.5, 0.5)
-            Direction.SOUTH -> Vector3d(0.5, 0.5, 1  )
-            Direction.WEST ->  Vector3d(e     , 0.5, 0.5)
+    fun dirToStartingOffset(direction: Direction): Pair<Vector3d, Boolean> =
+        when(direction) {
+            Direction.DOWN ->  Pair(Vector3d(0.5, 0  , 0.5), true)
+            Direction.UP ->    Pair(Vector3d(0.5, 1  , 0.5), false)
+            Direction.NORTH -> Pair(Vector3d(0.5, 0.5, 0  ), true)
+            Direction.EAST ->  Pair(Vector3d(1  , 0.5, 0.5), false)
+            Direction.SOUTH -> Pair(Vector3d(0.5, 0.5, 1  ), false)
+            Direction.WEST ->  Pair(Vector3d(0  , 0.5, 0.5), true)
         }
-    }
 
     @JvmStatic
     fun eulerRotationCalc(direction: Quaternion, pitch_: Double, yaw_: Double): Vector3d {
@@ -222,12 +224,14 @@ object RaycastFunctions {
 
     @JvmStatic
     fun commonMakeRaycastObj(level: Level, start: Vector3d, unit_d: Vector3d, distance: Double, cache: PosCache,
-                             pos: Vector3d, ignore_entity: Entity?, check_for_blocks_in_world: Boolean=true): RaycastObj {
+                             pos: Vector3d, ignore_entity: Entity?, check_for_blocks_in_world: Boolean=true,
+                             iterate_once: Boolean=false): RaycastObj {
         val stop = unit_d * distance + start
 
         val max_dist = if (check_for_blocks_in_world) SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.max_raycast_distance else SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.max_raycast_no_worldcheking_distance
         val max_iter = if (max_dist <= 0) { distance.toInt() } else { min(distance.toInt(), max_dist) }
-        val iter = DDAIter(start, stop, max_iter)
+        val iter = DDAIter(start, stop, max_iter + if (iterate_once) 1 else 0)
+        if (iterate_once) { iter.next() }
 
         return makeRaycastObj(level, iter, ignore_entity, cache, pos, unit_d, check_for_blocks_in_world)
     }
@@ -282,22 +286,20 @@ object RaycastFunctions {
             vectorRotationCalc(Pair(dir, dir.cross(up).scross(dir)), var1, var2, var3)
         }
 
-        val start = if (SomePeripherals.has_vs) {
+        val (offset, iterate_once) = dirToStartingOffset(be.blockState.getValue(BlockStateProperties.FACING))
+
+        val start = if (!SomePeripherals.has_vs) {Vector3d(pos) + offset} else {
             val ship = level.getShipManagingPos(pos)
-            if (ship != null) {
+            if (ship == null) { Vector3d(pos) + offset } else {
                 val scale = Vector3d(ship.transform.shipToWorldScaling)
                 val ship_wp = Vector3d(ship.transform.positionInWorld)
                 val ship_sp = Vector3d(ship.transform.positionInShip)
                 unit_d = Vector3d(ship.transform.transformDirectionNoScalingFromShipToWorld(unit_d.toJomlVector3d(), unit_d.toJomlVector3d()))
                 Vector3d((ship.transform.transformDirectionNoScalingFromShipToWorld(
-                    ((Vector3d(pos) - ship_sp + dirToStartingOffset(be.blockState.getValue(BlockStateProperties.FACING)))*scale).toJomlVector3d(), org.joml.Vector3d()))
+                    ((Vector3d(pos) - ship_sp + offset)*scale).toJomlVector3d(), org.joml.Vector3d()))
                 ) + ship_wp
-            } else {
-                Vector3d(pos) + dirToStartingOffset(be.blockState.getValue(BlockStateProperties.FACING))
             }
-        } else {
-            Vector3d(pos) + dirToStartingOffset(be.blockState.getValue(BlockStateProperties.FACING))
         }
-        return commonMakeRaycastObj(level, start, unit_d, distance, cache, Vector3d(pos), null, check_for_blocks_in_world)
+        return commonMakeRaycastObj(level, start, unit_d, distance, cache, Vector3d(pos), null, check_for_blocks_in_world, iterate_once)
     }
 }

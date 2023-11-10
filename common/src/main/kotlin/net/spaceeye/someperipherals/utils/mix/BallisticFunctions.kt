@@ -5,11 +5,10 @@ import kotlin.math.*
 
 object BallisticFunctions {
     @JvmStatic
-    inline fun rad(deg:Double): Double = deg * 0.017453292519943295
+    inline fun rad(deg:Double) = deg * 0.017453292519943295
 
     @JvmStatic
-    inline fun flinspace(start: Double, stop: Double, num_elements:Int, min: Double, max: Double): List<Double>
-        = linspace(max(start, min), min(stop, max) , num_elements)
+    inline fun flinspace(start: Double, stop: Double, num_elements:Int, min: Double, max: Double) = linspace(max(start, min), min(stop, max), num_elements)
 
     @JvmStatic
     fun getRoot(data: ArrayList<Array<Double>>, from_end:Boolean): Array<Double> {
@@ -63,7 +62,7 @@ object BallisticFunctions {
     fun tryPitch(
         pitch_to_try: Double,
         initial_speed: Double,
-        length: Int,
+        length: Double,
         distance: Double,
         cannon: Array<Double>,
         target: Array<Double>,
@@ -104,7 +103,7 @@ object BallisticFunctions {
     fun tryPitches(
         iter: Iterable<Double>,
         initial_speed: Double,
-        length: Int,
+        length: Double,
         distance: Double,
         cannon: Array<Double>,
         target: Array<Double>,
@@ -125,7 +124,7 @@ object BallisticFunctions {
         cannon: Array<Double>,
         target: Array<Double>,
         initial_speed: Double,
-        length: Int,
+        length: Double,
         amin: Int = -30,
         amax: Int = 60,
         gravity: Double = 0.05,

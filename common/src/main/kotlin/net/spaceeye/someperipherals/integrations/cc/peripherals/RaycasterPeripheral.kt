@@ -17,6 +17,8 @@ import net.spaceeye.someperipherals.integrations.cc.makeErrorReturn
 import net.spaceeye.someperipherals.integrations.cc.tableToDoubleArray
 import net.spaceeye.someperipherals.utils.configToMap.makeRaycastingConfigInfo
 import net.spaceeye.someperipherals.utils.raycasting.*
+import net.spaceeye.someperipherals.utils.raycasting.RaycastFunctions.timedRaycast
+import net.spaceeye.someperipherals.utils.raycasting.RaycastFunctions.RaycastObj
 
 class RaycasterPeripheral(private val level: Level, private val pos: BlockPos, private var be: BlockEntity): IPeripheral {
     companion object {
@@ -120,14 +122,14 @@ class RaycasterPeripheral(private val level: Level, private val pos: BlockPos, p
         var terminate = false
         var pull: MethodResult? = null
 
-        if (raycast_obj !is RaycastFunctions.RaycastObj) {return MethodResult.of(makeRaycastResponse(raycast_obj as RaycastReturn))}
+        if (raycast_obj !is RaycastObj) { return MethodResult.of(makeRaycastResponse(raycast_obj as RaycastReturn)) }
 
         val callback = CallbackToLuaWrapper {
             if (terminate) {return@CallbackToLuaWrapper makeErrorReturn("Was terminated") }
 
-            val res = RaycastFunctions.timedRaycast(raycast_obj, level, SomePeripheralsConfig.SERVER.RAYCASTING_SETTINGS.max_raycast_time_ms)
+            val res = timedRaycast(raycast_obj, level, SomePeripheralsConfig.SERVER.RAYCASTING_SETTINGS.max_raycast_time_ms)
 
-            if (res.first != null) { return@CallbackToLuaWrapper makeRaycastResponse(res.first!!)} else {
+            if (res.first != null) { return@CallbackToLuaWrapper makeRaycastResponse(res.first!!) } else {
                 computer.queueEvent(Constants.RAYCASTER_RAYCAST_EVENT_NAME)
                 return@CallbackToLuaWrapper pull!!
             }
@@ -153,10 +155,10 @@ class RaycasterPeripheral(private val level: Level, private val pos: BlockPos, p
     }
 
     @LuaFunction
-    fun getConfigInfo(): Any = makeRaycastingConfigInfo()
+    fun getConfigInfo() = makeRaycastingConfigInfo()
 
     @LuaFunction
-    fun getFacingDirection(): Any = be.blockState.getValue(BlockStateProperties.FACING).getName()
+    fun getFacingDirection() = be.blockState.getValue(BlockStateProperties.FACING).getName()
 
     override fun equals(p0: IPeripheral?): Boolean = level.getBlockState(pos).`is`(SomePeripheralsCommonBlocks.RAYCASTER.get())
     override fun getType(): String = "raycaster"
