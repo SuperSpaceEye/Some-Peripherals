@@ -87,17 +87,17 @@ object ConfigDelegateRegister {
     }
 
     fun initConfig() {
-        SomePeripheralsConfig.server_config_holder = PlatformUtils.getConfig()
+        SomePeripheralsConfig.server_config_holder = PlatformUtils.getConfigBuilder()
         SomePeripheralsConfig.server_config_holder.beginBuilding()
         reflectResolveConfigPaths(SomePeripheralsConfig.SERVER, "SomePeripheralsConfig", "SomePeripheralsConfig", SomePeripheralsConfig.server_config_holder)
         SomePeripheralsConfig.server_config_holder.finishBuilding("server")
 
-        SomePeripheralsConfig.client_config_holder = PlatformUtils.getConfig()
+        SomePeripheralsConfig.client_config_holder = PlatformUtils.getConfigBuilder()
         SomePeripheralsConfig.client_config_holder.beginBuilding()
         reflectResolveConfigPaths(SomePeripheralsConfig.CLIENT, "SomePeripheralsConfig", "SomePeripheralsConfig", SomePeripheralsConfig.client_config_holder)
         SomePeripheralsConfig.client_config_holder.finishBuilding("client")
 
-        SomePeripheralsConfig.common_config_holder = PlatformUtils.getConfig()
+        SomePeripheralsConfig.common_config_holder = PlatformUtils.getConfigBuilder()
         SomePeripheralsConfig.common_config_holder.beginBuilding()
         reflectResolveConfigPaths(SomePeripheralsConfig.COMMON, "SomePeripheralsConfig", "SomePeripheralsConfig", SomePeripheralsConfig.common_config_holder)
         SomePeripheralsConfig.common_config_holder.finishBuilding("common")

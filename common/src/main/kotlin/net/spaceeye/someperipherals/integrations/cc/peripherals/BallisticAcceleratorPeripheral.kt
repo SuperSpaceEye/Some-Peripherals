@@ -93,6 +93,10 @@ class BallisticAcceleratorPeripheral(private val level: Level, private val pos: 
         return ret
     }
 
+    @LuaFunction
+    @Throws(LuaException::class)
+    fun getDrag(base_drag: Double, dimensional_drag_multiplier: Double): Any = BallisticFunctions.getDrag(base_drag, dimensional_drag_multiplier)
+
     override fun equals(p0: IPeripheral?): Boolean = level.getBlockState(pos).`is`(SomePeripheralsCommonBlocks.BALLISTIC_ACCELERATOR.get())
     override fun getType(): String = "ballistic_accelerator"
 }

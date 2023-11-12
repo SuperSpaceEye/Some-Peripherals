@@ -7,13 +7,9 @@ import net.spaceeye.someperipherals.config.AbstractConfigBuilder
 object PlatformUtils {
     @ExpectPlatform
     @JvmStatic
-    fun getPeripheralProvider(): IPeripheralProvider {
-        throw AssertionError()
-    }
+    fun getPeripheralProvider(): IPeripheralProvider = throw AssertionError()
 
     @ExpectPlatform
     @JvmStatic
-    fun getConfig(): AbstractConfigBuilder {
-        throw AssertionError()
-    }
+    fun getConfigBuilder(): AbstractConfigBuilder = throw AssertionError()
 }

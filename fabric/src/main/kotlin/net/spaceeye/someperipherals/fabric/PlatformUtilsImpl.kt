@@ -6,12 +6,8 @@ import net.spaceeye.someperipherals.fabric.integrations.cc.SomePeripheralsPeriph
 
 object PlatformUtilsImpl {
     @JvmStatic
-    fun getPeripheralProvider(): IPeripheralProvider {
-        return SomePeripheralsPeripheralProviderFabric()
-    }
+    fun getPeripheralProvider(): IPeripheralProvider = SomePeripheralsPeripheralProviderFabric()
 
     @JvmStatic
-    fun getConfig(): AbstractConfigBuilder {
-        return FabricConfigBuilder()
-    }
+    fun getConfigBuilder(): AbstractConfigBuilder = FabricConfigBuilder()
 }

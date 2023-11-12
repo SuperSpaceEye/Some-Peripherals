@@ -1,5 +1,6 @@
 package net.spaceeye.someperipherals.utils.mix
 
+import net.minecraft.util.Mth
 import java.lang.Math.pow
 import kotlin.math.*
 
@@ -172,5 +173,14 @@ object BallisticFunctions {
         if (check_impossible && dT2 > max_delta_t_error) {r2 = arrayOf(-1.0, -1.0, -1.0)}
 
         return Pair(r1, r2)
+    }
+
+    //https://github.com/Cannoneers-of-Create/CreateBigCannons/blob/5a26459a1a65e65cc6c60cf8efaea96ed3b7fabc/common/src/main/java/rbasamoyai/createbigcannons/munitions/AbstractCannonProjectile.java#L378
+    //https://github.com/Cannoneers-of-Create/CreateBigCannons/tree/1.18.2/dev/common/src/main/resources/data/minecraft/dimension_munition_properties
+    @JvmStatic
+    fun getDrag(base_drag: Double, dimensional_drag_multiplier: Double): Double {
+        if (dimensional_drag_multiplier <= 1) { return Mth.lerp(dimensional_drag_multiplier, 1.0, base_drag) }
+        val diff = base_drag - 1
+        return Mth.clamp(base_drag + diff * (dimensional_drag_multiplier - 1), 0.9, base_drag)
     }
 }

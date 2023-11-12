@@ -22,7 +22,8 @@ import net.spaceeye.someperipherals.utils.configToMap.makeGoggleLinkPortConfigIn
 import net.spaceeye.someperipherals.utils.configToMap.makeGoggleLinkPortConfigInfoRange
 
 class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockPos, private var be:BlockEntity):IPeripheral {
-    private var connection = GlobalLinkConnections.links[(be as GoggleLinkPortBlockEntity).this_manager_key]
+    private val connection: LinkConnectionsManager?
+    get() {return (be as GoggleLinkPortBlockEntity).connection}
 
     private inline fun goggleType(connection: LinkPing) =
         when(connection) {
@@ -36,7 +37,6 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
     @LuaFunction
     fun getConnected(computer: IComputerAccess): Any {
         val ret = mutableMapOf<String, Any>()
-        val port = (be.blockState.block as GoggleLinkPort)
 
         val to_remove = mutableListOf<String>()
         for ((k, v) in connection!!.constant_pings) {
@@ -44,8 +44,8 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
 
             val item = mutableMapOf<String, Any>()
 
-            makeBaseGoggleFunctions(computer, item, port, k)
-            if (v is Server_RangeGogglesPing) {makeRangeGogglesFunctions(computer, item, port, k)}
+            makeBaseGoggleFunctions(computer, item, k)
+            if (v is Server_RangeGogglesPing) {makeRangeGogglesFunctions(computer, item, k)}
 
             ret[k] = item
         }
@@ -57,7 +57,6 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
     private fun makeRangeGogglesFunctions(
         computer: IComputerAccess,
         item: MutableMap<String, Any>,
-        port: GoggleLinkPort,
         k: String
     ) {
         item["raycast"] = FunToLuaWrapper {args ->
@@ -163,7 +162,6 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
     private fun makeBaseGoggleFunctions(
         computer: IComputerAccess,
         item: MutableMap<String, Any>,
-        port: GoggleLinkPort,
         k: String
     ) {
         item["getInfo"] = FunToLuaWrapper {args ->

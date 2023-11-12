@@ -6,12 +6,8 @@ import net.spaceeye.someperipherals.forge.integrations.cc.SomePeripheralsPeriphe
 
 object PlatformUtilsImpl {
     @JvmStatic
-    fun getPeripheralProvider(): IPeripheralProvider {
-        return SomePeripheralsPeripheralProviderForge()
-    }
+    fun getPeripheralProvider(): IPeripheralProvider = SomePeripheralsPeripheralProviderForge()
 
     @JvmStatic
-    fun getConfig(): AbstractConfigBuilder {
-        return ForgeConfigBuilder()
-    }
+    fun getConfigBuilder(): AbstractConfigBuilder = ForgeConfigBuilder()
 }

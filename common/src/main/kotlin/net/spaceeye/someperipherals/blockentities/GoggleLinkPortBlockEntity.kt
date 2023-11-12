@@ -10,11 +10,17 @@ import net.spaceeye.someperipherals.utils.mix.Constants
 import java.util.*
 
 class GoggleLinkPortBlockEntity(pos: BlockPos, state: BlockState): BlockEntity(CommonBlockEntities.GOOGLE_LINK_PORT.get(), pos, state) {
-    lateinit var this_manager_key: UUID
+    var this_manager_key: UUID? = null
+    var connection: LinkConnectionsManager? = null
+
+    init {
+        load(CompoundTag())
+    }
 
     override fun saveAdditional(tag: CompoundTag) {
         super.saveAdditional(tag)
-        tag.putUUID(Constants.LINK_UUID_NAME, this_manager_key)
+        if (this_manager_key == null) { load(tag) }
+        tag.putUUID(Constants.LINK_UUID_NAME, this_manager_key!!)
     }
 
     override fun load(tag: CompoundTag) {
@@ -24,6 +30,7 @@ class GoggleLinkPortBlockEntity(pos: BlockPos, state: BlockState): BlockEntity(C
         }
         this_manager_key = tag.getUUID(Constants.LINK_UUID_NAME)
 
-        GlobalLinkConnections.links[this_manager_key] = LinkConnectionsManager()
+        connection = LinkConnectionsManager()
+        GlobalLinkConnections.links[this_manager_key] = connection
     }
 }
