@@ -107,11 +107,11 @@ object RaycastFunctions {
     ): RaycastReturn {
         cache.cleanup()
         return if (world_res != null && entity_res != null) {
-            if (world_res.second < entity_res.second) {RaycastBlockReturn(world_res.first, world_res.second, unit_d*world_res.second+start)} else {RaycastEntityReturn(entity_res.first, entity_res.second, unit_d*entity_res.second+start)}
+            if (world_res.second < entity_res.second) {RaycastBlockReturn(start, world_res.first, world_res.second, unit_d*world_res.second+start)} else {RaycastEntityReturn(start, entity_res.first, entity_res.second, unit_d*entity_res.second+start)}
         } else if (world_res != null) {
-            RaycastBlockReturn(world_res.first, world_res.second, unit_d*world_res.second+start)
+            RaycastBlockReturn(start, world_res.first, world_res.second, unit_d*world_res.second+start)
         } else if (entity_res != null) {
-            RaycastEntityReturn(entity_res.first, entity_res.second, unit_d * entity_res.second+start)
+            RaycastEntityReturn(start, entity_res.first, entity_res.second, unit_d * entity_res.second+start)
         } else {
             throw AssertionError("makeResult was called but both entity_res and world_res are nil")
         }

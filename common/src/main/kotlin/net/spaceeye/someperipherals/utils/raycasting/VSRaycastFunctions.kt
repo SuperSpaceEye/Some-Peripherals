@@ -82,7 +82,7 @@ object VSRaycastFunctions {
 
     @JvmStatic
     fun makeShipyardRay(
-        start: Vector3d,
+        shipyard_ray_start: Vector3d,
         d: Vector3d,
         max_iter_num: Int,
         initial_ray_distance: Double,
@@ -93,7 +93,7 @@ object VSRaycastFunctions {
         val ship_sp = ship.transform.positionInShip
         val scale   = ship.transform.shipToWorldScaling
 
-        val start = ((start - Vector3d(ship_wp)) / Vector3d(scale)).toJomlVector3d()
+        val start = ((shipyard_ray_start - Vector3d(ship_wp)) / Vector3d(scale)).toJomlVector3d()
         val world_dir = d.rdiv(1.0).snormalize().toJomlVector3d() //transform d back to ray direction
 
         val sp_start = Vector3d(ship.transform.transformDirectionNoScalingFromWorldToShip(start, start).add(ship_sp))
@@ -179,7 +179,7 @@ object VSRaycastFunctions {
             if (ray.started_from_shipyard && point.floorCompare(shipyard_start)) {continue}
             val world_res = checkForBlockInWorld(ray.iter.start, point, ray.d, ray.ray_distance, level, cache) ?: continue
             val distance_to = world_res.second + ray.dist_to_ray_start
-            hits.add(Pair(RaycastVSShipBlockReturn(
+            hits.add(Pair(RaycastVSShipBlockReturn(start,
                 ray.ship, world_res.first, distance_to,
                 ray.world_unit_rd.normalize()*distance_to+start,
                 ray.d.rdiv(1.0).snormalize()*world_res.second+ray.iter.start // norm_shipyard_rd * dist_to_shipyard_block
@@ -201,8 +201,8 @@ object VSRaycastFunctions {
     ): RaycastReturn {
         cache.cleanup()
         val results = ships_res
-        if (world_res  != null) {results.add(Pair(RaycastBlockReturn ( world_res.first,  world_res.second, world_unit_rd* world_res.second+start),  world_res.second))}
-        if (entity_res != null) {results.add(Pair(RaycastEntityReturn(entity_res.first, entity_res.second, world_unit_rd*entity_res.second+start), entity_res.second))}
+        if (world_res  != null) {results.add(Pair(RaycastBlockReturn (start, world_res.first,  world_res.second, world_unit_rd* world_res.second+start),  world_res.second))}
+        if (entity_res != null) {results.add(Pair(RaycastEntityReturn(start, entity_res.first, entity_res.second, world_unit_rd*entity_res.second+start), entity_res.second))}
 
         return results.minBy { it.second }.first
     }

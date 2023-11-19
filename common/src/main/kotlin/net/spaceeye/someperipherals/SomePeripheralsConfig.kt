@@ -38,6 +38,7 @@ object SomePeripheralsConfig {
 
             var return_abs_pos: Boolean by CBool(true)
             var return_hit_pos: Boolean by CBool(true, "Returns hit position of ray relative to world origin")
+            var return_rel_hit_pos: Boolean by CBool(true, "Returns hit position of ray relative to ray origin")
             var return_distance: Boolean by CBool(true, "Distance is from ray origin to hit position")
             var return_block_type: Boolean by CBool(true)
 
@@ -52,7 +53,7 @@ object SomePeripheralsConfig {
         }
 
         class LinkPortSettings: ConfigSubDirectory() {
-            var max_connection_timeout_time_ticks: Long by CLong(5L, "If time between now and previous update is bigger than N, then the connection is treated as terminated. In mc ticks", Pair(0L, Long.MAX_VALUE))
+            var max_connection_timeout_time_ticks: Long by CLong(1L, "If time between now and previous update is bigger than N, then the connection is treated as terminated. In mc ticks", Pair(0L, Long.MAX_VALUE))
         }
 
         class RadarSettings: ConfigSubDirectory() {

@@ -193,11 +193,11 @@ object SomePeripheralsCommands {
 //    }
 
     fun registerServerCommands(dispatcher: CommandDispatcher<CommandSourceStack>) {
-        dispatcher.register(
-            lt("some_peripherals").then(
-                lt("debug-logging")
-                    .then(arg("enable", BoolArgumentType.bool()).executes{ optionDebugLogging(it) })
-                )
+//        dispatcher.register(
+//            lt("some_peripherals").then(
+//                lt("debug-logging")
+//                    .then(arg("enable", BoolArgumentType.bool()).executes{ optionDebugLogging(it) })
+//                )
 //                .then(
 //                lt("debug-offset")
 //                    .then(arg("offset", FloatArgumentType.floatArg()).executes{ optionSetDebugOffset(it) })
@@ -221,6 +221,6 @@ object SomePeripheralsCommands {
 //                        .then(arg("range", IntegerArgumentType.integer())
 //                            .executes { testLevelGetBlockStateNaiveLine(it) }))
 //                )
-        )
+//        )
     }
 }
