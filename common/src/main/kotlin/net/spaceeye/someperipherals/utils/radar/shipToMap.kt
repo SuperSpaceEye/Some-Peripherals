@@ -1,6 +1,7 @@
 package net.spaceeye.someperipherals.utils.radar
 
 import net.spaceeye.someperipherals.SomePeripheralsConfig
+import org.joml.primitives.AABBi
 import org.valkyrienskies.core.api.ships.ServerShip
 
 private inline fun getPos(ship: ServerShip) = mapOf(
@@ -23,7 +24,7 @@ private inline fun getVelocity(ship: ServerShip) = mapOf(
 )
 
 private inline fun getSize(ship: ServerShip): Map<String, Any> {
-    val aabb = ship.shipAABB!!
+    val aabb = ship.shipAABB ?: AABBi(0, 0, 0, 0, 0, 0)
     return mapOf(
         Pair("x", aabb.maxX() - aabb.minX()),
         Pair("y", aabb.maxY() - aabb.minY()),

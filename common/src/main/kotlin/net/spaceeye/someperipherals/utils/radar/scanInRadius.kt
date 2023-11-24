@@ -25,6 +25,8 @@ private fun getScanPos(level: Level, pos: BlockPos): BlockPos {
     }
 }
 
+//TODO If there are too many entities, it will be slow to collect them all, and as cc is on its own thread, mc may
+// add new entities, causing ConcurrentModificationException (though it may happen at any point accidentally)
 private fun scanForEntities(r: Double, level: ServerLevel, pos: BlockPos): MutableList<Any> {
     val spos = getScanPos(level, pos)
 
