@@ -7,13 +7,28 @@ import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
 import net.spaceeye.someperipherals.SomePeripheralsCommonBlocks
 import net.spaceeye.someperipherals.utils.configToMap.makeRadarConfigInfo
+import net.spaceeye.someperipherals.utils.radar.scanForEntitiesInRadius
+import net.spaceeye.someperipherals.utils.radar.scanForPlayersInRadius
+import net.spaceeye.someperipherals.utils.radar.scanForShipsInRadius
 import net.spaceeye.someperipherals.utils.radar.scanInRadius
 import kotlin.jvm.Throws
 
 class RadarPeripheral(private val level: Level, private val pos: BlockPos): IPeripheral {
-    @LuaFunction
+    @LuaFunction(mainThread = true)
     @Throws(LuaException::class)
     fun scan(radius: Double) = scanInRadius(radius, level, pos)
+
+    @LuaFunction(mainThread = true)
+    @Throws(LuaException::class)
+    fun scanForEntities(radius: Double) = scanForEntitiesInRadius(radius, level, pos)
+
+    @LuaFunction(mainThread = true)
+    @Throws(LuaException::class)
+    fun scanForShips(radius: Double) = scanForShipsInRadius(radius, level, pos)
+
+    @LuaFunction(mainThread = true)
+    @Throws(LuaException::class)
+    fun scanForPlayers(radius: Double) = scanForPlayersInRadius(radius, level, pos)
 
     @LuaFunction
     fun getConfigInfo() = makeRadarConfigInfo()

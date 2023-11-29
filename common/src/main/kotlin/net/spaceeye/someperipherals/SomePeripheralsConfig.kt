@@ -92,6 +92,7 @@ object SomePeripheralsConfig {
 
             var max_entity_search_radius: Double by CDouble(-1.0, "Max radius of a scan for entities. If <=0 then unlimited.")
             var max_ship_search_radius: Double by CDouble(-1.0, "Max radius of a scan for ships. <=0 for unlimited.", do_show = SomePeripherals.has_vs)
+            var max_entity_timeout_ms: Long by CLong(1000, "Max time a radar can try to get all entities in radius.", Pair(1000L, Long.MAX_VALUE))
         }
 
         class AllowedShipData: ConfigSubDirectory() {

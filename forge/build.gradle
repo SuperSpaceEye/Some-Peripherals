@@ -24,6 +24,15 @@ architectury {
     forge()
 }
 
+loom {
+    forge {
+        mixinConfig "some_peripherals-common.mixins.json"
+    }
+    mixin {
+        defaultRefmapName = "some_peripherals-refmap.json"
+    }
+}
+
 configurations {
     common
     shadowCommon // Don't use shadow from the shadow plugin because we don't want IDEA to index this.
@@ -65,6 +74,9 @@ dependencies {
 
     // CC Tweaked
     modImplementation("curse.maven:cctweaked-282001:4061947")
+
+    // Apply Mixin AP
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 }
 
 processResources {
