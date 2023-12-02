@@ -7,7 +7,7 @@ import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
-import net.spaceeye.someperipherals.SomePeripheralsCommonBlocks
+import net.spaceeye.someperipherals.blocks.SomePeripheralsCommonBlocks
 import net.spaceeye.someperipherals.SomePeripheralsConfig
 import net.spaceeye.someperipherals.integrations.cc.CallbackToLuaWrapper
 import net.spaceeye.someperipherals.integrations.cc.FunToLuaWrapper

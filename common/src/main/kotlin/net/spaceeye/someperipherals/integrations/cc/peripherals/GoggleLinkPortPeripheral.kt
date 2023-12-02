@@ -7,7 +7,7 @@ import dan200.computercraft.api.peripheral.IPeripheral
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.entity.BlockEntity
-import net.spaceeye.someperipherals.SomePeripheralsCommonBlocks
+import net.spaceeye.someperipherals.blocks.SomePeripheralsCommonBlocks
 import net.spaceeye.someperipherals.SomePeripheralsConfig
 import net.spaceeye.someperipherals.blockentities.GoggleLinkPortBlockEntity
 import net.spaceeye.someperipherals.blocks.GoggleLinkPort

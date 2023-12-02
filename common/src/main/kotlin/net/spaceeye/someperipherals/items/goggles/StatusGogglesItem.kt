@@ -12,7 +12,7 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.context.UseOnContext
 import net.minecraft.world.level.Level
 import net.spaceeye.someperipherals.utils.mix.entityToMapGoggles
-import net.spaceeye.someperipherals.SomePeripheralsCommonBlocks
+import net.spaceeye.someperipherals.blocks.SomePeripheralsCommonBlocks
 import net.spaceeye.someperipherals.SomePeripheralsConfig
 import net.spaceeye.someperipherals.SomePeripheralsItems
 import net.spaceeye.someperipherals.blockentities.GoggleLinkPortBlockEntity

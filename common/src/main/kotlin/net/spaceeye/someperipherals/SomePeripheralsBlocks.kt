@@ -4,6 +4,7 @@ import dev.architectury.registry.registries.DeferredRegister
 import net.minecraft.core.Registry
 import net.minecraft.world.item.BlockItem
 import net.minecraft.world.item.Item
+import net.spaceeye.someperipherals.blocks.SomePeripheralsCommonBlocks
 
 
 object SomePeripheralsBlocks {

@@ -3,6 +3,8 @@ package net.spaceeye.someperipherals
 import dan200.computercraft.api.peripheral.IPeripheralProvider
 import dev.architectury.injectables.annotations.ExpectPlatform
 import net.spaceeye.someperipherals.config.AbstractConfigBuilder
+import net.spaceeye.someperipherals.utils.mix.CommonBlockEntityInventory
+import net.spaceeye.someperipherals.utils.mix.CommonNetworkHooks
 
 object PlatformUtils {
     @ExpectPlatform
@@ -12,4 +14,12 @@ object PlatformUtils {
     @ExpectPlatform
     @JvmStatic
     fun getConfigBuilder(): AbstractConfigBuilder = throw AssertionError()
+
+    @ExpectPlatform
+    @JvmStatic
+    fun makeCommonBlockEntityInventory(size: Int): CommonBlockEntityInventory = throw AssertionError()
+
+    @ExpectPlatform
+    @JvmStatic
+    fun getCommonNetworkHooks(): CommonNetworkHooks = throw AssertionError()
 }

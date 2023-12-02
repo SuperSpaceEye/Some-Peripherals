@@ -29,6 +29,7 @@ object SomePeripherals {
         SomePeripheralsBlocks.register()
         SomePeripheralsBlockEntities.register()
         SomePeripheralsItems.register()
+        SomePeripheralsMenu.register()
 
         if (Platform.isModLoaded("computercraft")) { ComputerCraftAPI.registerPeripheralProvider(PlatformUtils.getPeripheralProvider()) }
     }

@@ -8,6 +8,7 @@ import net.minecraft.resources.ResourceLocation
 import net.minecraft.world.item.CreativeModeTab
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
+import net.spaceeye.someperipherals.blocks.SomePeripheralsCommonBlocks
 import net.spaceeye.someperipherals.items.goggles.RangeGogglesItem
 import net.spaceeye.someperipherals.items.goggles.StatusGogglesItem
 

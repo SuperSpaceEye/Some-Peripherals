@@ -6,7 +6,7 @@ import net.minecraft.core.Direction
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.state.BlockState
-import net.spaceeye.someperipherals.SomePeripheralsCommonBlocks
+import net.spaceeye.someperipherals.blocks.SomePeripheralsCommonBlocks
 import net.spaceeye.someperipherals.integrations.cc.peripherals.*
 
 private inline fun c(arg1:BlockState, arg2: Block) = arg1.`is`(arg2)
