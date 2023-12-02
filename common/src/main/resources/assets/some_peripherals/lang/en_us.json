@@ -3,6 +3,9 @@
   "block.some_peripherals.raycaster": "Raycaster",
   "block.some_peripherals.goggle_link_port": "Goggle Link Port",
   "block.some_peripherals.radar": "Radar",
+  "block.some_peripherals.digitizer": "Digitizer",
+
+  "screen.some_peripherals.digitizer": "Digitizer",
 
   "item.some_peripherals.status_goggles": "Status Goggles",
   "item.some_peripherals.range_goggles": "Range Goggles",

@@ -57,23 +57,23 @@ repositories {
 }
 
 dependencies {
-    api 'org.joml:joml-primitives:1.10.0'
-    api 'org.joml:joml:1.10.4'
+    compileOnlyApi 'org.joml:joml-primitives:1.10.0'
+    compileOnlyApi 'org.joml:joml:1.10.4'
     forge "net.minecraftforge:forge:${rootProject.forge_version}"
     // Remove the next line if you don't want to depend on the API
-    modApi "dev.architectury:architectury-forge:${rootProject.architectury_version}"
+    compileOnlyApi "dev.architectury:architectury-forge:${rootProject.architectury_version}"
 
-    modApi("org.valkyrienskies:valkyrienskies-118-forge:${rootProject.vs2_version}") { transitive = false }
-    implementation("org.valkyrienskies.core:api:${rootProject.vs_core_version}") { transitive = false }
+    compileOnlyApi("org.valkyrienskies:valkyrienskies-118-forge:${rootProject.vs2_version}") { transitive = false }
+    compileOnly("org.valkyrienskies.core:api:${rootProject.vs_core_version}") { transitive = false }
 
     common(project(path: ":common", configuration: "namedElements")) { transitive false }
     shadowCommon(project(path: ":common", configuration: "transformProductionForge")) { transitive = false }
 
     // Adds KFF as dependency and Kotlin libs
-    implementation 'thedarkcolour:kotlinforforge:3.12.0'
+    compileOnly 'thedarkcolour:kotlinforforge:3.12.0'
 
     // CC Tweaked
-    modImplementation("curse.maven:cctweaked-282001:4061947")
+    compileOnly("curse.maven:cctweaked-282001:4061947")
 
     // Apply Mixin AP
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'

@@ -1,19 +1,18 @@
 dependencies {
-    api 'org.joml:joml-primitives:1.10.0'
-    api 'org.joml:joml:1.10.4'
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3"
+    compileOnlyApi 'org.joml:joml-primitives:1.10.0'
+    compileOnlyApi 'org.joml:joml:1.10.4'
 
     // We depend on fabric loader here to use the fabric @Environment annotations and get the mixin dependencies
     // Do NOT use other classes from fabric loader
     modImplementation "net.fabricmc:fabric-loader:${rootProject.fabric_loader_version}"
     // Remove the next line if you don't want to depend on the API
-    modApi "dev.architectury:architectury:${rootProject.architectury_version}"
+    modCompileOnlyApi "dev.architectury:architectury:${rootProject.architectury_version}"
 
-    modApi("org.valkyrienskies:valkyrienskies-118-common:${rootProject.vs2_version}")
-    implementation("org.valkyrienskies.core:api:${rootProject.vs_core_version}") { transitive = false }
+    modCompileOnlyApi("org.valkyrienskies:valkyrienskies-118-common:${rootProject.vs2_version}")
+    modCompileOnly("org.valkyrienskies.core:api:${rootProject.vs_core_version}") { transitive = false }
 
-    api "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.7.21"
-    api "org.jetbrains.kotlin:kotlin-reflect:1.7.21"
+    compileOnlyApi "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.7.21"
+    compileOnlyApi "org.jetbrains.kotlin:kotlin-reflect:1.7.21"
 
     // CC Restitched
     modCompileOnly("curse.maven:cc-restitched-462672:3622561")

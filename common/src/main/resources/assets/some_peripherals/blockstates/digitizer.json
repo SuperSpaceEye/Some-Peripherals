@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "some_peripherals:block/digitizer"
+    },
+    "facing=south": {
+      "model": "some_peripherals:block/digitizer",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "some_peripherals:block/digitizer",
+      "y": 270
+    },
+    "facing=east": {
+      "model": "some_peripherals:block/digitizer",
+      "y": 90
+    }
+  }
+}

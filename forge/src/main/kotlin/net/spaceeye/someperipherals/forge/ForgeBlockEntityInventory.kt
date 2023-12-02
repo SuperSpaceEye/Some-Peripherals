@@ -6,7 +6,7 @@ import net.minecraftforge.items.ItemStackHandler
 import net.spaceeye.someperipherals.utils.mix.CommonBlockEntityInventory
 
 class ForgeBlockEntityInventory(size: Int): CommonBlockEntityInventory(size) {
-    private val inventory = ItemStackHandler(size)
+    val inventory = ItemStackHandler(size)
 
     override fun serializeNBT(): CompoundTag = inventory.serializeNBT()
     override fun deserializeNBT(nbt: CompoundTag) = inventory.deserializeNBT(nbt)

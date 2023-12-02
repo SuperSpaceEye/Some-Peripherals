@@ -13,6 +13,8 @@ class LogWrapper(val logger: Logger) {
     fun warn(msg: String) { if(is_enabled) { logger.warn(msg)} }
 }
 
+fun LOG(s: String) = SomePeripherals.logger.warn(s)
+
 object SomePeripherals {
     const val MOD_ID = "some_peripherals"
     val logger: Logger = LogManager.getLogger(MOD_ID)!!

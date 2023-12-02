@@ -8,12 +8,15 @@ import net.minecraft.world.MenuProvider
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.inventory.AbstractContainerMenu
+import net.minecraft.world.inventory.SimpleContainerData
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.state.BlockState
 import net.spaceeye.someperipherals.PlatformUtils.makeCommonBlockEntityInventory
+import net.spaceeye.someperipherals.utils.digitizer.DigitizerMenu
 
 class DigitizerBlockEntity(pos: BlockPos, state: BlockState): BlockEntity(CommonBlockEntities.DIGITIZER.get(), pos, state), MenuProvider {
-    private val inventory = makeCommonBlockEntityInventory(1)
+    val inventory = makeCommonBlockEntityInventory(1)
+    private val data = SimpleContainerData(8)
 
     override fun saveAdditional(tag: CompoundTag) {
         super.saveAdditional(tag)
@@ -25,11 +28,8 @@ class DigitizerBlockEntity(pos: BlockPos, state: BlockState): BlockEntity(Common
         inventory.deserializeNBT(tag.getCompound("inventory"))
     }
 
-    override fun createMenu(id: Int, inventory: Inventory, player: Player): AbstractContainerMenu? {
-        TODO("Not yet implemented")
-    }
+    override fun createMenu(id: Int, inventory: Inventory, player: Player): AbstractContainerMenu
+        = DigitizerMenu(id, inventory, this, data)
 
-    override fun getDisplayName(): Component {
-        return TextComponent("Digitizer")
-    }
+    override fun getDisplayName(): Component = TextComponent("Digitizer")
 }

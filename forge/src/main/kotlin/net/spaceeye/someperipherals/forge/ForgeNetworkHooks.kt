@@ -1,4 +1,4 @@
-package net.spaceeye.someperipherals.forge.integrations
+package net.spaceeye.someperipherals.forge
 
 import net.minecraft.core.BlockPos
 import net.minecraft.server.level.ServerPlayer
