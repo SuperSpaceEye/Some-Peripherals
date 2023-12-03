@@ -2,7 +2,9 @@ package net.spaceeye.someperipherals
 
 import dan200.computercraft.api.ComputerCraftAPI
 import dev.architectury.platform.Platform
+import dev.architectury.registry.menu.MenuRegistry
 import net.spaceeye.someperipherals.config.ConfigDelegateRegister
+import net.spaceeye.someperipherals.utils.digitizer.DigitizerScreen
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 
@@ -26,5 +28,10 @@ object SomePeripherals {
         SomePeripheralsMenu.register()
 
         if (Platform.isModLoaded("computercraft")) { ComputerCraftAPI.registerPeripheralProvider(PlatformUtils.getPeripheralProvider()) }
+    }
+
+    @JvmStatic
+    fun initClient() {
+        MenuRegistry.registerScreenFactory(SomePeripheralsMenu.DIGITIZER_MENU.get()) {it1, it2, it3 -> DigitizerScreen(it1, it2, it3) }
     }
 }

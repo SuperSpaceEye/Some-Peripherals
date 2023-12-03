@@ -1,10 +1,11 @@
 package net.spaceeye.someperipherals.blockentities
 
+import dev.architectury.registry.menu.ExtendedMenuProvider
 import net.minecraft.core.BlockPos
 import net.minecraft.nbt.CompoundTag
+import net.minecraft.network.FriendlyByteBuf
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.TextComponent
-import net.minecraft.world.MenuProvider
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.inventory.AbstractContainerMenu
@@ -14,7 +15,7 @@ import net.minecraft.world.level.block.state.BlockState
 import net.spaceeye.someperipherals.PlatformUtils.makeCommonBlockEntityInventory
 import net.spaceeye.someperipherals.utils.digitizer.DigitizerMenu
 
-class DigitizerBlockEntity(pos: BlockPos, state: BlockState): BlockEntity(CommonBlockEntities.DIGITIZER.get(), pos, state), MenuProvider {
+class DigitizerBlockEntity(pos: BlockPos, state: BlockState): BlockEntity(CommonBlockEntities.DIGITIZER.get(), pos, state), ExtendedMenuProvider {
     val inventory = makeCommonBlockEntityInventory(1)
     private val data = SimpleContainerData(8)
 
@@ -32,4 +33,8 @@ class DigitizerBlockEntity(pos: BlockPos, state: BlockState): BlockEntity(Common
         = DigitizerMenu(id, inventory, this, data)
 
     override fun getDisplayName(): Component = TextComponent("Digitizer")
+
+    override fun saveExtraData(buf: FriendlyByteBuf?) {
+        buf!!.writeBlockPos(blockPos)
+    }
 }

@@ -21,9 +21,6 @@ object PlatformUtilsImpl {
     fun makeCommonBlockEntityInventory(size: Int): CommonBlockEntityInventory = ForgeBlockEntityInventory(size)
 
     @JvmStatic
-    fun getCommonNetworkHooks(): CommonNetworkHooks = ForgeNetworkHooks
-
-    @JvmStatic
     fun setDigitizerStuff(be: BlockEntity, addSlot: (slot: Slot) -> Slot) {
         addSlot(SlotItemHandler(
             ((be as DigitizerBlockEntity)

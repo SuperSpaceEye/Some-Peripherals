@@ -32,7 +32,7 @@ class SomePeripheralsForge {
     object ClientModEvents {
         @SubscribeEvent
         @JvmStatic fun onClientSetup(event: FMLClientSetupEvent?) {
-            MenuScreens.register(SomePeripheralsMenu.DIGITIZER_MENU.get()) { it1, it2, it3 -> DigitizerScreen(it1, it2, it3) }
+            SomePeripherals.initClient()
         }
     }
 }

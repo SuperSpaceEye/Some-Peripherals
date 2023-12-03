@@ -23,9 +23,5 @@ object PlatformUtils {
 
     @ExpectPlatform
     @JvmStatic
-    fun getCommonNetworkHooks(): CommonNetworkHooks = throw AssertionError()
-
-    @ExpectPlatform
-    @JvmStatic
     fun setDigitizerStuff(be: BlockEntity, addSlot: (slot: Slot) -> Slot): Unit = throw AssertionError()
 }

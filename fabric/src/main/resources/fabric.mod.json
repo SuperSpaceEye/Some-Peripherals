@@ -21,6 +21,12 @@
         "adapter": "kotlin",
         "value": "net.spaceeye.someperipherals.fabric.SomePeripheralsFabric"
       }
+    ],
+    "client": [
+      {
+        "adapter": "kotlin",
+        "value": "net.spaceeye.someperipherals.fabric.SomePeripheralsFabricClient"
+      }
     ]
   },
   "mixins": [

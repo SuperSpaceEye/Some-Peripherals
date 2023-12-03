@@ -22,6 +22,7 @@ repositories {
             includeGroup "curse.maven"
         }
     }
+    maven { url = "https://mvn.devos.one/snapshots/" }
     mavenCentral()
 }
 
@@ -49,6 +50,8 @@ dependencies {
     implementation 'com.electronwill.night-config:core:3.6.3'
     implementation 'com.electronwill.night-config:toml:3.6.3'
     modApi "curse.maven:forge-config-api-port-fabric-547434:3943250"
+
+    modImplementation(include("io.github.fabricators_of_create:Porting-Lib:1.2.963-beta+1.18.2"))
 }
 
 processResources {

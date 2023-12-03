@@ -1,5 +1,7 @@
 package net.spaceeye.someperipherals.blocks
 
+import dev.architectury.registry.menu.ExtendedMenuProvider
+import dev.architectury.registry.menu.MenuRegistry
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.server.level.ServerPlayer
@@ -16,7 +18,6 @@ import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.state.StateDefinition
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.world.phys.BlockHitResult
-import net.spaceeye.someperipherals.PlatformUtils
 import net.spaceeye.someperipherals.blockentities.DigitizerBlockEntity
 
 class DigitizerBlock(properties: Properties): BaseEntityBlock(properties) {
@@ -42,7 +43,11 @@ class DigitizerBlock(properties: Properties): BaseEntityBlock(properties) {
 
     override fun use(state: BlockState, level: Level, pos: BlockPos, player: Player, hand: InteractionHand, hit: BlockHitResult): InteractionResult {
         if (player !is ServerPlayer) {return InteractionResult.SUCCESS}
-        PlatformUtils.getCommonNetworkHooks().openScreen(player, level.getBlockEntity(pos) as DigitizerBlockEntity, pos)
+
+        val provider = this.getMenuProvider(state, level, pos)
+        if (provider != null) {
+            MenuRegistry.openExtendedMenu(player, provider as ExtendedMenuProvider)
+        }
         return InteractionResult.CONSUME
     }
 
