@@ -20,7 +20,6 @@ import org.valkyrienskies.mod.common.getShipManagingPos
 import java.lang.Math.*
 
 object RaycastFunctions {
-    private val logger = SomePeripherals.slogger
     const val eps  = 1e-200
     const val heps = 1/ eps
 

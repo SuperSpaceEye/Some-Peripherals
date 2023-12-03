@@ -48,17 +48,18 @@ private fun <T> getEntitiesWithTimeout(level: ServerLevel,
 
 
 private fun scanForEntities(r: Double, level: ServerLevel, pos: BlockPos): MutableList<Any> {
-    val spos = getScanPos(level, pos)
+    val pos = getScanPos(level, pos)
 
     val res: MutableList<Any> = getEntitiesWithTimeout(level, AABB(
-        spos.x-r, spos.y-r, spos.z-r,
-        spos.x+r, spos.y+r, spos.z+r
+        pos.x-r, pos.y-r, pos.z-r,
+        pos.x+r, pos.y+r, pos.z+r
     )) {entityToMapRadar(it, SomePeripheralsConfig.SERVER.RADAR_SETTINGS.ALLOWED_ENTITY_DATA_SETTINGS)}
 
     return res
 }
 
 private fun scanForPlayers(r: Double, level: ServerLevel, pos: BlockPos): MutableList<Any> {
+    val pos = getScanPos(level, pos)
     val res = arrayListOf<Any>()
     for (player in level.server.playerList.players) {
         if ( !(player.level.dimension() == level.dimension()
@@ -74,14 +75,14 @@ private fun scanForPlayers(r: Double, level: ServerLevel, pos: BlockPos): Mutabl
 }
 
 private fun scanForShips(radius: Double, level: ServerLevel, pos: BlockPos): MutableList<Any> {
-    val spos = getScanPos(level, pos)
+    val pos = getScanPos(level, pos)
 
     val res = mutableListOf<Any>()
 
     val cur_ship = level.getShipManagingPos(pos)
     if (cur_ship != null) {res.add(shipToMap(cur_ship))}
 
-    for (ship_pos in level.transformToNearbyShipsAndWorld(spos.x.toDouble(), spos.y.toDouble(), spos.z.toDouble(), radius)) {
+    for (ship_pos in level.transformToNearbyShipsAndWorld(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), radius)) {
         val ship = level.getShipManagingPos(ship_pos) ?: continue
         if (ship == cur_ship) {continue}
         res.add(shipToMap(ship))

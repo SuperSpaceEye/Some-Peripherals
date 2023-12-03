@@ -49,7 +49,6 @@ class Ray(
 }
 
 object VSRaycastFunctions {
-    private val logger = SomePeripherals.slogger
     @JvmStatic
     fun getIntersectingShips(level: Level, pos: Vector3d, radius: Double, start: Vector3d, d: Vector3d): MutableList<Pair<Ship, Double>> {
         val ship_pos = level.transformToNearbyShipsAndWorld(pos.x, pos.y, pos.z, radius)

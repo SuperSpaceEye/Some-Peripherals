@@ -26,6 +26,7 @@ object SomePeripheralsCommonBlocks {
 
     fun registerItems(items: DeferredRegister<Item?>) {
         for (block in BLOCKS) {
+            if (block == DIGITIZER) {continue}
             items.register(block.id) { BlockItem(block.get(), Item.Properties().tab(TAB)) }
         }
     }

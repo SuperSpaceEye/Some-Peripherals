@@ -22,12 +22,6 @@ object SomePeripheralsCommands {
     private fun lt(name: String) = LiteralArgumentBuilder.literal<CommandSourceStack>(name)
     private fun <T> arg(name: String, type: ArgumentType<T>) = RequiredArgumentBuilder.argument<CommandSourceStack, T>(name, type)
 
-    private fun optionDebugLogging(it: CommandContext<CommandSourceStack>):Int {
-        val state = BoolArgumentType.getBool(it, "enable")
-        SomePeripherals.slogger.is_enabled = state
-        return 0
-    }
-
 //    private fun testLevelGetBlockStateChunked(it: CommandContext<CommandSourceStack>): Int {
 //        val rounds = IntegerArgumentType.getInteger(it, "rounds")
 //
