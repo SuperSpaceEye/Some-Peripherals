@@ -3,7 +3,7 @@
   "textures": {
     "down":  "some_peripherals:block/digitizer/digitizer_bottom",
     "up":    "some_peripherals:block/digitizer/digitizer_top",
-    "north": "some_peripherals:block/digitizer/digitizer_front_off",
+    "north": "some_peripherals:block/digitizer/digitizer_front_on",
     "south": "some_peripherals:block/digitizer/digitizer_side",
     "east":  "some_peripherals:block/digitizer/digitizer_side",
     "west":  "some_peripherals:block/digitizer/digitizer_side",

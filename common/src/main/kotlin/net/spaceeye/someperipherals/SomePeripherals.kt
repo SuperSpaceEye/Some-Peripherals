@@ -2,7 +2,6 @@ package net.spaceeye.someperipherals
 
 import dan200.computercraft.api.ComputerCraftAPI
 import dev.architectury.platform.Platform
-import net.minecraft.resources.ResourceLocation
 import net.spaceeye.someperipherals.config.ConfigDelegateRegister
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
@@ -28,10 +27,4 @@ object SomePeripherals {
 
         if (Platform.isModLoaded("computercraft")) { ComputerCraftAPI.registerPeripheralProvider(PlatformUtils.getPeripheralProvider()) }
     }
-
-    @JvmStatic
-    fun initClient() {
-
-    }
-    val String.resource: ResourceLocation get() = ResourceLocation(MOD_ID, this)
 }
