@@ -25,7 +25,7 @@ class DigitalItemsSavedData: SavedData() {
         return item
     }
 
-    fun setItem(item: DigitizedItem) { digitizedItems[item.id] = item }
+    fun setItem(item: DigitizedItem): DigitizedItem { digitizedItems[item.id] = item; return item }
 
     fun removeItem(uuid: UUID) { digitizedItems.remove(uuid) }
 

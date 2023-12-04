@@ -1,5 +1,6 @@
 package net.spaceeye.someperipherals.integrations.cc.peripherals
 
+import dan200.computercraft.api.lua.IArguments
 import dan200.computercraft.api.lua.LuaFunction
 import dan200.computercraft.api.peripheral.IPeripheral
 import net.minecraft.core.BlockPos
@@ -28,11 +29,10 @@ class DigitizerPeripheral(private val level: Level, private val pos: BlockPos, b
         if (item.count == 0) { return makeErrorReturn("Empty slot") }
 
         val amount = min(amount, item.count)
+        val instance = DigitalItemsSavedData.getInstance(level)
 
         val uuid = UUID.randomUUID()
-        DigitalItemsSavedData.getInstance(level).setItem(
-            DigitizedItem(
-                uuid,
+        instance.setItem(DigitizedItem(uuid,
                 be.inventory.extractItem(0, amount, false).copy()
             )
         )
@@ -43,18 +43,20 @@ class DigitizerPeripheral(private val level: Level, private val pos: BlockPos, b
         } else {
             be.inventory.setStackInSlot(0, ItemStack.EMPTY)
         }
-        DigitalItemsSavedData.getInstance(level).setDirty()
+        instance.setDirty()
 
         return uuid.toString()
     }
 
     @LuaFunction(mainThread = true)
     fun rematerializeAmount(uuid: String, amount: Int): Any {
-        val uuid = UUID.fromString(uuid)
+        val uuid = try {UUID.fromString(uuid)} catch (_ : Exception) {return makeErrorReturn("First argument is not a UUID")}
         if (amount <= 0) { return makeErrorReturn("Invalid amount") }
         if (!idExists(uuid)) { return makeErrorReturn("UUID doesn't exist") }
 
-        val item = DigitalItemsSavedData.getInstance(level).getItem(uuid)!!
+        val instance = DigitalItemsSavedData.getInstance(level)
+
+        val item = instance.getItem(uuid)!!
 
         val amount = min(amount, item.item.count)
 
@@ -67,21 +69,83 @@ class DigitizerPeripheral(private val level: Level, private val pos: BlockPos, b
         be.inventory.insertItemInSlot(0, limitedAmount, false)
         item.item.count = item.item.count - amount
 
-        if (item.item.count == 0) { DigitalItemsSavedData.getInstance(level).removeItem(uuid) }
-        DigitalItemsSavedData.getInstance(level).setDirty()
+        if (item.item.count == 0) { instance.removeItem(uuid) }
+        instance.setDirty()
+
+        return true
+    }
+
+    private fun canItemsStack(a: ItemStack, b: ItemStack): Boolean {
+        if (a.isEmpty || b.isEmpty || !a.sameItem(b) || !a.isStackable) return false
+        return if (a.hasTag() != b.hasTag()) false else (!a.hasTag() || a.tag == b.tag)
+    }
+
+    @LuaFunction(mainThread = true)
+    fun mergeDigitalItems(args: IArguments): Any {
+        val into = try {UUID.fromString(args.getString(0))} catch (_ : Exception) {return makeErrorReturn("First argument is not a UUID")}
+        val from = try {UUID.fromString(args.getString(1))} catch (_ : Exception) {return makeErrorReturn("Second argument is not a UUID")}
+        var amount = args.optInt(2).orElse(Int.MAX_VALUE)
+
+        if (amount <= 0) {return makeErrorReturn("Invalid amount")}
+        if (into == from) {return makeErrorReturn("Items have same id")}
+
+        if (!idExists(into)) {return makeErrorReturn("First id does not exists")}
+        if (!idExists(from)) {return makeErrorReturn("Second id does not exists")}
+
+        val instance = DigitalItemsSavedData.getInstance(level)
+
+        val intoItem = instance.getItem(into)!!
+        val fromItem = instance.getItem(from)!!
+
+        if (!canItemsStack(intoItem.item, fromItem.item)) {return makeErrorReturn("Can't stack items")}
+
+        if (amount > fromItem.item.count) {amount = fromItem.item.count}
+
+        intoItem.item.count += amount
+        fromItem.item.count -= amount
+
+        if (fromItem.item.count == 0) {instance.removeItem(from)}
+        instance.setDirty()
 
         return true
     }
 
     @LuaFunction(mainThread = true)
+    fun separateItem(from: String, amount: Int): Any {
+        val from = try {UUID.fromString(from)} catch (_ : Exception) {return makeErrorReturn("First argument is not a UUID")}
+
+        if (amount <= 0) {return makeErrorReturn("Invalid amount")}
+        if (!idExists(from)) {return makeErrorReturn("id does not exists")}
+
+        val instance = DigitalItemsSavedData.getInstance(level)
+
+        val fromItem = instance.getItem(from)!!
+
+        if (!fromItem.item.isStackable) {return makeErrorReturn("Item is not stackable")}
+        if (fromItem.item.count <= amount) {return makeErrorReturn("Cannot separate stack")}
+
+        val copy = fromItem.item.copy()
+
+        copy.count = amount
+        fromItem.item.count -= amount
+
+        val newUUID = UUID.randomUUID()
+        val newItem = instance.setItem(DigitizedItem(newUUID, copy))
+
+        instance.setDirty()
+
+        return newItem.id.toString()
+    }
+
+    @LuaFunction(mainThread = true)
     fun checkID(uuid: String): Any {
-        val uuid = UUID.fromString(uuid)
+        val uuid = try {UUID.fromString(uuid)} catch (_ : Exception) {return makeErrorReturn("First argument is not a UUID")}
         if (!idExists(uuid)) { return makeErrorReturn("UUID doesn't exist") }
 
         val item = DigitalItemsSavedData.getInstance(level).getItem(uuid)!!
 
         val ret = HashMap<String, Any>()
-        ret.put("item", ItemData.fill(mutableMapOf(), item.item))
+        ret["item"] = ItemData.fill(mutableMapOf(), item.item)
         return ret
     }
 
