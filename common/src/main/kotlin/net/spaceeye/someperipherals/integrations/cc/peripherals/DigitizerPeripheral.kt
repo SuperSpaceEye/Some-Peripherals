@@ -23,12 +23,14 @@ class DigitizerPeripheral(private val level: Level, private val pos: BlockPos, b
         DigitalItemsSavedData.getInstance(level).getItem(uuid) != null
 
     @LuaFunction(mainThread = true)
-    fun digitizeAmount(amount: Int): Any {
+    fun digitizeAmount(args: IArguments): Any {
+        var amount = args.optInt(0).orElse(Int.MAX_VALUE)
+
         if (amount <= 0) { return makeErrorReturn("Invalid amount") }
         val item = be.inventory.getStackInSlot(0)
         if (item.count == 0) { return makeErrorReturn("Empty slot") }
 
-        val amount = min(amount, item.count)
+        amount = min(amount, item.count)
         val instance = DigitalItemsSavedData.getInstance(level)
 
         val uuid = UUID.randomUUID()
@@ -49,8 +51,10 @@ class DigitizerPeripheral(private val level: Level, private val pos: BlockPos, b
     }
 
     @LuaFunction(mainThread = true)
-    fun rematerializeAmount(uuid: String, amount: Int): Any {
-        val uuid = try {UUID.fromString(uuid)} catch (_ : Exception) {return makeErrorReturn("First argument is not a UUID")}
+    fun rematerializeAmount(args: IArguments): Any {
+        val uuid = try {UUID.fromString(args.getString(0))} catch (_ : Exception) {return makeErrorReturn("First argument is not a UUID")}
+        var amount = args.optInt(1).orElse(Int.MAX_VALUE)
+
         if (amount <= 0) { return makeErrorReturn("Invalid amount") }
         if (!idExists(uuid)) { return makeErrorReturn("UUID doesn't exist") }
 
@@ -58,7 +62,7 @@ class DigitizerPeripheral(private val level: Level, private val pos: BlockPos, b
 
         val item = instance.getItem(uuid)!!
 
-        val amount = min(amount, item.item.count)
+        amount = min(min(amount, item.item.count), getItemLimitInSlot() - be.inventory.getStackInSlot(0).count)
 
         val limitedAmount = item.item.copy()
         limitedAmount.count = amount
@@ -111,7 +115,7 @@ class DigitizerPeripheral(private val level: Level, private val pos: BlockPos, b
     }
 
     @LuaFunction(mainThread = true)
-    fun separateItem(from: String, amount: Int): Any {
+    fun separateDigitalItem(from: String, amount: Int): Any {
         val from = try {UUID.fromString(from)} catch (_ : Exception) {return makeErrorReturn("First argument is not a UUID")}
 
         if (amount <= 0) {return makeErrorReturn("Invalid amount")}
@@ -129,8 +133,7 @@ class DigitizerPeripheral(private val level: Level, private val pos: BlockPos, b
         copy.count = amount
         fromItem.item.count -= amount
 
-        val newUUID = UUID.randomUUID()
-        val newItem = instance.setItem(DigitizedItem(newUUID, copy))
+        val newItem = instance.setItem(DigitizedItem(UUID.randomUUID(), copy))
 
         instance.setDirty()
 
