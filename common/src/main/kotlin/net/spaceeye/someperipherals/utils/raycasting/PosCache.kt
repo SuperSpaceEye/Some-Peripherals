@@ -86,7 +86,7 @@ class PosCache {
     }
 
     fun getBlockState(level: Level, bpos: BlockPos): BlockState {
-        //TODO make distant horizons compat if possible
+        //TODO wait for when Distant Horizons has a server side
         if (no_chunkloading && !level.isLoaded(bpos)) {throw RuntimeException("Block is not loaded")}
 
         if (chunk == null) {chunk = level.getChunkAt(bpos)}
