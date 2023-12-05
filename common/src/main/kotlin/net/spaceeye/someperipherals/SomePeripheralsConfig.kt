@@ -25,6 +25,7 @@ object SomePeripheralsConfig {
         class RaycastingSettings: ConfigSubDirectory() {
             var max_raycast_time_ms: Long by CLong(100L, "Max time before yielding")
             var allow_raycasting_for_entities_only: Boolean by CBool(true, "Includes Valkyrien Skies ships.")
+            var no_chunkloading_rays: Boolean by CBool(false)
         }
 
         class RaycasterSettings: ConfigSubDirectory() {

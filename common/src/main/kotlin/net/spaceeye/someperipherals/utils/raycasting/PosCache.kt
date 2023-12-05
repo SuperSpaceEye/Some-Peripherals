@@ -23,6 +23,7 @@ class PosCache {
     var chunk: LevelChunk? = null
     var do_cache = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.do_position_caching
     var max_items: Int = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.max_cached_positions
+    var no_chunkloading: Boolean = SomePeripheralsConfig.SERVER.RAYCASTING_SETTINGS.no_chunkloading_rays
 
     private fun getItem(bpos: BlockPos): CachedObject? {
         val r1 = data[bpos.x] ?: return null
@@ -85,6 +86,9 @@ class PosCache {
     }
 
     fun getBlockState(level: Level, bpos: BlockPos): BlockState {
+        //TODO make distant horizons compat if possible
+        if (no_chunkloading && !level.isLoaded(bpos)) {throw RuntimeException("Block is not loaded")}
+
         if (chunk == null) {chunk = level.getChunkAt(bpos)}
         chunk = getNewOrPreviousChunk(level, chunk!!, bpos)
 

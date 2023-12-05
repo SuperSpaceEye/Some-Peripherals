@@ -135,6 +135,7 @@ object RaycastFunctions {
         var world_res: Pair<Pair<BlockPos, BlockState>, Double>? = null
 
         open fun iterate(point: Vector3d, level: Level): RaycastReturn? {
+            try {
             //if ray hits entity and any block wasn't hit before another check, then previous intersected entity is the actual hit place
             if (check_for_entities && entity_step_counter % er == 0) {
                 if (entity_res != null) { return makeResult(null, entity_res, unit_d, start, cache) }
@@ -152,6 +153,8 @@ object RaycastFunctions {
             if (world_res != null) {return makeResult(world_res, entity_res, unit_d, start, cache)}
 
             return null
+                //TODO make new exception maybe?
+            } catch (e: RuntimeException) {return RaycastERROR("Chunk is not loaded")}
         }
 
         open fun post_check(): RaycastReturn? {
@@ -242,6 +245,8 @@ object RaycastFunctions {
         val cache = PosCache()
         val start = Vector3d(entity.eyePosition)
         cache.do_cache = do_cache
+        cache.max_items = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.max_cached_positions
+        cache.no_chunkloading = SomePeripheralsConfig.SERVER.RAYCASTING_SETTINGS.no_chunkloading_rays
 
         //https://gamedev.stackexchange.com/questions/190054/how-to-calculate-the-forward-up-right-vectors-using-the-rotation-angles
         val p = rad(entity.xRot.toDouble()) // picth
@@ -267,6 +272,7 @@ object RaycastFunctions {
         val cache = (be.blockState.block as RaycasterBlock).pos_cache
         cache.do_cache = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.do_position_caching && do_cache
         cache.max_items = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.max_cached_positions
+        cache.no_chunkloading = SomePeripheralsConfig.SERVER.RAYCASTING_SETTINGS.no_chunkloading_rays
 
         var unit_d = if (euler_mode) {
             eulerRotationCalc(directionToQuat(be.blockState.getValue(BlockStateProperties.FACING)), var1, var2)

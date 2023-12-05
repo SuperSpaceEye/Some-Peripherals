@@ -222,6 +222,7 @@ object VSRaycastFunctions {
 
         override fun iterate(point: Vector3d, level: Level): RaycastReturn? {
             val res = super.iterate(point, level)
+            if (res is RaycastERROR) {return res}
 
             if (check_for_entities && ship_step_counter % er == 0) {
                 addPossibleShipIntersections(
