@@ -16,6 +16,8 @@ dependencies {
 
     // CC Restitched
     modCompileOnly("curse.maven:cc-restitched-462672:3622561")
+
+    modCompileOnly (files(accelerated_raycasting_path))
 }
 
 architectury {

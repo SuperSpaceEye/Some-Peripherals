@@ -27,8 +27,8 @@ repositories {
 }
 
 dependencies {
-    api 'org.joml:joml-primitives:1.10.0'
-    api 'org.joml:joml:1.10.4'
+    compileOnlyApi 'org.joml:joml-primitives:1.10.0'
+    compileOnlyApi 'org.joml:joml:1.10.4'
     modImplementation "net.fabricmc:fabric-loader:${rootProject.fabric_loader_version}"
     modApi "net.fabricmc.fabric-api:fabric-api:${rootProject.fabric_api_version}"
     modApi "dev.architectury:architectury-fabric:${rootProject.architectury_version}"
@@ -36,16 +36,16 @@ dependencies {
     common(project(path: ":common", configuration: "namedElements")) { transitive false }
     shadowCommon(project(path: ":common", configuration: "transformProductionFabric")) { transitive false }
 
-    modApi("org.valkyrienskies:valkyrienskies-118-fabric:${rootProject.vs2_version}") { transitive = false }
-    modApi("org.valkyrienskies.core:api:${rootProject.vs_core_version}") { transitive = false }
+    modCompileOnlyApi("org.valkyrienskies:valkyrienskies-118-fabric:${rootProject.vs2_version}") { transitive = false }
+    modCompileOnly("org.valkyrienskies.core:api:${rootProject.vs_core_version}") { transitive = false }
 
     // Kotlin
-    modApi("net.fabricmc:fabric-language-kotlin:1.10.10+kotlin.1.9.10")
+    modImplementation("net.fabricmc:fabric-language-kotlin:1.10.10+kotlin.1.9.10")
     api "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.7.21"
     api "org.jetbrains.kotlin:kotlin-reflect:1.7.21"
 
     // CC Restitched
-    modApi("curse.maven:cc-restitched-462672:3622561")
+    modImplementation("curse.maven:cc-restitched-462672:3622561")
 
     implementation 'com.electronwill.night-config:core:3.6.3'
     implementation 'com.electronwill.night-config:toml:3.6.3'

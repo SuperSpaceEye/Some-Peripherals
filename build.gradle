@@ -82,5 +82,6 @@ allprojects {
 dependencies {
     api 'org.joml:joml-primitives:1.10.0'
     api 'org.joml:joml:1.10.4'
+    implementation files("AcceleratedRaycasting-0.0.1.jar")
 //    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3"
 }

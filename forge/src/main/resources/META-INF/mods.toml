@@ -44,7 +44,7 @@ credits="Contributors: Illuc, Tetrode, sashafiesta"
 [[dependencies.some_peripherals]]
    modId="computercraft"
    mandatory=false
-   versionRange="[1.101.3,)"
+   versionRange="[1.101.0,)"
    ordering="NONE"
    side="BOTH"
 [[dependencies.some_peripherals]]

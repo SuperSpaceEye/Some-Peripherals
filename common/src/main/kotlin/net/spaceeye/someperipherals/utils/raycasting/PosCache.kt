@@ -94,6 +94,7 @@ class PosCache {
 
         if (!do_cache) {return chunk!!.getBlockState(bpos)}
 
+        //raycasting operates on cc thread while cache cleaning operates on mc thread.
         mutex.lock()
         val item = getItem(bpos)
         if (item != null) {

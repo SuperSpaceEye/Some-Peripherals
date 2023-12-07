@@ -1,4 +1,4 @@
-package net.spaceeye.someperipherals.mixins;
+package net.spaceeye.someperipherals.mixin;
 
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;

@@ -10,6 +10,7 @@ import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.world.phys.AABB
+import net.spaceeye.acceleratedraycasting.ChunkProcessor
 import net.spaceeye.someperipherals.SomePeripherals
 import net.spaceeye.someperipherals.SomePeripheralsConfig
 import net.spaceeye.someperipherals.blocks.RaycasterBlock
@@ -17,6 +18,7 @@ import net.spaceeye.someperipherals.utils.mix.BallisticFunctions.rad
 import net.spaceeye.someperipherals.utils.mix.Vector3d
 import net.spaceeye.someperipherals.utils.mix.getNowFast_ms
 import org.valkyrienskies.mod.common.getShipManagingPos
+import java.lang.Exception
 import java.lang.Math.*
 
 object RaycastFunctions {
@@ -62,9 +64,11 @@ object RaycastFunctions {
         cache: PosCache
     ): Pair<Pair<BlockPos, BlockState>, Double>? {
         val bpos = BlockPos(point.x, point.y, point.z)
+        if (!ChunkProcessor.getIsSolidState(level, bpos)) {return null}
+
         val res = cache.getBlockState(level, bpos)
 
-        if (res.isAir) {return null}
+//        if (res.isAir) {return null}
         val (test_res, t) = rayIntersectsAABBs(start, bpos, d, res.getShape(level, bpos).toAabbs())
         if (!test_res) {return null}
         return Pair(Pair(bpos, res), t * ray_distance)
@@ -135,7 +139,7 @@ object RaycastFunctions {
         var world_res: Pair<Pair<BlockPos, BlockState>, Double>? = null
 
         open fun iterate(point: Vector3d, level: Level): RaycastReturn? {
-            try {
+//            try {
             //if ray hits entity and any block wasn't hit before another check, then previous intersected entity is the actual hit place
             if (check_for_entities && entity_step_counter % er == 0) {
                 if (entity_res != null) { return makeResult(null, entity_res, unit_d, start, cache) }
@@ -154,7 +158,8 @@ object RaycastFunctions {
 
             return null
                 //TODO make new exception maybe?
-            } catch (e: RuntimeException) {return RaycastERROR("Chunk is not loaded")}
+//            } catch (e: RuntimeException) {return RaycastERROR("Chunk is not loaded")
+//            } catch (e: Exception) {throw e}
         }
 
         open fun post_check(): RaycastReturn? {

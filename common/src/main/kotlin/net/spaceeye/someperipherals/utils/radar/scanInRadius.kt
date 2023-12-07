@@ -8,7 +8,7 @@ import net.minecraft.world.phys.AABB
 import net.spaceeye.someperipherals.SomePeripherals
 import net.spaceeye.someperipherals.SomePeripheralsConfig
 import net.spaceeye.someperipherals.integrations.cc.makeErrorReturn
-import net.spaceeye.someperipherals.mixins.IServerLevelAccessor
+import net.spaceeye.someperipherals.mixin.IServerLevelAccessor
 import net.spaceeye.someperipherals.utils.mix.entityToMapRadar
 import net.spaceeye.someperipherals.utils.mix.getNowFast_ms
 import org.valkyrienskies.mod.common.getShipManagingPos
