@@ -35,7 +35,7 @@ class RaycasterPeripheral(private val level: Level, private val pos: BlockPos, p
             if (rcc.return_abs_pos)  {ret["abs_pos"] = mutableListOf(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())}
             if (rcc.return_hit_pos)  {ret["hit_pos"] = res.hit_position.toArray()}
             if (rcc.return_distance) {ret["distance"] = res.distance_to}
-            if (rcc.return_block_type) {ret["block_type"] = bs.block.descriptionId.toString()}
+            if (rcc.return_block_type) {ret["block_type"] = if (bs is FullBlockRes) {bs.state.block.descriptionId.toString()} else {""}}
             if (rcc.return_rel_hit_pos) {ret["rel_hit_pos"] = (res.hit_position - res.origin).toArray() }
         }
         @JvmStatic
@@ -67,7 +67,7 @@ class RaycasterPeripheral(private val level: Level, private val pos: BlockPos, p
             if (rcc.return_abs_pos)  {ret["abs_pos"] = mutableListOf(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())}
             if (rcc.return_hit_pos)  {ret["hit_pos"] = res.hit_position.toArray()}
             if (rcc.return_distance) {ret["distance"] = res.distance_to}
-            if (rcc.return_block_type) {ret["block_type"] = bs.block.descriptionId.toString()}
+            if (rcc.return_block_type) {ret["block_type"] = if (bs is FullBlockRes) {bs.state.block.descriptionId.toString()} else {""}}
             if (rcc.return_rel_hit_pos) {ret["rel_hit_pos"] = (res.hit_position - res.origin).toArray() }
 
             if (rcc.return_ship_id)  {ret["ship_id"] = res.ship.id.toDouble()}
@@ -110,6 +110,7 @@ class RaycasterPeripheral(private val level: Level, private val pos: BlockPos, p
         val im_execute  = args.optBoolean(3).orElse(true) // execute immediately
         val do_cache    = args.optBoolean(4).orElse(false)
         var check_for_blocks_in_world = args.optBoolean(5).orElse(true)
+        val only_distance = args.optBoolean(6).orElse(false)
 
         check_for_blocks_in_world = check_for_blocks_in_world && SomePeripheralsConfig.SERVER.RAYCASTING_SETTINGS.allow_raycasting_for_entities_only
 
@@ -118,7 +119,7 @@ class RaycasterPeripheral(private val level: Level, private val pos: BlockPos, p
         val var2 = variables[1]
         val var3 = if (variables.size == 3) {variables[2]} else {1.0}
 
-        val raycast_obj = blockMakeRaycastObj(level, be, pos, distance, euler_mode, do_cache, var1, var2, var3, check_for_blocks_in_world)
+        val raycast_obj = blockMakeRaycastObj(level, be, pos, distance, euler_mode, do_cache, var1, var2, var3, check_for_blocks_in_world, only_distance)
         var terminate = false
         var pull: MethodResult? = null
 

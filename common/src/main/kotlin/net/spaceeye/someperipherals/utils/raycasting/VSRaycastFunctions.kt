@@ -157,7 +157,8 @@ object VSRaycastFunctions {
                         ships_already_intersected: MutableList<Ship>,
                         start: Vector3d,
                         shipyard_start: Vector3d,
-                        cache: PosCache): MutableList<Pair<RaycastReturn, Double>> {
+                        cache: PosCache,
+                        onlyDistance: Boolean): MutableList<Pair<RaycastReturn, Double>> {
         val hits = mutableListOf<Pair<RaycastReturn, Double>>()
         var size = rays.size
         var i = 0
@@ -176,7 +177,7 @@ object VSRaycastFunctions {
 
             // if ray has started from shipyard, then don't check starting pos (ray can clip into raycaster)
             if (ray.started_from_shipyard && point.floorCompare(shipyard_start)) {continue}
-            val world_res = checkForBlockInWorld(ray.iter.start, point, ray.d, ray.ray_distance, level, cache) ?: continue
+            val world_res = checkForBlockInWorld(ray.iter.start, point, ray.d, ray.ray_distance, level, cache, onlyDistance) ?: continue
             val distance_to = world_res.second + ray.dist_to_ray_start
             hits.add(Pair(RaycastVSShipBlockReturn(start,
                 ray.ship, world_res.first, distance_to,
@@ -191,7 +192,7 @@ object VSRaycastFunctions {
 
     @JvmStatic
     fun calculateReturn(
-        world_res: Pair<Pair<BlockPos, BlockState>, Double>?,
+        world_res: Pair<Pair<BlockPos, IBlockRes>, Double>?,
         entity_res: Pair<Entity, Double>?,
         ships_res: MutableList<Pair<RaycastReturn, Double>>,
         world_unit_rd: Vector3d,
@@ -207,8 +208,8 @@ object VSRaycastFunctions {
     }
 
     class VSRaycastObj(start: Vector3d, stop: Vector3d, ignore_entity: Entity?,
-                       cache: PosCache, points_iter: RayIter, val pos: Vector3d, val world_unit_rd: Vector3d, val level: Level, check_for_blocks_in_world: Boolean=true)
-        : RaycastFunctions.RaycastObj(start, stop, ignore_entity, cache, points_iter, check_for_blocks_in_world){
+                       cache: PosCache, points_iter: RayIter, val pos: Vector3d, val world_unit_rd: Vector3d, val level: Level, check_for_blocks_in_world: Boolean, onlyDistance: Boolean)
+        : RaycastFunctions.RaycastObj(start, stop, ignore_entity, cache, points_iter, check_for_blocks_in_world, onlyDistance){
 
         val shipyard_start = if (level.getShipManagingPos(pos.toBlockPos()) != null) { pos } else { start }
 
@@ -236,7 +237,7 @@ object VSRaycastFunctions {
             // why? idfk, but this fixes it, i think. Idk what will happen if ship touches another ship though.
             checkForShipIntersections(start, point+unit_d, ray_distance, d, rd, points_iter.up_to, future_ship_intersections, shipyard_rays)
 
-            ship_hit_res = iterateShipRays(level, shipyard_rays, ships_already_intersected, start, shipyard_start, cache)
+            ship_hit_res = iterateShipRays(level, shipyard_rays, ships_already_intersected, start, shipyard_start, cache, onlyDistance)
 
             //TODO double calculation of result but idfc
             if (res != null || ship_hit_res.isNotEmpty()) {return calculateReturn(world_res, entity_res, ship_hit_res, world_unit_rd, start, cache)}

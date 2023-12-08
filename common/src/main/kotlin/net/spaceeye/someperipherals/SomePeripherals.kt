@@ -15,10 +15,12 @@ object SomePeripherals {
     val logger: Logger = LogManager.getLogger(MOD_ID)!!
 
     var has_vs: Boolean = false
+    var has_arc = false
 
     @JvmStatic
     fun init() {
         if (Platform.isModLoaded("valkyrienskies")) { has_vs = true}
+        if (Platform.isModLoaded("acceleratedraycasting")) { has_arc = true}
 
         ConfigDelegateRegister.initConfig()
 

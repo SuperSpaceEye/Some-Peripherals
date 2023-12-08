@@ -15,11 +15,25 @@ import net.spaceeye.someperipherals.SomePeripherals
 import net.spaceeye.someperipherals.SomePeripheralsConfig
 import net.spaceeye.someperipherals.blocks.RaycasterBlock
 import net.spaceeye.someperipherals.utils.mix.BallisticFunctions.rad
+import net.spaceeye.someperipherals.utils.mix.ChunkIsNotLoadedException
 import net.spaceeye.someperipherals.utils.mix.Vector3d
 import net.spaceeye.someperipherals.utils.mix.getNowFast_ms
 import org.valkyrienskies.mod.common.getShipManagingPos
-import java.lang.Exception
 import java.lang.Math.*
+
+interface IBlockRes {
+    val state: BlockState
+}
+
+class FullBlockRes(private val blockState: BlockState): IBlockRes {
+    override val state: BlockState
+        get() = blockState
+}
+
+class PartialBlockRes: IBlockRes {
+    override val state: BlockState
+        get() = throw AssertionError("No state.")
+}
 
 object RaycastFunctions {
     const val eps  = 1e-200
@@ -61,17 +75,26 @@ object RaycastFunctions {
         d: Vector3d,
         ray_distance: Double,
         level: Level,
-        cache: PosCache
-    ): Pair<Pair<BlockPos, BlockState>, Double>? {
+        cache: PosCache,
+        onlyDistance: Boolean
+    ): Pair<Pair<BlockPos, IBlockRes>, Double>? {
         val bpos = BlockPos(point.x, point.y, point.z)
-        if (!ChunkProcessor.getIsSolidState(level, bpos)) {return null}
+
+        if (SomePeripherals.has_arc) {
+            if (!ChunkProcessor.getIsSolidState(level, bpos)) { return null }
+            if (onlyDistance) {
+                val (test_res, t) = rayIntersectsAABBs(start, bpos, d, listOf(AABB(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)))
+                if (!test_res) {return null}
+                return Pair(Pair(bpos, PartialBlockRes()), t * ray_distance)
+            }
+        }
 
         val res = cache.getBlockState(level, bpos)
 
-//        if (res.isAir) {return null}
+        if (!SomePeripherals.has_arc && res.isAir) {return null}
         val (test_res, t) = rayIntersectsAABBs(start, bpos, d, res.getShape(level, bpos).toAabbs())
         if (!test_res) {return null}
-        return Pair(Pair(bpos, res), t * ray_distance)
+        return Pair(Pair(bpos, FullBlockRes(res)), t * ray_distance)
     }
     @JvmStatic
     fun checkForIntersectedEntity(
@@ -102,7 +125,7 @@ object RaycastFunctions {
     }
 
     fun makeResult(
-        world_res: Pair<Pair<BlockPos, BlockState>, Double>?,
+        world_res: Pair<Pair<BlockPos, IBlockRes>, Double>?,
         entity_res: Pair<Entity, Double>?,
         unit_d: Vector3d,
         start: Vector3d,
@@ -123,7 +146,8 @@ object RaycastFunctions {
 
     open class RaycastObj(
         val start: Vector3d, stop: Vector3d, val ignore_entity: Entity?,
-        val cache: PosCache, val points_iter: RayIter, val check_for_blocks_in_world: Boolean=true
+        val cache: PosCache, val points_iter: RayIter, val check_for_blocks_in_world: Boolean,
+        val onlyDistance: Boolean
     ): RaycastObjOrError {
         val rd = stop - start
         val d = (rd+eps).srdiv(1.0)
@@ -136,10 +160,10 @@ object RaycastFunctions {
         var entity_res: Pair<Entity, Double>? = null
         var entity_step_counter = 0
 
-        var world_res: Pair<Pair<BlockPos, BlockState>, Double>? = null
+        var world_res: Pair<Pair<BlockPos, IBlockRes>, Double>? = null
 
         open fun iterate(point: Vector3d, level: Level): RaycastReturn? {
-//            try {
+            try {
             //if ray hits entity and any block wasn't hit before another check, then previous intersected entity is the actual hit place
             if (check_for_entities && entity_step_counter % er == 0) {
                 if (entity_res != null) { return makeResult(null, entity_res, unit_d, start, cache) }
@@ -150,16 +174,19 @@ object RaycastFunctions {
             }
             entity_step_counter++
 
-            if (check_for_blocks_in_world) {world_res = checkForBlockInWorld(start, point, d, ray_distance, level, cache)}
+            if (check_for_blocks_in_world) {world_res = checkForBlockInWorld(start, point, d, ray_distance, level, cache, onlyDistance)}
 
             //if the block and intersected entity are both hit, then we need to find out actual intersection as
             // checkForIntersectedEntity checks "er" block radius
             if (world_res != null) {return makeResult(world_res, entity_res, unit_d, start, cache)}
 
             return null
-                //TODO make new exception maybe?
-//            } catch (e: RuntimeException) {return RaycastERROR("Chunk is not loaded")
-//            } catch (e: Exception) {throw e}
+            } catch (e: Exception) {
+                when (e) {
+                    is ChunkIsNotLoadedException -> return RaycastERROR("Chunk is not loaded")
+                    else -> throw e
+                }
+            }
         }
 
         open fun post_check(): RaycastReturn? {
@@ -182,11 +209,13 @@ object RaycastFunctions {
     }
 
     @JvmStatic
-    fun makeRaycastObj(level: Level, points_iter: RayIter, ignore_entity:Entity?=null, cache: PosCache,
-                       pos: Vector3d, unit_d: Vector3d, check_for_blocks_in_world: Boolean=true): RaycastObj {
+    fun makeRaycastObj(level: Level, points_iter: RayIter, ignore_entity:Entity?, cache: PosCache,
+                       pos: Vector3d, unit_d: Vector3d, check_for_blocks_in_world: Boolean,
+                       onlyDistance: Boolean
+    ): RaycastObj {
         return when (SomePeripherals.has_vs) {
-            false -> RaycastObj(points_iter.start, points_iter.stop, ignore_entity, cache, points_iter, check_for_blocks_in_world)
-            true  -> VSRaycastFunctions.VSRaycastObj(points_iter.start, points_iter.stop, ignore_entity, cache, points_iter, pos, unit_d, level, check_for_blocks_in_world)
+            false -> RaycastObj(points_iter.start, points_iter.stop, ignore_entity, cache, points_iter, check_for_blocks_in_world, onlyDistance)
+            true  -> VSRaycastFunctions.VSRaycastObj(points_iter.start, points_iter.stop, ignore_entity, cache, points_iter, pos, unit_d, level, check_for_blocks_in_world, onlyDistance)
         }
     }
 
@@ -231,8 +260,8 @@ object RaycastFunctions {
 
     @JvmStatic
     fun commonMakeRaycastObj(level: Level, start: Vector3d, unit_d: Vector3d, distance: Double, cache: PosCache,
-                             pos: Vector3d, ignore_entity: Entity?, check_for_blocks_in_world: Boolean=true,
-                             iterate_once: Boolean=false): RaycastObj {
+                             pos: Vector3d, ignore_entity: Entity?, check_for_blocks_in_world: Boolean,
+                             onlyDistance: Boolean, iterate_once: Boolean=false): RaycastObj {
         val stop = unit_d * distance + start
 
         val max_dist = if (check_for_blocks_in_world) SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.max_raycast_distance else SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.max_raycast_no_worldcheking_distance
@@ -240,12 +269,13 @@ object RaycastFunctions {
         val iter = DDAIter(start, stop, max_iter + if (iterate_once) 1 else 0)
         if (iterate_once) { iter.next() }
 
-        return makeRaycastObj(level, iter, ignore_entity, cache, pos, unit_d, check_for_blocks_in_world)
+        return makeRaycastObj(level, iter, ignore_entity, cache, pos, unit_d, check_for_blocks_in_world, onlyDistance)
     }
 
     @JvmStatic
-    fun entityMakeRaycastObj(entity: LivingEntity, distance: Double, euler_mode: Boolean = true, do_cache:Boolean = false,
-                             var1:Double, var2: Double, var3: Double, check_for_blocks_in_world: Boolean): RaycastObj {
+    fun entityMakeRaycastObj(entity: LivingEntity, distance: Double, euler_mode: Boolean, do_cache:Boolean,
+                             var1:Double, var2: Double, var3: Double, check_for_blocks_in_world: Boolean,
+                             onlyDistance: Boolean): RaycastObj {
         val level = entity.getLevel()
         val cache = PosCache()
         val start = Vector3d(entity.eyePosition)
@@ -265,13 +295,13 @@ object RaycastFunctions {
             vectorRotationCalc(Pair(dir, up), var1, var2, var3, right)
         }
 
-        return commonMakeRaycastObj(level, start, unit_d, distance, cache, start, entity, check_for_blocks_in_world)
+        return commonMakeRaycastObj(level, start, unit_d, distance, cache, start, entity, check_for_blocks_in_world, onlyDistance)
     }
 
     @JvmStatic
     fun blockMakeRaycastObj(level: Level, be: BlockEntity, pos: BlockPos,
-                            distance: Double, euler_mode: Boolean = true, do_cache:Boolean = false,
-                            var1:Double, var2: Double, var3: Double, check_for_blocks_in_world: Boolean=true): RaycastObjOrError {
+                            distance: Double, euler_mode: Boolean, do_cache:Boolean,
+                            var1:Double, var2: Double, var3: Double, check_for_blocks_in_world: Boolean, onlyDistance: Boolean): RaycastObjOrError {
         if (level.isClientSide) { return RaycastERROR("Level is clientside. how.") }
 
         val cache = (be.blockState.block as RaycasterBlock).pos_cache
@@ -310,6 +340,6 @@ object RaycastFunctions {
                 ) + ship_wp
             }
         }
-        return commonMakeRaycastObj(level, start, unit_d, distance, cache, Vector3d(pos), null, check_for_blocks_in_world, iterate_once)
+        return commonMakeRaycastObj(level, start, unit_d, distance, cache, Vector3d(pos), null, check_for_blocks_in_world, onlyDistance, iterate_once)
     }
 }

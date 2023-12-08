@@ -74,14 +74,15 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
             val euler_mode = args.optBoolean(2).orElse(false)
             val im_execute = args.optBoolean(3).orElse(true)
             val do_cache   = args.optBoolean(4).orElse(false)
-            var check_for_blocks_in_world = args.optBoolean(5).orElse(true)
+            val check_for_blocks_in_world = args.optBoolean(5).orElse(true)
+            val only_distance = args.optBoolean(6).orElse(false)
 
             if (variables.size < 2 || variables.size > 3) { return@FunToLuaWrapper makeErrorReturn("Variables table should have 2 or 3 items") }
             val var1 = variables[0]
             val var2 = variables[1]
             val var3 = if (variables.size == 3) {variables[2]} else {1.0}
 
-            connection!!.makeRequest(k, LinkRaycastRequest(distance, euler_mode, do_cache, var1, var2, var3, check_for_blocks_in_world))
+            connection!!.makeRequest(k, LinkRaycastRequest(distance, euler_mode, do_cache, var1, var2, var3, check_for_blocks_in_world, only_distance))
 
             var terminate = false
             var pull: MethodResult? = null
@@ -131,7 +132,8 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
                 args.optBoolean(2).orElse(false),
                 args.optBoolean(3).orElse(false),
                 args.optBoolean(4).orElse(true),
-                data.toTypedArray()
+                data.toTypedArray(),
+                args.optBoolean(5).orElse(false)
             ))
 
             return@FunToLuaWrapper true

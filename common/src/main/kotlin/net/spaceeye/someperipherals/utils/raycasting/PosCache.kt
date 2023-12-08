@@ -5,6 +5,7 @@ import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.chunk.LevelChunk
 import net.spaceeye.someperipherals.SomePeripheralsConfig
+import net.spaceeye.someperipherals.utils.mix.ChunkIsNotLoadedException
 import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.ReentrantLock
 
@@ -87,7 +88,7 @@ class PosCache {
 
     fun getBlockState(level: Level, bpos: BlockPos): BlockState {
         //TODO wait for when Distant Horizons has a server side
-        if (no_chunkloading && !level.isLoaded(bpos)) {throw RuntimeException("Block is not loaded")}
+        if (no_chunkloading && !level.isLoaded(bpos)) {throw ChunkIsNotLoadedException()}
 
         if (chunk == null) {chunk = level.getChunkAt(bpos)}
         chunk = getNewOrPreviousChunk(level, chunk!!, bpos)

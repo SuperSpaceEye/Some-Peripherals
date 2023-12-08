@@ -6,7 +6,6 @@ import net.minecraft.world.inventory.Slot
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.spaceeye.someperipherals.config.AbstractConfigBuilder
 import net.spaceeye.someperipherals.utils.mix.CommonBlockEntityInventory
-import net.spaceeye.someperipherals.utils.mix.CommonNetworkHooks
 
 object PlatformUtils {
     @ExpectPlatform

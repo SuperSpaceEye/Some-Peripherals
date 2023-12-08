@@ -6,7 +6,6 @@ import net.minecraft.world.level.block.entity.BlockEntity
 import net.spaceeye.someperipherals.config.AbstractConfigBuilder
 import net.spaceeye.someperipherals.forge.integrations.cc.SomePeripheralsPeripheralProviderForge
 import net.spaceeye.someperipherals.utils.mix.CommonBlockEntityInventory
-import net.spaceeye.someperipherals.utils.mix.CommonNetworkHooks
 import net.minecraftforge.items.SlotItemHandler
 import net.spaceeye.someperipherals.blockentities.DigitizerBlockEntity
 
