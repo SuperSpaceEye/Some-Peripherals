@@ -40,8 +40,9 @@ object RaycastFunctions {
     const val heps = 1/ eps
 
     //https://gamedev.stackexchange.com/questions/18436/most-efficient-aabb-vs-ray-collision-algorithms
+    //first t is time to in collision point, second t is time to out collision point
     @JvmStatic
-    fun rayIntersectsBox(box: AABB, or: Vector3d, d: Vector3d): Pair<Boolean, Double> {
+    fun rayIntersectsBox(box: AABB, or: Vector3d, d: Vector3d): Pair<Boolean, Pair<Double, Double>> {
         val t1: Double = (box.minX - or.x) * d.x
         val t2: Double = (box.maxX - or.x) * d.x
         val t3: Double = (box.minY - or.y) * d.y
@@ -51,9 +52,8 @@ object RaycastFunctions {
 
         val tmin = max(max(min(t1, t2), min(t3, t4)), min(t5, t6))
         val tmax = min(min(max(t1, t2), max(t3, t4)), max(t5, t6))
-        if (tmax < 0 || tmin > tmax) {return Pair(false, tmax)}
-        if (tmin <= 0) {return Pair(true, 0.0)} // already inside an object so no t
-        return Pair(true, tmin)
+        if (tmax < 0 || tmin > tmax) {return Pair(false, Pair(tmax, tmin))}
+        return Pair(true, Pair(tmin, tmax))
     }
     @JvmStatic
     fun rayIntersectsAABBs(start: Vector3d, at: BlockPos, d: Vector3d, boxes: List<AABB>): Pair<Boolean, Double> {
@@ -62,7 +62,7 @@ object RaycastFunctions {
         val intersecting = mutableListOf<Double>()
         for (box in boxes) {
             val (res, t) = rayIntersectsBox(box, r, d)
-            if (res) {intersecting.add(t)}
+            if (res) {intersecting.add(t.first)}
         }
         if (intersecting.isEmpty()) {return Pair(false, heps)}
         return Pair(true, intersecting.min())
@@ -116,7 +116,7 @@ object RaycastFunctions {
             if (entity == null || entity == ignore_entity) {continue}
             val (res, t) = rayIntersectsBox(entity.boundingBox, start, d)
             if (!res) {continue}
-            intersecting_entities.add(Pair(entity, t * ray_distance))
+            intersecting_entities.add(Pair(entity, t.first * ray_distance))
         }
 
         if (intersecting_entities.size == 0) {return null}

@@ -12,6 +12,7 @@ import org.valkyrienskies.core.api.ships.Ship
 import org.valkyrienskies.mod.common.getShipManagingPos
 import org.valkyrienskies.mod.common.transformToNearbyShipsAndWorld
 import org.valkyrienskies.mod.common.util.toMinecraft
+import kotlin.math.max
 
 class Ray(
     var iter: RayIter,
@@ -57,7 +58,7 @@ object VSRaycastFunctions {
             val data = level.getShipManagingPos(spos) ?: continue
             val (res, t) = rayIntersectsBox(data.worldAABB.toMinecraft(), start, d)
             if (!res) {continue}
-            ret.add(Pair(data, t))
+            ret.add(Pair(data, t.first))
         }
         return ret
     }
@@ -112,7 +113,7 @@ object VSRaycastFunctions {
             DDAIter(sp_start, sp_end, max_iter_num),
             ship, sd, s_dir.dist(),
             initial_t * initial_ray_distance,
-            initial_t < 1e-60, // if ray started from shipyard, t to intersection will be 0
+            initial_t < 1e-60, // if ray started from shipyard, it's realworld position will start in ship hitbox
             d.rdiv(1.0).snormalize()
         )
 
@@ -142,7 +143,7 @@ object VSRaycastFunctions {
         while (i < size) {
             val ship = future_ship_intersections[i]
             if (!checkRayPassedShip(start, ship, next, ray_distance)) {i++; continue}
-            val intersection_point = start + rd * ship.second
+            val intersection_point = start + rd * max(ship.second, 0.0) // max to prevent negative t
             shipyard_rays.add(makeShipyardRay(intersection_point, d, max_iter_num, ray_distance, ship.second, ship.first))
 
             future_ship_intersections[i] = future_ship_intersections.last()
