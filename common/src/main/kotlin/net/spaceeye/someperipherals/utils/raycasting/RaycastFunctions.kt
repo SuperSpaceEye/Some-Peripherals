@@ -54,6 +54,8 @@ object RaycastFunctions {
         if (tmax < 0 || tmin > tmax) {return Pair(false, Pair(tmax, tmin))}
         return Pair(true, Pair(tmin, tmax))
     }
+
+    // will check all AABBs for intersections, and if intersects more than one, will return the closest AABB with which ray intersects
     @JvmStatic
     fun rayIntersectsAABBs(start: Vector3d, at: BlockPos, d: Vector3d, boxes: List<AABB>): Pair<Boolean, Double> {
         val r = start - Vector3d(at)
@@ -74,7 +76,7 @@ object RaycastFunctions {
         d: Vector3d,
         ray_distance: Double,
         level: Level,
-        cache: PosManager,
+        manager: PosManager,
         onlyDistance: Boolean
     ): Pair<Pair<BlockPos, IBlockRes>, Double>? {
         val bpos = BlockPos(point.x, point.y, point.z)
@@ -88,7 +90,7 @@ object RaycastFunctions {
             }
         }
 
-        val res = cache.getBlockState(level, bpos)
+        val res = manager.getBlockState(level, bpos)
 
         if (!SomePeripherals.has_arc && res.isAir) {return null}
         val (test_res, t) = rayIntersectsAABBs(start, bpos, d, res.getShape(level, bpos).toAabbs())
@@ -105,7 +107,8 @@ object RaycastFunctions {
         er: Int,
         ignore_entity: Entity?
     ): Pair<Entity, Double>? {
-        //null for any entity
+        //null is for any entity
+        //TODO timeout code?
         val entities = level.getEntities(null, AABB(
             cur.x-er, cur.y-er, cur.z-er,
             cur.x+er, cur.y+er, cur.z+er))
@@ -120,7 +123,7 @@ object RaycastFunctions {
 
         if (intersecting_entities.size == 0) {return null}
         return intersecting_entities.minBy {
-            pow(it.first.x - cur.x, 2.0) + pow(it.first.y - cur.y, 2.0)+ pow(it.first.z - cur.z, 2.0) }
+            pow(it.first.x - cur.x, 2.0) + pow(it.first.y - cur.y, 2.0) + pow(it.first.z - cur.z, 2.0) }
     }
 
     fun makeResult(
@@ -190,7 +193,8 @@ object RaycastFunctions {
             }
         }
 
-        open fun post_check(): RaycastReturn? {
+        //is needed so that when raycasting ended but ray does intersect with some entity, it would return said entity.
+        open fun postCheckForUnreturnedEntity(): RaycastReturn? {
             if (entity_res != null && entity_res!!.second <= points_iter.up_to) { return makeResult(null, entity_res, unit_d, start, cache) }
             return null
         }
@@ -206,7 +210,7 @@ object RaycastFunctions {
 
             if (getNowFast_ms() - start > timeout_ms) {return Pair(null, raycastObj)}
         }
-        return Pair(raycastObj.post_check() ?: RaycastNoResultReturn(raycastObj.points_iter.up_to.toDouble()), raycastObj)
+        return Pair(raycastObj.postCheckForUnreturnedEntity() ?: RaycastNoResultReturn(raycastObj.points_iter.up_to.toDouble()), raycastObj)
     }
 
     @JvmStatic
@@ -220,8 +224,10 @@ object RaycastFunctions {
         }
     }
 
+    //if the dir is down (0 rel y), north (0 rel z) or west (0 rel x), then starting position of ray will be in the
+    // raycasting. To prevent that, i iterate DDA once, so that it starts at next position.
     @JvmStatic
-    fun dirToStartingOffset(direction: Direction): Pair<Vector3d, Boolean> =
+    fun dirToStartingRayOffset(direction: Direction): Pair<Vector3d, Boolean> =
         when(direction) {
             Direction.DOWN ->  Pair(Vector3d(0.5, 0  , 0.5), true)
             Direction.UP ->    Pair(Vector3d(0.5, 1  , 0.5), false)
@@ -231,10 +237,22 @@ object RaycastFunctions {
             Direction.WEST ->  Pair(Vector3d(0  , 0.5, 0.5), true)
         }
 
+    //No idea how or why it works, don't use it anywhere else other than eulerRotationCalc
+    private fun quatToUnit(rot: Quaternion): Vector3d {
+        val quint = Quaternion(0f, 1f, 0f, 0f)
+        val rota = Quaternion(rot.i(), -rot.j(), -rot.k(), -rot.r())
+        rot.mul(quint); rot.mul(rota)
+        return Vector3d(
+            -rot.k().toDouble(),
+             rot.r().toDouble(),
+            -rot.j().toDouble()
+        )
+    }
+
     @JvmStatic
     fun eulerRotationCalc(direction: Quaternion, pitch_: Double, yaw_: Double): Vector3d {
-        val pitch = (if (pitch_ < 0) { pitch_.coerceAtLeast(-PI/2) } else { pitch_.coerceAtMost(PI/2) })
-        val yaw   = (if (yaw_ < 0)   { yaw_  .coerceAtLeast(-PI/2) } else { yaw_  .coerceAtMost(PI/2) })
+        val pitch = (if (pitch_ < 0) { max(pitch_, -PI/2) } else { min(pitch_, PI/2) })
+        val yaw   = (if (yaw_ < 0)   { max(yaw_,   -PI/2) } else { min(yaw_  , PI/2) })
 
         //idk why roll is yaw, and it needs to be inverted so that +yaw is right and -yaw is left
         val rotation = Quaternion(-yaw.toFloat(), pitch.toFloat(), 0f, false)
@@ -289,6 +307,7 @@ object RaycastFunctions {
             val up  = Vector3d(sin(p)*sin(y),  cos(p), sin(p)*cos(y))
             val dir = Vector3d(cos(p)*sin(y), -sin(p), cos(p)*cos(y))
             val right = Vector3d(-cos(y), 0, sin(y))
+
             vectorRotationCalc(Pair(dir, up), var1, var2, var3, right)
         }
 
@@ -299,26 +318,36 @@ object RaycastFunctions {
     fun blockMakeRaycastObj(level: Level, be: BlockEntity, pos: BlockPos,
                             distance: Double, euler_mode: Boolean,
                             var1:Double, var2: Double, var3: Double, check_for_blocks_in_world: Boolean, onlyDistance: Boolean): RaycastObjOrError {
-        if (level.isClientSide) { return RaycastERROR("Level is clientside. how.") }
+        if (level.isClientSide) { throw AssertionError("Direction is null, how.") }
 
         var unit_d = if (euler_mode) {
-            eulerRotationCalc(directionToQuat(be.blockState.getValue(BlockStateProperties.FACING)), var1, var2)
+            eulerRotationCalc(
+                when(be.blockState.getValue(BlockStateProperties.FACING)) {
+                    Direction.DOWN ->  Quaternion(0.707107f, 0f, -0.707107f, 0f)
+                    Direction.UP ->    Quaternion(0.707107f, 0f, 0.707107f, 0f)
+                    Direction.NORTH -> Quaternion(1f, 0f, 0f, 0f)
+                    Direction.EAST ->  Quaternion(0.707107f, 0f, 0f, 0.707107f)
+                    Direction.SOUTH -> Quaternion(0f, 0f, 0f, 1f)
+                    Direction.WEST ->  Quaternion(-0.707107f, 0f, 0f, 0.707107f)
+                    null -> throw AssertionError("Direction is null, how.")
+                },
+                var1, var2)
         } else {
-            val dir_en = be.blockState.getValue(BlockStateProperties.FACING)
-            val up = when(dir_en) {
+            val dir_enum = be.blockState.getValue(BlockStateProperties.FACING)
+            val up = when(dir_enum) {
                 Direction.DOWN ->  Vector3d(0, 0,-1)
                 Direction.UP ->    Vector3d(0, 0, 1)
                 Direction.NORTH -> Vector3d(0, 1, 0)
                 Direction.SOUTH -> Vector3d(0, 1, 0)
                 Direction.WEST ->  Vector3d(0, 1, 0)
                 Direction.EAST ->  Vector3d(0, 1, 0)
-                null -> return RaycastERROR("Direction is null, how.")
+                null -> throw AssertionError("Direction is null, how.")
             }
-            val dir = Vector3d(dir_en.step()).snormalize()
+            val dir = Vector3d(dir_enum.step()).snormalize()
             vectorRotationCalc(Pair(dir, dir.cross(up).scross(dir)), var1, var2, var3)
         }
 
-        val (offset, iterate_once) = dirToStartingOffset(be.blockState.getValue(BlockStateProperties.FACING))
+        val (offset, iterate_once) = dirToStartingRayOffset(be.blockState.getValue(BlockStateProperties.FACING))
 
         val start = if (!SomePeripherals.has_vs) {Vector3d(pos) + offset} else {
             val ship = level.getShipManagingPos(pos)

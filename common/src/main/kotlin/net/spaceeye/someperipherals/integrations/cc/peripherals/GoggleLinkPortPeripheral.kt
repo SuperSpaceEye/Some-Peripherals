@@ -10,14 +10,9 @@ import net.minecraft.world.level.block.entity.BlockEntity
 import net.spaceeye.someperipherals.blocks.SomePeripheralsCommonBlocks
 import net.spaceeye.someperipherals.SomePeripheralsConfig
 import net.spaceeye.someperipherals.blockentities.GoggleLinkPortBlockEntity
-import net.spaceeye.someperipherals.blocks.GoggleLinkPort
-import net.spaceeye.someperipherals.integrations.cc.CallbackToLuaWrapper
-import net.spaceeye.someperipherals.integrations.cc.FunToLuaWrapper
+import net.spaceeye.someperipherals.integrations.cc.*
 import net.spaceeye.someperipherals.utils.linkPort.*
 import net.spaceeye.someperipherals.utils.mix.Constants
-import net.spaceeye.someperipherals.integrations.cc.makeErrorReturn
-import net.spaceeye.someperipherals.integrations.cc.tableToDoubleArray
-import net.spaceeye.someperipherals.integrations.cc.tableToTableArray
 import net.spaceeye.someperipherals.utils.configToMap.makeGoggleLinkPortConfigInfoBase
 import net.spaceeye.someperipherals.utils.configToMap.makeGoggleLinkPortConfigInfoRange
 
@@ -99,7 +94,7 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
                 if (res == null) {computer.queueEvent(Constants.GOGGLES_RAYCAST_EVENT_NAME); return@CallbackToLuaWrapper pull!!}
                 if (res !is LinkRaycastResponse) {return@CallbackToLuaWrapper makeErrorReturn("res not a LinkRaycastResponse") }
 
-                return@CallbackToLuaWrapper RaycasterPeripheral.makeRaycastResponse(res.result)
+                return@CallbackToLuaWrapper makeRaycastReturn(res.result)
             }
 
             pull = MethodResult.pullEvent(Constants.GOGGLES_RAYCAST_EVENT_NAME, callback)
@@ -150,7 +145,7 @@ class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockP
             data["is_done"] = r.is_done
             val returns = mutableMapOf<Double, Any>()
             //this is to avoid concurrent modification exception
-            for (i in 0 until r.results.size) {returns[i.toDouble()+1.0] = RaycasterPeripheral.makeRaycastResponse(r.results[i])}
+            for (i in 0 until r.results.size) {returns[i.toDouble()+1.0] = makeRaycastReturn(r.results[i])}
             data["results"] = returns
 
             return@FunToLuaWrapper data

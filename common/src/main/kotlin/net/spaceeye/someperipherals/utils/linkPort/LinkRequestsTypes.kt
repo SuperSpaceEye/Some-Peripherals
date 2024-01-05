@@ -15,7 +15,5 @@ class LinkStatusResponse(var data: MutableMap<String, Any>, var entity: Entity):
 class LinkRaycastRequest(var distance: Double, var euler_mode: Boolean, var var1:Double, var var2: Double, var var3: Double, var check_for_blocks_in_world:Boolean, var only_distance: Boolean): LinkRequest()
 class LinkRaycastResponse(var result: RaycastReturn): LinkResponse()
 
-class LinkBatchRaycastRequest(
-    var distance: Double, var euler_mode: Boolean,
-    var check_for_blocks_in_world:Boolean, var data: Array<Array<Double>>, var only_distance: Boolean): LinkRequest()
+class LinkBatchRaycastRequest(var distance: Double, var euler_mode: Boolean, var check_for_blocks_in_world:Boolean, var data: Array<Array<Double>>, var only_distance: Boolean): LinkRequest()
 class LinkBatchRaycastResponse(var results: MutableList<RaycastReturn>, var is_done:Boolean=false): LinkResponse()

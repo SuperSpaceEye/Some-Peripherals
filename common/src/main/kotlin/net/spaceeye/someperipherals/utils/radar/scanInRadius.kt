@@ -14,6 +14,7 @@ import net.spaceeye.someperipherals.utils.mix.getNowFast_ms
 import org.valkyrienskies.mod.common.getShipManagingPos
 import org.valkyrienskies.mod.common.toWorldCoordinates
 import org.valkyrienskies.mod.common.transformToNearbyShipsAndWorld
+import java.util.concurrent.TimeoutException
 import kotlin.math.max
 import kotlin.math.min
 
@@ -28,20 +29,20 @@ private fun getScanPos(level: Level, pos: BlockPos): BlockPos {
     }
 }
 
-private fun <T> getEntitiesWithTimeout(level: ServerLevel,
-                               area: AABB,
-                               timeout: Long = SomePeripheralsConfig.SERVER.RADAR_SETTINGS.max_entity_timeout_ms,
-                               fn: (entity: Entity) -> T): MutableList<T> {
+private fun <T> getEntitiesWithTimeout(
+        level: ServerLevel,
+        area: AABB,
+        timeout: Long = SomePeripheralsConfig.SERVER.RADAR_SETTINGS.max_entity_timeout_ms,
+        fn: (entity: Entity) -> T): MutableList<T> {
     val entities = ArrayList<T>()
 
     val now = getNowFast_ms()
     try {
         (level as IServerLevelAccessor).entitiesAcc.get(area) {
-            if (getNowFast_ms() - now > timeout) { throw RuntimeException() }
+            if (getNowFast_ms() - now > timeout) { throw TimeoutException() }
             entities.add(fn(it))
         }
-    } catch (_: RuntimeException) {
-    } catch (_: ConcurrentModificationException) {}
+    } catch (_: TimeoutException) {}
 
     return entities
 }

@@ -28,6 +28,7 @@ class Ray(
     operator fun next(): Vector3d {
         val cpos = iter.cpos
         val aabb = ship.shipAABB!!
+        // TODO check if ray doesn't intersect ship boundaries and do early return
         if (!has_entered) {
             if (   cpos.x >= aabb.minX() && cpos.x <= aabb.maxX()
                 && cpos.y >= aabb.minY() && cpos.y <= aabb.maxY()
@@ -39,7 +40,7 @@ class Ray(
         if (has_entered && !(
                cpos.x >= aabb.minX() && cpos.x <= aabb.maxX()
             && cpos.y >= aabb.minY() && cpos.y <= aabb.maxY()
-            && cpos.z >= aabb.minZ() && cpos.z <= aabb.maxZ()) ) {
+            && cpos.z >= aabb.minZ() && cpos.z <= aabb.maxZ())) {
             can_iterate = false
         }
 
@@ -50,13 +51,13 @@ class Ray(
 object VSRaycastFunctions {
     @JvmStatic
     fun getIntersectingShips(level: Level, pos: Vector3d, radius: Double, start: Vector3d, d: Vector3d): MutableList<Pair<Ship, Double>> {
-        val ship_pos = level.transformToNearbyShipsAndWorld(pos.x, pos.y, pos.z, radius)
+        val shipsPos = level.transformToNearbyShipsAndWorld(pos.x, pos.y, pos.z, radius)
         val ret = mutableListOf<Pair<Ship, Double>>()
-        for (spos in ship_pos) {
-            val data = level.getShipManagingPos(spos) ?: continue
-            val (res, t) = rayIntersectsBox(data.worldAABB.toMinecraft(), start, d)
+        for (spos in shipsPos) {
+            val ship = level.getShipManagingPos(spos) ?: continue
+            val (res, t) = rayIntersectsBox(ship.worldAABB.toMinecraft(), start, d)
             if (!res) {continue}
-            ret.add(Pair(data, t.first))
+            ret.add(Pair(ship, t.first))
         }
         return ret
     }
@@ -200,7 +201,7 @@ object VSRaycastFunctions {
     ): RaycastReturn {
         cache.cleanup()
         val results = ships_res
-        if (world_res  != null) {results.add(Pair(RaycastBlockReturn (start, world_res.first,  world_res.second, world_unit_rd* world_res.second+start),  world_res.second))}
+        if (world_res  != null) {results.add(Pair(RaycastBlockReturn (start, world_res.first,  world_res.second,  world_unit_rd* world_res.second+start),  world_res.second))}
         if (entity_res != null) {results.add(Pair(RaycastEntityReturn(start, entity_res.first, entity_res.second, world_unit_rd*entity_res.second+start), entity_res.second))}
 
         return results.minBy { it.second }.first
@@ -233,6 +234,7 @@ object VSRaycastFunctions {
             }
             ship_step_counter++
 
+            //TODO check if it's actually true
             //if you don't add unit_d to point, it incorrectly calculates that ray hits world block instead of ship block.
             // why? idfk, but this fixes it, i think. Idk what will happen if ship touches another ship though.
             checkForShipIntersections(start, point+unit_d, ray_distance, d, rd, points_iter.up_to, future_ship_intersections, shipyard_rays)
@@ -245,7 +247,7 @@ object VSRaycastFunctions {
             return null
         }
 
-        override fun post_check(): RaycastReturn? {
+        override fun postCheckForUnreturnedEntity(): RaycastReturn? {
             if (entity_res != null && entity_res!!.second <= points_iter.up_to) {return calculateReturn(world_res, entity_res, ship_hit_res, world_unit_rd, start, cache)}
             return null
         }

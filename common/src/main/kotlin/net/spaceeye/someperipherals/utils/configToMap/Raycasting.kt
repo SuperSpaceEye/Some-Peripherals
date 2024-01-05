@@ -26,9 +26,5 @@ fun makeRaycastingConfigInfo(): MutableMap<String, Any> {
         Pair("return_shipyard_hit_pos", rc.return_shipyard_hit_pos),
 
         Pair("return_entity_type", rc.return_entity_type),
-
-        Pair("do_position_caching", rc.do_position_caching),
-        Pair("max_cached_positions", rc.max_cached_positions),
-        Pair("save_cache_for_N_ticks", rc.save_cache_for_N_ticks),
     )
 }
