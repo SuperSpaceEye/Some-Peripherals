@@ -10,7 +10,7 @@ import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.world.phys.AABB
-import net.spaceeye.acceleratedraycasting.ChunkProcessor
+import net.spaceeye.acceleratedraycasting.api.API
 import net.spaceeye.someperipherals.SomePeripherals
 import net.spaceeye.someperipherals.SomePeripheralsConfig
 import net.spaceeye.someperipherals.blocks.RaycasterBlock
@@ -81,7 +81,7 @@ object RaycastFunctions {
         val bpos = BlockPos(point.x, point.y, point.z)
 
         if (SomePeripherals.has_arc) {
-            if (!ChunkProcessor.getIsSolidState(level, bpos)) { return null }
+            if (!API.getIsSolidState(level, bpos)) { return null }
             if (onlyDistance) {
                 val (test_res, t) = rayIntersectsAABBs(start, bpos, d, listOf(AABB(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)))
                 if (!test_res) {return null}

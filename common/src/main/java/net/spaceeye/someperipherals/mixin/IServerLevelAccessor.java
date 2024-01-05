@@ -9,5 +9,5 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(ServerLevel.class)
 public interface IServerLevelAccessor {
-    @Invoker("getEntities") @NotNull LevelEntityGetter<Entity> getEntities();
+    @Invoker("getEntities") @NotNull LevelEntityGetter<Entity> getEntitiesAcc();
 }

@@ -36,7 +36,7 @@ private fun <T> getEntitiesWithTimeout(level: ServerLevel,
 
     val now = getNowFast_ms()
     try {
-        (level as IServerLevelAccessor).entities.get(area) {
+        (level as IServerLevelAccessor).entitiesAcc.get(area) {
             if (getNowFast_ms() - now > timeout) { throw RuntimeException() }
             entities.add(fn(it))
         }
