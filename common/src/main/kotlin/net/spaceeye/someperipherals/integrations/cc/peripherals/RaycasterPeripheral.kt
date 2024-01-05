@@ -47,9 +47,10 @@ class RaycasterPeripheral(private val level: Level, private val pos: BlockPos, p
             val entity = res.result
 
             ret["is_entity"] = true
-            if (rcc.return_abs_pos)  {ret["abs_pos"] = mutableListOf(entity.x, entity.y, entity.z)}
-            if (rcc.return_hit_pos)  {ret["hit_pos"] = res.hit_position.toArray()}
-            if (rcc.return_distance) {ret["distance"] = res.distance_to}
+            if (rcc.return_abs_pos)   {ret["abs_pos"] = mutableListOf(entity.x, entity.y, entity.z)}
+            if (rcc.return_hit_pos)   {ret["hit_pos"] = res.hit_position.toArray()}
+            if (rcc.return_distance)  {ret["distance"] = res.distance_to}
+            if (rcc.return_entity_id) {ret["id"] = entity.id}
             if (rcc.return_rel_hit_pos) {ret["rel_hit_pos"] = (res.hit_position - res.origin).toArray() }
 
             if (rcc.return_entity_type) {ret["descriptionId"] = entity.type.descriptionId}
@@ -108,9 +109,8 @@ class RaycasterPeripheral(private val level: Level, private val pos: BlockPos, p
         val variables   = tableToDoubleArray(args.optTable(1).orElse(mutableMapOf(Pair(1.0, 0.0), Pair(2.0, 0.0), Pair(3.0, 1.0))))
         val euler_mode  = args.optBoolean(2).orElse(false)
         val im_execute  = args.optBoolean(3).orElse(true) // execute immediately
-        val do_cache    = args.optBoolean(4).orElse(false)
-        var check_for_blocks_in_world = args.optBoolean(5).orElse(true)
-        val only_distance = args.optBoolean(6).orElse(false)
+        var check_for_blocks_in_world = args.optBoolean(4).orElse(true)
+        val only_distance = args.optBoolean(5).orElse(false)
 
         check_for_blocks_in_world = check_for_blocks_in_world && SomePeripheralsConfig.SERVER.RAYCASTING_SETTINGS.allow_raycasting_for_entities_only
 
@@ -119,7 +119,7 @@ class RaycasterPeripheral(private val level: Level, private val pos: BlockPos, p
         val var2 = variables[1]
         val var3 = if (variables.size == 3) {variables[2]} else {1.0}
 
-        val raycast_obj = blockMakeRaycastObj(level, be, pos, distance, euler_mode, do_cache, var1, var2, var3, check_for_blocks_in_world, only_distance)
+        val raycast_obj = blockMakeRaycastObj(level, be, pos, distance, euler_mode, var1, var2, var3, check_for_blocks_in_world, only_distance)
         var terminate = false
         var pull: MethodResult? = null
 

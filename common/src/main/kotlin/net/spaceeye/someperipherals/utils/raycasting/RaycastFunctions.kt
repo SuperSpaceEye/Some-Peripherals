@@ -13,7 +13,6 @@ import net.minecraft.world.phys.AABB
 import net.spaceeye.acceleratedraycasting.api.API
 import net.spaceeye.someperipherals.SomePeripherals
 import net.spaceeye.someperipherals.SomePeripheralsConfig
-import net.spaceeye.someperipherals.blocks.RaycasterBlock
 import net.spaceeye.someperipherals.utils.mix.BallisticFunctions.rad
 import net.spaceeye.someperipherals.utils.mix.ChunkIsNotLoadedException
 import net.spaceeye.someperipherals.utils.mix.Vector3d
@@ -75,7 +74,7 @@ object RaycastFunctions {
         d: Vector3d,
         ray_distance: Double,
         level: Level,
-        cache: PosCache,
+        cache: PosManager,
         onlyDistance: Boolean
     ): Pair<Pair<BlockPos, IBlockRes>, Double>? {
         val bpos = BlockPos(point.x, point.y, point.z)
@@ -129,7 +128,7 @@ object RaycastFunctions {
         entity_res: Pair<Entity, Double>?,
         unit_d: Vector3d,
         start: Vector3d,
-        cache: PosCache
+        cache: PosManager
     ): RaycastReturn {
         cache.cleanup()
         return if (world_res != null && entity_res != null) {
@@ -146,7 +145,7 @@ object RaycastFunctions {
 
     open class RaycastObj(
         val start: Vector3d, stop: Vector3d, val ignore_entity: Entity?,
-        val cache: PosCache, val points_iter: RayIter, val check_for_blocks_in_world: Boolean,
+        val points_iter: RayIter, val check_for_blocks_in_world: Boolean,
         val onlyDistance: Boolean
     ): RaycastObjOrError {
         val rd = stop - start
@@ -161,6 +160,8 @@ object RaycastFunctions {
         var entity_step_counter = 0
 
         var world_res: Pair<Pair<BlockPos, IBlockRes>, Double>? = null
+
+        var cache = PosManager()
 
         open fun iterate(point: Vector3d, level: Level): RaycastReturn? {
             try {
@@ -209,13 +210,13 @@ object RaycastFunctions {
     }
 
     @JvmStatic
-    fun makeRaycastObj(level: Level, points_iter: RayIter, ignore_entity:Entity?, cache: PosCache,
+    fun makeRaycastObj(level: Level, points_iter: RayIter, ignore_entity:Entity?,
                        pos: Vector3d, unit_d: Vector3d, check_for_blocks_in_world: Boolean,
                        onlyDistance: Boolean
     ): RaycastObj {
         return when (SomePeripherals.has_vs) {
-            false -> RaycastObj(points_iter.start, points_iter.stop, ignore_entity, cache, points_iter, check_for_blocks_in_world, onlyDistance)
-            true  -> VSRaycastFunctions.VSRaycastObj(points_iter.start, points_iter.stop, ignore_entity, cache, points_iter, pos, unit_d, level, check_for_blocks_in_world, onlyDistance)
+            false -> RaycastObj(points_iter.start, points_iter.stop, ignore_entity, points_iter, check_for_blocks_in_world, onlyDistance)
+            true  -> VSRaycastFunctions.VSRaycastObj(points_iter.start, points_iter.stop, ignore_entity, points_iter, pos, unit_d, level, check_for_blocks_in_world, onlyDistance)
         }
     }
 
@@ -259,7 +260,7 @@ object RaycastFunctions {
     }
 
     @JvmStatic
-    fun commonMakeRaycastObj(level: Level, start: Vector3d, unit_d: Vector3d, distance: Double, cache: PosCache,
+    fun commonMakeRaycastObj(level: Level, start: Vector3d, unit_d: Vector3d, distance: Double,
                              pos: Vector3d, ignore_entity: Entity?, check_for_blocks_in_world: Boolean,
                              onlyDistance: Boolean, iterate_once: Boolean=false): RaycastObj {
         val stop = unit_d * distance + start
@@ -269,19 +270,15 @@ object RaycastFunctions {
         val iter = DDAIter(start, stop, max_iter + if (iterate_once) 1 else 0)
         if (iterate_once) { iter.next() }
 
-        return makeRaycastObj(level, iter, ignore_entity, cache, pos, unit_d, check_for_blocks_in_world, onlyDistance)
+        return makeRaycastObj(level, iter, ignore_entity, pos, unit_d, check_for_blocks_in_world, onlyDistance)
     }
 
     @JvmStatic
-    fun entityMakeRaycastObj(entity: LivingEntity, distance: Double, euler_mode: Boolean, do_cache:Boolean,
+    fun entityMakeRaycastObj(entity: LivingEntity, distance: Double, euler_mode: Boolean,
                              var1:Double, var2: Double, var3: Double, check_for_blocks_in_world: Boolean,
                              onlyDistance: Boolean): RaycastObj {
         val level = entity.getLevel()
-        val cache = PosCache()
         val start = Vector3d(entity.eyePosition)
-        cache.do_cache = do_cache
-        cache.max_items = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.max_cached_positions
-        cache.no_chunkloading = SomePeripheralsConfig.SERVER.RAYCASTING_SETTINGS.no_chunkloading_rays
 
         //https://gamedev.stackexchange.com/questions/190054/how-to-calculate-the-forward-up-right-vectors-using-the-rotation-angles
         val p = rad(entity.xRot.toDouble()) // picth
@@ -295,19 +292,14 @@ object RaycastFunctions {
             vectorRotationCalc(Pair(dir, up), var1, var2, var3, right)
         }
 
-        return commonMakeRaycastObj(level, start, unit_d, distance, cache, start, entity, check_for_blocks_in_world, onlyDistance)
+        return commonMakeRaycastObj(level, start, unit_d, distance, start, entity, check_for_blocks_in_world, onlyDistance)
     }
 
     @JvmStatic
     fun blockMakeRaycastObj(level: Level, be: BlockEntity, pos: BlockPos,
-                            distance: Double, euler_mode: Boolean, do_cache:Boolean,
+                            distance: Double, euler_mode: Boolean,
                             var1:Double, var2: Double, var3: Double, check_for_blocks_in_world: Boolean, onlyDistance: Boolean): RaycastObjOrError {
         if (level.isClientSide) { return RaycastERROR("Level is clientside. how.") }
-
-        val cache = (be.blockState.block as RaycasterBlock).pos_cache
-        cache.do_cache = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.do_position_caching && do_cache
-        cache.max_items = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.max_cached_positions
-        cache.no_chunkloading = SomePeripheralsConfig.SERVER.RAYCASTING_SETTINGS.no_chunkloading_rays
 
         var unit_d = if (euler_mode) {
             eulerRotationCalc(directionToQuat(be.blockState.getValue(BlockStateProperties.FACING)), var1, var2)
@@ -340,6 +332,6 @@ object RaycastFunctions {
                 ) + ship_wp
             }
         }
-        return commonMakeRaycastObj(level, start, unit_d, distance, cache, Vector3d(pos), null, check_for_blocks_in_world, onlyDistance, iterate_once)
+        return commonMakeRaycastObj(level, start, unit_d, distance, Vector3d(pos), null, check_for_blocks_in_world, onlyDistance, iterate_once)
     }
 }

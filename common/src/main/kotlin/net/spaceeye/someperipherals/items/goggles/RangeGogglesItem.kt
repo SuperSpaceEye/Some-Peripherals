@@ -28,7 +28,7 @@ class RangeGogglesItem: StatusGogglesItem() {
 
     private fun raycastRequest(entity: Entity, r: LinkRaycastRequest) {
         connection!!.getRequests(uuid.toString()).raycast_request = null
-        val rsp = timedRaycast(entityMakeRaycastObj(entity as LivingEntity, r.distance, r.euler_mode, r.do_cache, r.var1, r.var2, r.var3, r.check_for_blocks_in_world, r.only_distance), entity.level, SomePeripheralsConfig.SERVER.RAYCASTING_SETTINGS.max_raycast_time_ms)
+        val rsp = timedRaycast(entityMakeRaycastObj(entity as LivingEntity, r.distance, r.euler_mode, r.var1, r.var2, r.var3, r.check_for_blocks_in_world, r.only_distance), entity.level, SomePeripheralsConfig.SERVER.RAYCASTING_SETTINGS.max_raycast_time_ms)
         connection!!.makeResponse(uuid.toString(), LinkRaycastResponse(rsp.first ?: RaycastERROR("Raycast took too long")))
     }
 
@@ -48,7 +48,7 @@ class RangeGogglesItem: StatusGogglesItem() {
         for (i in start_index until req.data.size) {
             val item = req.data[i]
             rsp.results.add(timedRaycast(
-                entityMakeRaycastObj(entity as LivingEntity, req.distance, req.euler_mode, req.do_cache, item[0], item[1], item[2], req.check_for_blocks_in_world, req.only_distance),
+                entityMakeRaycastObj(entity as LivingEntity, req.distance, req.euler_mode, item[0], item[1], item[2], req.check_for_blocks_in_world, req.only_distance),
                 entity.level,
                 SomePeripheralsConfig.SERVER.GOGGLE_SETTINGS.RANGE_GOGGLES_SETTINGS.max_batch_raycast_time_ms).first ?: RaycastERROR("Raycast took too long")
             )

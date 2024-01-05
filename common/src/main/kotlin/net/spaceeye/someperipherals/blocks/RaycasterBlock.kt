@@ -16,12 +16,9 @@ import net.minecraft.world.level.block.state.StateDefinition
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.spaceeye.someperipherals.SomePeripheralsConfig
 import net.spaceeye.someperipherals.blockentities.RaycasterBlockEntity
-import net.spaceeye.someperipherals.utils.raycasting.PosCache
+import net.spaceeye.someperipherals.utils.raycasting.PosManager
 
 class RaycasterBlock(properties: Properties): BaseEntityBlock(properties) {
-    val pos_cache = PosCache()
-    private var ticks = 0
-
     init {
         //TODO learn how to make a new blockstate property instead of whatever this is
         registerDefaultState(defaultBlockState()
@@ -48,24 +45,14 @@ class RaycasterBlock(properties: Properties): BaseEntityBlock(properties) {
         return RenderShape.MODEL
     }
 
-    private fun doTick(state: BlockState, level: ServerLevel, pos: BlockPos) {
-        if (level.isClientSide || !SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.do_position_caching) {return}
-        if (ticks >= SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.save_cache_for_N_ticks) {
-            pos_cache.clear()
-            ticks = 0
-        }
-        ticks += 1
-    }
-
-    override fun <T : BlockEntity?> getTicker(
-        level: Level,
-        state: BlockState,
-        type: BlockEntityType<T>
-    ): BlockEntityTicker<T>? {
-        return if(level.isClientSide) {null} else {
-            BlockEntityTicker<T> { level: Level, pos: BlockPos, state: BlockState, entity: T ->
-                doTick(state, level as ServerLevel, pos)
-            }
-        }
-    }
+//    override fun <T : BlockEntity?> getTicker(
+//        level: Level,
+//        state: BlockState,
+//        type: BlockEntityType<T>
+//    ): BlockEntityTicker<T>? {
+//        return if(level.isClientSide) {null} else {
+//            BlockEntityTicker<T> { level: Level, pos: BlockPos, state: BlockState, entity: T ->
+//            }
+//        }
+//    }
 }

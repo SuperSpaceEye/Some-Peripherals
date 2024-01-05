@@ -3,8 +3,6 @@ package net.spaceeye.someperipherals.utils.raycasting
 import net.minecraft.core.BlockPos
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.level.Level
-import net.minecraft.world.level.block.state.BlockState
-import net.spaceeye.someperipherals.SomePeripherals
 import net.spaceeye.someperipherals.utils.raycasting.RaycastFunctions.checkForBlockInWorld
 import net.spaceeye.someperipherals.utils.raycasting.RaycastFunctions.rayIntersectsBox
 import net.spaceeye.someperipherals.utils.mix.Vector3d
@@ -158,7 +156,7 @@ object VSRaycastFunctions {
                         ships_already_intersected: MutableList<Ship>,
                         start: Vector3d,
                         shipyard_start: Vector3d,
-                        cache: PosCache,
+                        cache: PosManager,
                         onlyDistance: Boolean): MutableList<Pair<RaycastReturn, Double>> {
         val hits = mutableListOf<Pair<RaycastReturn, Double>>()
         var size = rays.size
@@ -198,7 +196,7 @@ object VSRaycastFunctions {
         ships_res: MutableList<Pair<RaycastReturn, Double>>,
         world_unit_rd: Vector3d,
         start: Vector3d,
-        cache: PosCache
+        cache: PosManager
     ): RaycastReturn {
         cache.cleanup()
         val results = ships_res
@@ -209,8 +207,9 @@ object VSRaycastFunctions {
     }
 
     class VSRaycastObj(start: Vector3d, stop: Vector3d, ignore_entity: Entity?,
-                       cache: PosCache, points_iter: RayIter, val pos: Vector3d, val world_unit_rd: Vector3d, val level: Level, check_for_blocks_in_world: Boolean, onlyDistance: Boolean)
-        : RaycastFunctions.RaycastObj(start, stop, ignore_entity, cache, points_iter, check_for_blocks_in_world, onlyDistance){
+                       points_iter: RayIter, val pos: Vector3d, val world_unit_rd: Vector3d, val level: Level,
+                       check_for_blocks_in_world: Boolean, onlyDistance: Boolean)
+        : RaycastFunctions.RaycastObj(start, stop, ignore_entity, points_iter, check_for_blocks_in_world, onlyDistance){
 
         val shipyard_start = if (level.getShipManagingPos(pos.toBlockPos()) != null) { pos } else { start }
 

@@ -47,10 +47,7 @@ object SomePeripheralsConfig {
             val return_shipyard_hit_pos: Boolean by CBool(true, "Returns hit position of ray relative to shipyard origin", SomePeripherals.has_vs)
 
             var return_entity_type: Boolean by CBool(true)
-
-            var do_position_caching: Boolean by CBool(true, "If true, raycaster will cache traveled blocks for some time")
-            var max_cached_positions: Int by CInt(1000, "", Pair(1, Int.MAX_VALUE))
-            var save_cache_for_N_ticks: Int by CInt(20, "Will clear raycaster cache after N MC ticks passed", Pair(1, Int.MAX_VALUE))
+            var return_entity_id: Boolean by CBool(true)
         }
 
         class LinkPortSettings: ConfigSubDirectory() {
