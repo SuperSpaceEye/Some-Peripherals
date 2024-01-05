@@ -2,7 +2,6 @@ package net.spaceeye.someperipherals.items.goggles
 
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.chat.Component
-import net.minecraft.network.chat.TranslatableComponent
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EquipmentSlot
@@ -32,7 +31,7 @@ open class StatusGogglesItem:
     protected var connection: LinkConnectionsManager? = null
 
     override fun getDescription(): Component {
-        return TranslatableComponent(base_name)
+        return Component.translatable(base_name)
     }
 
     protected open fun makeConnectionPing(): LinkPing {
@@ -75,7 +74,7 @@ open class StatusGogglesItem:
         val be = level.getBlockEntity(bpos)
         if (be !is GoggleLinkPortBlockEntity) {return super.useOn(context)}
         if (level.isClientSide) {
-            context.player!!.displayClientMessage(TranslatableComponent(linked_name), true)
+            context.player!!.displayClientMessage(Component.translatable(linked_name), true)
             return InteractionResult.SUCCESS
         }
 
@@ -91,7 +90,7 @@ open class StatusGogglesItem:
 
         item.setTag(nbt)
 
-        context.player!!.displayClientMessage(TranslatableComponent(linked_name), true)
+        context.player!!.displayClientMessage(Component.translatable(linked_name), true)
         return InteractionResult.SUCCESS
     }
 }

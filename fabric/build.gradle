@@ -47,12 +47,12 @@ dependencies {
     // CC Restitched
     modImplementation("curse.maven:cc-restitched-462672:3908334")
 
+    implementation 'com.electronwill.night-config:core:3.6.5'
+    implementation 'com.electronwill.night-config:toml:3.6.5'
+    modApi "curse.maven:forge-config-api-port-fabric-547434:4322560"
 
-//    implementation 'com.electronwill.night-config:core:3.6.3'
-//    implementation 'com.electronwill.night-config:toml:3.6.3'
-//    modApi "curse.maven:forge-config-api-port-fabric-547434:3943250"
-//
-//    modImplementation(include("io.github.fabricators_of_create:Porting-Lib:1.2.963-beta+1.18.2"))
+    //https://mvn.devos.one/#/snapshots/io/github/fabricators_of_create/Porting-Lib
+    modImplementation(include("io.github.fabricators_of_create.Porting-Lib:transfer:2.1.1018+1.19.2"))
 }
 
 processResources {
