@@ -8,8 +8,11 @@ dependencies {
     // Remove the next line if you don't want to depend on the API
     modCompileOnlyApi "dev.architectury:architectury:${rootProject.architectury_version}"
 
-    modCompileOnlyApi("org.valkyrienskies:valkyrienskies-118-common:${rootProject.vs2_version}")
-    modCompileOnly("org.valkyrienskies.core:api:${rootProject.vs_core_version}") { transitive = false }
+    modApi("org.valkyrienskies:valkyrienskies-118-common:${rootProject.vs2_version}")
+    compileOnly("org.valkyrienskies.core:api:${rootProject.vs_core_version}")
+    compileOnly("org.valkyrienskies.core:api-game:${rootProject.vs_core_version}")
+    compileOnly("org.valkyrienskies.core:util:${rootProject.vs_core_version}")
+    compileOnly("org.valkyrienskies.core:impl:${rootProject.vs_core_version}")
 
     compileOnlyApi "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.7.21"
     compileOnlyApi "org.jetbrains.kotlin:kotlin-reflect:1.7.21"
