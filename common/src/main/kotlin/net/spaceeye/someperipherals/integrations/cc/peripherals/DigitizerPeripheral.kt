@@ -10,9 +10,9 @@ import net.minecraft.world.level.block.entity.BlockEntity
 import net.spaceeye.someperipherals.blockentities.DigitizerBlockEntity
 import net.spaceeye.someperipherals.blocks.SomePeripheralsCommonBlocks
 import net.spaceeye.someperipherals.integrations.cc.makeErrorReturn
-import net.spaceeye.someperipherals.utils.digitizer.DigitalItemsSavedData
-import net.spaceeye.someperipherals.utils.digitizer.DigitizedItem
-import net.spaceeye.someperipherals.utils.digitizer.ItemData
+import net.spaceeye.someperipherals.stuff.digitizer.DigitalItemsSavedData
+import net.spaceeye.someperipherals.stuff.digitizer.DigitizedItem
+import net.spaceeye.someperipherals.stuff.digitizer.ItemData
 import java.util.*
 import kotlin.math.min
 

@@ -6,11 +6,11 @@ import dan200.computercraft.api.peripheral.IPeripheral
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
 import net.spaceeye.someperipherals.blocks.SomePeripheralsCommonBlocks
-import net.spaceeye.someperipherals.utils.configToMap.makeRadarConfigInfo
-import net.spaceeye.someperipherals.utils.radar.scanForEntitiesInRadius
-import net.spaceeye.someperipherals.utils.radar.scanForPlayersInRadius
-import net.spaceeye.someperipherals.utils.radar.scanForShipsInRadius
-import net.spaceeye.someperipherals.utils.radar.scanInRadius
+import net.spaceeye.someperipherals.stuff.configToMap.makeRadarConfigInfo
+import net.spaceeye.someperipherals.stuff.radar.scanForEntitiesInRadius
+import net.spaceeye.someperipherals.stuff.radar.scanForPlayersInRadius
+import net.spaceeye.someperipherals.stuff.radar.scanForShipsInRadius
+import net.spaceeye.someperipherals.stuff.radar.scanInRadius
 import kotlin.jvm.Throws
 
 class RadarPeripheral(private val level: Level, private val pos: BlockPos): IPeripheral {

@@ -7,7 +7,7 @@ import dan200.computercraft.api.peripheral.IPeripheral
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
 import net.spaceeye.someperipherals.blocks.SomePeripheralsCommonBlocks
-import net.spaceeye.someperipherals.utils.mix.BallisticFunctions
+import net.spaceeye.someperipherals.stuff.BallisticFunctions
 import net.spaceeye.someperipherals.integrations.cc.tableToDoubleArray
 import net.spaceeye.someperipherals.integrations.cc.tableToTableArray
 

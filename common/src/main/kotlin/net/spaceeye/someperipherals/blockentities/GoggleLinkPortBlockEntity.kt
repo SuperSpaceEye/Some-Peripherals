@@ -4,9 +4,9 @@ import net.minecraft.core.BlockPos
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.state.BlockState
-import net.spaceeye.someperipherals.utils.linkPort.GlobalLinkConnections
-import net.spaceeye.someperipherals.utils.linkPort.LinkConnectionsManager
-import net.spaceeye.someperipherals.utils.mix.Constants
+import net.spaceeye.someperipherals.stuff.linkPort.GlobalLinkConnections
+import net.spaceeye.someperipherals.stuff.linkPort.LinkConnectionsManager
+import net.spaceeye.someperipherals.stuff.utils.Constants
 import java.util.*
 
 class GoggleLinkPortBlockEntity(pos: BlockPos, state: BlockState): BlockEntity(CommonBlockEntities.GOOGLE_LINK_PORT.get(), pos, state) {

@@ -10,7 +10,7 @@ import net.minecraft.world.level.block.entity.BlockEntityTicker
 import net.minecraft.world.level.block.entity.BlockEntityType
 import net.minecraft.world.level.block.state.BlockState
 import net.spaceeye.someperipherals.blockentities.GoggleLinkPortBlockEntity
-import net.spaceeye.someperipherals.utils.linkPort.GlobalLinkConnections
+import net.spaceeye.someperipherals.stuff.linkPort.GlobalLinkConnections
 
 class GoggleLinkPort(properties: Properties): BaseEntityBlock(properties) {
     override fun newBlockEntity(pos: BlockPos, state: BlockState): BlockEntity? {

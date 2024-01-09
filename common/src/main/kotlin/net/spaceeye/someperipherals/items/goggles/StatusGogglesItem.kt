@@ -11,13 +11,13 @@ import net.minecraft.world.item.ArmorMaterials
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.context.UseOnContext
 import net.minecraft.world.level.Level
-import net.spaceeye.someperipherals.utils.mix.entityToMapGoggles
+import net.spaceeye.someperipherals.stuff.utils.entityToMapGoggles
 import net.spaceeye.someperipherals.blocks.SomePeripheralsCommonBlocks
 import net.spaceeye.someperipherals.SomePeripheralsConfig
 import net.spaceeye.someperipherals.SomePeripheralsItems
 import net.spaceeye.someperipherals.blockentities.GoggleLinkPortBlockEntity
-import net.spaceeye.someperipherals.utils.linkPort.*
-import net.spaceeye.someperipherals.utils.mix.Constants
+import net.spaceeye.someperipherals.stuff.linkPort.*
+import net.spaceeye.someperipherals.stuff.utils.Constants
 import java.util.UUID
 
 open class StatusGogglesItem:

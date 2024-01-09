@@ -5,7 +5,7 @@ import dev.architectury.injectables.annotations.ExpectPlatform
 import net.minecraft.world.inventory.Slot
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.spaceeye.someperipherals.config.AbstractConfigBuilder
-import net.spaceeye.someperipherals.utils.mix.CommonBlockEntityInventory
+import net.spaceeye.someperipherals.stuff.utils.CommonBlockEntityInventory
 
 object PlatformUtils {
     @ExpectPlatform

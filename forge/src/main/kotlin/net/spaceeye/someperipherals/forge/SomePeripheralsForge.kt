@@ -1,7 +1,6 @@
 package net.spaceeye.someperipherals.forge
 
 import dev.architectury.platform.forge.EventBuses
-import net.minecraft.client.gui.screens.MenuScreens
 import net.minecraftforge.api.distmarker.Dist
 import net.minecraftforge.common.MinecraftForge
 import net.minecraftforge.event.RegisterCommandsEvent
@@ -12,8 +11,6 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext
 import net.spaceeye.someperipherals.SomePeripherals
 import net.spaceeye.someperipherals.SomePeripheralsCommands
-import net.spaceeye.someperipherals.SomePeripheralsMenu
-import net.spaceeye.someperipherals.utils.digitizer.DigitizerScreen
 
 @Mod(SomePeripherals.MOD_ID)
 class SomePeripheralsForge {

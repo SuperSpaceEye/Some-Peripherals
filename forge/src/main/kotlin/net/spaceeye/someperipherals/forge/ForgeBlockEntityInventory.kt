@@ -3,7 +3,7 @@ package net.spaceeye.someperipherals.forge
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.world.item.ItemStack
 import net.minecraftforge.items.ItemStackHandler
-import net.spaceeye.someperipherals.utils.mix.CommonBlockEntityInventory
+import net.spaceeye.someperipherals.stuff.utils.CommonBlockEntityInventory
 
 class ForgeBlockEntityInventory(size: Int): CommonBlockEntityInventory(size) {
     val inventory = ItemStackHandler(size)

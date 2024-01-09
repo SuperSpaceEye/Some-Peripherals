@@ -10,12 +10,12 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.spaceeye.someperipherals.blocks.SomePeripheralsCommonBlocks
 import net.spaceeye.someperipherals.SomePeripheralsConfig
 import net.spaceeye.someperipherals.integrations.cc.*
-import net.spaceeye.someperipherals.utils.raycasting.RaycastFunctions.blockMakeRaycastObj
-import net.spaceeye.someperipherals.utils.mix.Constants
-import net.spaceeye.someperipherals.utils.configToMap.makeRaycastingConfigInfo
-import net.spaceeye.someperipherals.utils.raycasting.*
-import net.spaceeye.someperipherals.utils.raycasting.RaycastFunctions.timedRaycast
-import net.spaceeye.someperipherals.utils.raycasting.RaycastFunctions.RaycastObj
+import net.spaceeye.someperipherals.stuff.raycasting.RaycastFunctions.blockMakeRaycastObj
+import net.spaceeye.someperipherals.stuff.utils.Constants
+import net.spaceeye.someperipherals.stuff.configToMap.makeRaycastingConfigInfo
+import net.spaceeye.someperipherals.stuff.raycasting.*
+import net.spaceeye.someperipherals.stuff.raycasting.RaycastFunctions.timedRaycast
+import net.spaceeye.someperipherals.stuff.raycasting.RaycastFunctions.RaycastObj
 
 class RaycasterPeripheral(private val level: Level, private val pos: BlockPos, private var be: BlockEntity): IPeripheral {
     @LuaFunction

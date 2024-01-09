@@ -4,7 +4,7 @@ import dan200.computercraft.api.ComputerCraftAPI
 import dev.architectury.platform.Platform
 import dev.architectury.registry.menu.MenuRegistry
 import net.spaceeye.someperipherals.config.ConfigDelegateRegister
-import net.spaceeye.someperipherals.utils.digitizer.DigitizerScreen
+import net.spaceeye.someperipherals.stuff.digitizer.DigitizerScreen
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 

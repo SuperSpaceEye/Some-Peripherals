@@ -1,7 +1,7 @@
 package net.spaceeye.someperipherals.integrations.cc
 
 import net.spaceeye.someperipherals.SomePeripheralsConfig
-import net.spaceeye.someperipherals.utils.raycasting.*
+import net.spaceeye.someperipherals.stuff.raycasting.*
 
 private fun makeBlockReturn(
     res: RaycastBlockReturn,

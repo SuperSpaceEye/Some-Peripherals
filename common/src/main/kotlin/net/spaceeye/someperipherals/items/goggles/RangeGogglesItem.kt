@@ -5,11 +5,11 @@ import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.Level
 import net.spaceeye.someperipherals.SomePeripheralsConfig
-import net.spaceeye.someperipherals.utils.linkPort.*
-import net.spaceeye.someperipherals.utils.mix.getNowFast_ms
-import net.spaceeye.someperipherals.utils.raycasting.RaycastERROR
-import net.spaceeye.someperipherals.utils.raycasting.RaycastFunctions.timedRaycast
-import net.spaceeye.someperipherals.utils.raycasting.RaycastFunctions.entityMakeRaycastObj
+import net.spaceeye.someperipherals.stuff.linkPort.*
+import net.spaceeye.someperipherals.stuff.utils.getNowFast_ms
+import net.spaceeye.someperipherals.stuff.raycasting.RaycastERROR
+import net.spaceeye.someperipherals.stuff.raycasting.RaycastFunctions.timedRaycast
+import net.spaceeye.someperipherals.stuff.raycasting.RaycastFunctions.entityMakeRaycastObj
 
 class RangeGogglesItem: StatusGogglesItem() {
     override val base_name = "item.some_peripherals.tootlip.range_goggles"

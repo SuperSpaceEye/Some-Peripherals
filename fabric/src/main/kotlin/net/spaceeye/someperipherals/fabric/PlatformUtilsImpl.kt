@@ -7,7 +7,7 @@ import net.minecraft.world.level.block.entity.BlockEntity
 import net.spaceeye.someperipherals.blockentities.DigitizerBlockEntity
 import net.spaceeye.someperipherals.config.AbstractConfigBuilder
 import net.spaceeye.someperipherals.fabric.integrations.cc.SomePeripheralsPeripheralProviderFabric
-import net.spaceeye.someperipherals.utils.mix.CommonBlockEntityInventory
+import net.spaceeye.someperipherals.stuff.utils.CommonBlockEntityInventory
 
 object PlatformUtilsImpl {
     @JvmStatic

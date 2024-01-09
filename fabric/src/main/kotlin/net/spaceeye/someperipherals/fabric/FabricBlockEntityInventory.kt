@@ -4,7 +4,7 @@ import io.github.fabricators_of_create.porting_lib.transfer.item.ItemHandlerHelp
 import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.world.item.ItemStack
-import net.spaceeye.someperipherals.utils.mix.CommonBlockEntityInventory
+import net.spaceeye.someperipherals.stuff.utils.CommonBlockEntityInventory
 
 class ExtendedItemStackHandler(size: Int): ItemStackHandler(size) {
     protected fun validateSlotIndex(slot: Int) {

@@ -13,7 +13,7 @@ import net.minecraft.world.inventory.SimpleContainerData
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.state.BlockState
 import net.spaceeye.someperipherals.PlatformUtils.makeCommonBlockEntityInventory
-import net.spaceeye.someperipherals.utils.digitizer.DigitizerMenu
+import net.spaceeye.someperipherals.stuff.digitizer.DigitizerMenu
 
 class DigitizerBlockEntity(pos: BlockPos, state: BlockState): BlockEntity(CommonBlockEntities.DIGITIZER.get(), pos, state), ExtendedMenuProvider {
     val inventory = makeCommonBlockEntityInventory(1)

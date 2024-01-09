@@ -11,10 +11,10 @@ import net.spaceeye.someperipherals.blocks.SomePeripheralsCommonBlocks
 import net.spaceeye.someperipherals.SomePeripheralsConfig
 import net.spaceeye.someperipherals.blockentities.GoggleLinkPortBlockEntity
 import net.spaceeye.someperipherals.integrations.cc.*
-import net.spaceeye.someperipherals.utils.linkPort.*
-import net.spaceeye.someperipherals.utils.mix.Constants
-import net.spaceeye.someperipherals.utils.configToMap.makeGoggleLinkPortConfigInfoBase
-import net.spaceeye.someperipherals.utils.configToMap.makeGoggleLinkPortConfigInfoRange
+import net.spaceeye.someperipherals.stuff.linkPort.*
+import net.spaceeye.someperipherals.stuff.utils.Constants
+import net.spaceeye.someperipherals.stuff.configToMap.makeGoggleLinkPortConfigInfoBase
+import net.spaceeye.someperipherals.stuff.configToMap.makeGoggleLinkPortConfigInfoRange
 
 class GoggleLinkPortPeripheral(private val level: Level, private val pos: BlockPos, private var be:BlockEntity):IPeripheral {
     private val connection: LinkConnectionsManager?

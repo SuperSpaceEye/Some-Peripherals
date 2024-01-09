@@ -6,7 +6,7 @@ import dev.architectury.registry.registries.RegistrySupplier
 import net.minecraft.core.Registry
 import net.minecraft.world.inventory.AbstractContainerMenu
 import net.minecraft.world.inventory.MenuType
-import net.spaceeye.someperipherals.utils.digitizer.DigitizerMenu
+import net.spaceeye.someperipherals.stuff.digitizer.DigitizerMenu
 
 object SomePeripheralsMenu {
     private val MENU = DeferredRegister.create(SomePeripherals.MOD_ID, Registry.MENU_REGISTRY)
