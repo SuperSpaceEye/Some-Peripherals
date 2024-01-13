@@ -28,6 +28,10 @@ subprojects {
             name = "ParchmentMC"
             url = "https://maven.parchmentmc.org"
         }
+//        maven {
+//            name = "Valkyrien Skies Internal"
+//            url = 'https://maven.valkyrienskies.org'
+//        }
     }
 
 //    apply plugin: "com.github.imifou.jsonschema-module-addon"
@@ -41,7 +45,7 @@ subprojects {
 
         mappings(loom.layered {
             officialMojangMappings()
-            parchment("org.parchmentmc.data:parchment-${rootProject.minecraft_version}:2022.11.06@zip")
+            parchment("org.parchmentmc.data:parchment-${rootProject.minecraft_version}:2022.09.04@zip")
         })
     }
 }
