@@ -3,7 +3,7 @@ plugins {
     id "dev.architectury.loom" version "1.1-SNAPSHOT" apply false
 
     // Adds the Kotlin Gradle plugin
-    id 'org.jetbrains.kotlin.jvm' version '1.8.21'
+    id 'org.jetbrains.kotlin.jvm' version '1.8.21' apply false
     // OPTIONAL Kotlin Serialization plugin
     id 'org.jetbrains.kotlin.plugin.serialization' version '1.8.21'
 
@@ -80,8 +80,8 @@ allprojects {
 }
 
 dependencies {
-    api 'org.joml:joml-primitives:1.10.0'
-    api 'org.joml:joml:1.10.4'
+//    api 'org.joml:joml-primitives:1.10.0'
+//    api 'org.joml:joml:1.10.4'
     implementation files("AcceleratedRaycasting-0.0.1.jar")
 //    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3"
 }
