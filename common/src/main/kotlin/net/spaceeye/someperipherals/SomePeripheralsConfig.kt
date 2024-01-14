@@ -21,6 +21,7 @@ object SomePeripheralsConfig {
         val LINK_PORT_SETTINGS = LinkPortSettings()
         val RADAR_SETTINGS = RadarSettings()
         val GOGGLE_SETTINGS = GogglesSettings()
+        val WORLD_SCANNER_SETTINGS = WorldScannerSettings()
 
         class RaycastingSettings: ConfigSubDirectory() {
             var max_raycast_time_ms: Long by CLong(100L, "Max time before yielding")
@@ -143,6 +144,11 @@ object SomePeripheralsConfig {
                 var max_allowed_raycast_waiting_time_ms: Long by CLong(4000L, "In milliseconds", Pair(0L, Long.MAX_VALUE))
                 var max_batch_raycast_time_ms: Long by CLong(100L, "In milliseconds", Pair(0L, Long.MAX_VALUE))
             }
+        }
+
+        class WorldScannerSettings: ConfigSubDirectory() {
+            var max_allowed_range: Int by CInt(-1, "In blocks from scanner. <= -1 for unlimited range.")
+            var no_chunkloading: Boolean by CBool(false)
         }
     }
 }

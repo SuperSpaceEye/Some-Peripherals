@@ -19,6 +19,7 @@ object SomePeripheralsCommonBlocks {
     @JvmField var GOGGLE_LINK_PORT = BLOCKS.register<Block>("goggle_link_port") {GoggleLinkPort(BlockBehaviour.Properties.of(Material.METAL).strength(2.0f))}
     @JvmField var RADAR = BLOCKS.register("radar") {Block(BlockBehaviour.Properties.of(Material.METAL).strength(2.0f))}
     @JvmField var DIGITIZER = BLOCKS.register("digitizer") {DigitizerBlock(BlockBehaviour.Properties.of(Material.METAL).strength(2.0f))}
+    @JvmField var WORLD_SCANNER = BLOCKS.register("world_scanner") {Block(BlockBehaviour.Properties.of(Material.METAL).strength(2.0f))}
 
     fun registerBaseBlocks() {
         BLOCKS.register()

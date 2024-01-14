@@ -17,6 +17,7 @@ import net.spaceeye.someperipherals.stuff.BallisticFunctions.rad
 import net.spaceeye.someperipherals.stuff.utils.ChunkIsNotLoadedException
 import net.spaceeye.someperipherals.stuff.utils.Vector3d
 import net.spaceeye.someperipherals.stuff.utils.getNowFast_ms
+import net.spaceeye.someperipherals.stuff.utils.posShipToWorld
 import org.valkyrienskies.mod.common.getShipManagingPos
 import java.lang.Math.*
 
@@ -352,13 +353,8 @@ object RaycastFunctions {
         val start = if (!SomePeripherals.has_vs) {Vector3d(pos) + offset} else {
             val ship = level.getShipManagingPos(pos)
             if (ship == null) { Vector3d(pos) + offset } else {
-                val scale = Vector3d(ship.transform.shipToWorldScaling)
-                val ship_wp = Vector3d(ship.transform.positionInWorld)
-                val ship_sp = Vector3d(ship.transform.positionInShip)
                 unit_d = Vector3d(ship.transform.transformDirectionNoScalingFromShipToWorld(unit_d.toJomlVector3d(), unit_d.toJomlVector3d()))
-                Vector3d((ship.transform.transformDirectionNoScalingFromShipToWorld(
-                    ((Vector3d(pos) - ship_sp + offset)*scale).toJomlVector3d(), org.joml.Vector3d()))
-                ) + ship_wp
+                posShipToWorld(ship, Vector3d(pos) + offset)
             }
         }
         return commonMakeRaycastObj(level, start, unit_d, distance, Vector3d(pos), null, check_for_blocks_in_world, onlyDistance, iterate_once)

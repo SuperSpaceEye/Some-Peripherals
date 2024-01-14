@@ -39,7 +39,7 @@ dependencies {
     common(project(path: ":common", configuration: "namedElements")) { transitive false }
     shadowCommon(project(path: ":common", configuration: "transformProductionFabric")) { transitive false }
 
-    modApi("org.valkyrienskies:valkyrienskies-118-fabric:${rootProject.vs2_version}") { transitive = false}
+    modCompileOnlyApi("org.valkyrienskies:valkyrienskies-118-fabric:${rootProject.vs2_version}") { transitive = false}
 
     // Kotlin
     modImplementation("net.fabricmc:fabric-language-kotlin:1.10.10+kotlin.1.9.10")
@@ -51,7 +51,7 @@ dependencies {
 
     implementation 'com.electronwill.night-config:core:3.6.3'
     implementation 'com.electronwill.night-config:toml:3.6.3'
-    modApi "curse.maven:forge-config-api-port-fabric-547434:3943250"
+    modCompileOnlyApi "curse.maven:forge-config-api-port-fabric-547434:3943250"
 
     modImplementation(include("io.github.fabricators_of_create:Porting-Lib:1.2.963-beta+1.18.2"))
 }

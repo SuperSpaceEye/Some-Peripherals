@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "some_peripherals:block/world_scanner"
+    }
+  }
+}
