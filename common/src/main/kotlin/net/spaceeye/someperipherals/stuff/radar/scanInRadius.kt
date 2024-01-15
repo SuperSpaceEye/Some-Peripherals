@@ -2,19 +2,16 @@ package net.spaceeye.someperipherals.stuff.radar
 
 import net.minecraft.core.BlockPos
 import net.minecraft.server.level.ServerLevel
-import net.minecraft.world.entity.Entity
 import net.minecraft.world.level.Level
 import net.minecraft.world.phys.AABB
 import net.spaceeye.someperipherals.SomePeripherals
 import net.spaceeye.someperipherals.SomePeripheralsConfig
 import net.spaceeye.someperipherals.integrations.cc.makeErrorReturn
-import net.spaceeye.someperipherals.mixin.IServerLevelAccessor
 import net.spaceeye.someperipherals.stuff.utils.entityToMapRadar
-import net.spaceeye.someperipherals.stuff.utils.getNowFast_ms
+import net.spaceeye.someperipherals.stuff.utils.getEntitiesWithTimeout
 import org.valkyrienskies.mod.common.getShipManagingPos
 import org.valkyrienskies.mod.common.toWorldCoordinates
 import org.valkyrienskies.mod.common.transformToNearbyShipsAndWorld
-import java.util.concurrent.TimeoutException
 import kotlin.math.max
 import kotlin.math.min
 
@@ -29,24 +26,6 @@ private fun getScanPos(level: Level, pos: BlockPos): BlockPos {
     }
 }
 
-private fun <T> getEntitiesWithTimeout(
-        level: ServerLevel,
-        area: AABB,
-        timeout: Long = SomePeripheralsConfig.SERVER.RADAR_SETTINGS.max_entity_timeout_ms,
-        fn: (entity: Entity) -> T): MutableList<T> {
-    val entities = ArrayList<T>()
-
-    val now = getNowFast_ms()
-    try {
-        (level as IServerLevelAccessor).entitiesAcc.get(area) {
-            if (getNowFast_ms() - now > timeout) { throw TimeoutException() }
-            entities.add(fn(it))
-        }
-    } catch (_: TimeoutException) {}
-
-    return entities
-}
-
 
 private fun scanForEntities(r: Double, level: ServerLevel, pos: BlockPos): MutableList<Any> {
     val pos = getScanPos(level, pos)
@@ -54,8 +33,8 @@ private fun scanForEntities(r: Double, level: ServerLevel, pos: BlockPos): Mutab
     val res: MutableList<Any> = getEntitiesWithTimeout(level, AABB(
         pos.x-r, pos.y-r, pos.z-r,
         pos.x+r, pos.y+r, pos.z+r
-    )) {entityToMapRadar(it, SomePeripheralsConfig.SERVER.RADAR_SETTINGS.ALLOWED_ENTITY_DATA_SETTINGS)}
-
+    ), SomePeripheralsConfig.SERVER.RADAR_SETTINGS.max_entity_get_time_ms
+    ) {entityToMapRadar(it, SomePeripheralsConfig.SERVER.RADAR_SETTINGS.ALLOWED_ENTITY_DATA_SETTINGS)}
     return res
 }
 

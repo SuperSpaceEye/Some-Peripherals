@@ -3,6 +3,7 @@ package net.spaceeye.someperipherals.stuff.raycasting
 import com.mojang.math.Quaternion
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
+import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.level.Level
@@ -14,10 +15,7 @@ import net.spaceeye.acceleratedraycasting.api.API
 import net.spaceeye.someperipherals.SomePeripherals
 import net.spaceeye.someperipherals.SomePeripheralsConfig
 import net.spaceeye.someperipherals.stuff.BallisticFunctions.rad
-import net.spaceeye.someperipherals.stuff.utils.ChunkIsNotLoadedException
-import net.spaceeye.someperipherals.stuff.utils.Vector3d
-import net.spaceeye.someperipherals.stuff.utils.getNowFast_ms
-import net.spaceeye.someperipherals.stuff.utils.posShipToWorld
+import net.spaceeye.someperipherals.stuff.utils.*
 import org.valkyrienskies.mod.common.getShipManagingPos
 import java.lang.Math.*
 
@@ -102,21 +100,22 @@ object RaycastFunctions {
     fun checkForIntersectedEntity(
         start: Vector3d,
         cur: Vector3d,
-        level: Level,
+        level: ServerLevel,
         d: Vector3d,
         ray_distance: Double,
         er: Int,
-        ignore_entity: Entity?
+        ignore_entity: Entity?,
+        timeout_ms: Long
     ): Pair<Entity, Double>? {
-        //null is for any entity
-        //TODO timeout code?
-        val entities = level.getEntities(null, AABB(
+        // to prevent mc from dying when there are too many entities
+        val entities = getEntitiesWithTimeout(level, AABB(
             cur.x-er, cur.y-er, cur.z-er,
-            cur.x+er, cur.y+er, cur.z+er))
+            cur.x+er, cur.y+er, cur.z+er), timeout_ms
+        ) { it }
 
         val intersecting_entities = mutableListOf<Pair<Entity, Double>>()
         for (entity in entities) {
-            if (entity == null || entity == ignore_entity) {continue}
+            if (entity == ignore_entity) {continue}
             val (res, t) = rayIntersectsBox(entity.boundingBox, start, d)
             if (!res) {continue}
             intersecting_entities.add(Pair(entity, t.first * ray_distance))
@@ -158,7 +157,7 @@ object RaycastFunctions {
         val unit_d = rd.normalize()
 
         val check_for_entities = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.check_for_intersection_with_entities
-        val er = if (check_for_blocks_in_world) SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.entity_check_radius else SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.entity_check_radius_no_worldchecking
+        val er = if (check_for_blocks_in_world) SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.entity_check_radius else SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.entities_only_raycast_entity_check_radius
 
         var entity_res: Pair<Entity, Double>? = null
         var entity_step_counter = 0
@@ -167,14 +166,16 @@ object RaycastFunctions {
 
         var cache = PosManager()
 
-        open fun iterate(point: Vector3d, level: Level): RaycastReturn? {
+        var entity_timeout_ms = SomePeripheralsConfig.SERVER.RAYCASTING_SETTINGS.max_entity_get_time_ms
+
+        open fun iterate(point: Vector3d, level: ServerLevel): RaycastReturn? {
             try {
             //if ray hits entity and any block wasn't hit before another check, then previous intersected entity is the actual hit place
             if (check_for_entities && entity_step_counter % er == 0) {
                 if (entity_res != null) { return makeResult(null, entity_res, unit_d, start, cache) }
 
                 // Pair of Entity, t
-                entity_res = checkForIntersectedEntity(start, point, level, d, ray_distance, er, ignore_entity)
+                entity_res = checkForIntersectedEntity(start, point, level, d, ray_distance, er, ignore_entity, entity_timeout_ms)
                 entity_step_counter = 0
             }
             entity_step_counter++
@@ -202,7 +203,7 @@ object RaycastFunctions {
     }
 
     @JvmStatic
-    fun timedRaycast(raycastObj: RaycastObj, level: Level, timeout_ms: Long): Pair<RaycastReturn?, RaycastObj> {
+    fun timedRaycast(raycastObj: RaycastObj, level: ServerLevel, timeout_ms: Long): Pair<RaycastReturn?, RaycastObj> {
         val start = getNowFast_ms()
 
         for (point in raycastObj.points_iter) {
@@ -284,7 +285,7 @@ object RaycastFunctions {
                              onlyDistance: Boolean, iterate_once: Boolean=false): RaycastObj {
         val stop = unit_d * distance + start
 
-        val max_dist = if (check_for_blocks_in_world) SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.max_raycast_distance else SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.max_raycast_no_worldcheking_distance
+        val max_dist = if (check_for_blocks_in_world) SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.max_raycast_distance else SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.max_entities_only_raycast_distance
         val max_iter = if (max_dist <= 0) { distance.toInt() } else { min(distance.toInt(), max_dist) }
         val iter = DDAIter(start, stop, max_iter + if (iterate_once) 1 else 0)
         if (iterate_once) { iter.next() }

@@ -1,5 +1,6 @@
 package net.spaceeye.someperipherals.items.goggles
 
+import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.item.ItemStack
@@ -28,7 +29,7 @@ class RangeGogglesItem: StatusGogglesItem() {
 
     private fun raycastRequest(entity: Entity, r: LinkRaycastRequest) {
         connection!!.getRequests(uuid.toString()).raycast_request = null
-        val rsp = timedRaycast(entityMakeRaycastObj(entity as LivingEntity, r.distance, r.euler_mode, r.var1, r.var2, r.var3, r.check_for_blocks_in_world, r.only_distance), entity.level, SomePeripheralsConfig.SERVER.RAYCASTING_SETTINGS.max_raycast_time_ms)
+        val rsp = timedRaycast(entityMakeRaycastObj(entity as LivingEntity, r.distance, r.euler_mode, r.var1, r.var2, r.var3, r.check_for_blocks_in_world, r.only_distance), entity.level as ServerLevel, SomePeripheralsConfig.SERVER.RAYCASTING_SETTINGS.max_raycast_time_ms)
         connection!!.makeResponse(uuid.toString(), LinkRaycastResponse(rsp.first ?: RaycastERROR("Raycast took too long")))
     }
 
@@ -49,7 +50,7 @@ class RangeGogglesItem: StatusGogglesItem() {
             val item = req.data[i]
             rsp.results.add(timedRaycast(
                 entityMakeRaycastObj(entity as LivingEntity, req.distance, req.euler_mode, item[0], item[1], item[2], req.check_for_blocks_in_world, req.only_distance),
-                entity.level,
+                entity.level as ServerLevel,
                 SomePeripheralsConfig.SERVER.GOGGLE_SETTINGS.RANGE_GOGGLES_SETTINGS.max_batch_raycast_time_ms).first ?: RaycastERROR("Raycast took too long")
             )
             if (getNowFast_ms() - start >= timeout) { break }

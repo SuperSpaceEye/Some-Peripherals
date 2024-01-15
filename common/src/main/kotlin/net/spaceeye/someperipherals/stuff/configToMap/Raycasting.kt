@@ -12,8 +12,8 @@ fun makeRaycastingConfigInfo(): MutableMap<String, Any> {
         Pair("max_raycast_distance", rc.max_raycast_distance),
         Pair("entity_check_radius", rc.entity_check_radius),
 
-        Pair("max_raycast_no_worldcheking_distance", rc.max_raycast_no_worldcheking_distance),
-        Pair("entity_check_radius_no_worldchecking", rc.entity_check_radius_no_worldchecking),
+        Pair("max_raycast_no_worldcheking_distance", rc.max_entities_only_raycast_distance),
+        Pair("entity_check_radius_no_worldchecking", rc.entities_only_raycast_entity_check_radius),
 
         Pair("check_for_intersection_with_entities", rc.check_for_intersection_with_entities),
 

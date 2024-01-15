@@ -1,6 +1,7 @@
 package net.spaceeye.someperipherals.stuff.raycasting
 
 import net.minecraft.core.BlockPos
+import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.level.Level
 import net.spaceeye.someperipherals.stuff.raycasting.RaycastFunctions.checkForBlockInWorld
@@ -222,7 +223,7 @@ object VSRaycastFunctions {
 
         var ship_hit_res: MutableList<Pair<RaycastReturn, Double>> = mutableListOf()
 
-        override fun iterate(point: Vector3d, level: Level): RaycastReturn? {
+        override fun iterate(point: Vector3d, level: ServerLevel): RaycastReturn? {
             val res = super.iterate(point, level)
             if (res is RaycastERROR) {return res}
 

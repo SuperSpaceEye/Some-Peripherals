@@ -4,6 +4,7 @@ import dan200.computercraft.api.lua.*
 import dan200.computercraft.api.peripheral.IComputerAccess
 import dan200.computercraft.api.peripheral.IPeripheral
 import net.minecraft.core.BlockPos
+import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
@@ -44,7 +45,7 @@ class RaycasterPeripheral(private val level: Level, private val pos: BlockPos, p
         val callback = CallbackToLuaWrapper {
             if (terminate) {return@CallbackToLuaWrapper makeErrorReturn("Was terminated") }
 
-            val res = timedRaycast(raycast_obj, level, SomePeripheralsConfig.SERVER.RAYCASTING_SETTINGS.max_raycast_time_ms)
+            val res = timedRaycast(raycast_obj, level as ServerLevel, SomePeripheralsConfig.SERVER.RAYCASTING_SETTINGS.max_raycast_time_ms)
 
             if (res.first != null) { return@CallbackToLuaWrapper makeRaycastReturn(res.first!!) } else {
                 computer.queueEvent(Constants.RAYCASTER_RAYCAST_EVENT_NAME)
