@@ -24,8 +24,8 @@ object SomePeripheralsConfig {
         val WORLD_SCANNER_SETTINGS = WorldScannerSettings()
 
         class RaycastingSettings: ConfigSubDirectory() {
-            var max_raycast_time_ms: Long by CLong(50L, "Max time before yielding.")
-            var max_entity_get_time_ms: Long by CLong(10L, "Max time raycast will try to get entities from level before stopping. Prevents mc from freezing when raycasting in areas with too many entities at the cost of not entirely correct result.")
+            var max_raycast_time_ms: Long by CLong(50L, "Max time before yielding.", Pair(0, Long.MAX_VALUE))
+            var max_entity_get_time_ms: Long by CLong(10L, "Max time raycast will try to get entities from level before stopping. Prevents mc from freezing when raycasting in areas with too many entities at the cost of not entirely correct result.", Pair(0, Long.MAX_VALUE))
             var allow_raycasting_for_entities_only: Boolean by CBool(true, "Includes Valkyrien Skies ships. If in that mode ray hits VS ship, it will check for blocks on that ship.")
             var no_chunkloading_rays: Boolean by CBool(false)
         }
