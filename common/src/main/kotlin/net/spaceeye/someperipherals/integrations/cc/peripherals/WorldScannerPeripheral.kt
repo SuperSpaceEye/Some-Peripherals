@@ -13,15 +13,19 @@ import net.spaceeye.someperipherals.integrations.cc.makeErrorReturn
 import net.spaceeye.someperipherals.stuff.utils.Vector3d
 import net.spaceeye.someperipherals.stuff.utils.posShipToWorld
 import net.spaceeye.someperipherals.stuff.utils.posWorldToShip
+import org.valkyrienskies.core.api.ships.Ship
 import org.valkyrienskies.mod.common.getShipManagingPos
 import org.valkyrienskies.mod.common.transformToNearbyShipsAndWorld
 import kotlin.math.sqrt
 
 class WorldScannerPeripheral(private val level: Level, private val pos: BlockPos): IPeripheral {
-    private fun makeResult(state: BlockState): Any {
-        return mutableMapOf(
-            Pair("block_type", state.block.descriptionId.toString())
-        )
+    private fun makeResult(state: BlockState, ship: Ship? = null): Any {
+        val ret = mutableMapOf<String, Any>()
+
+        ret["block_type"] = state.block.descriptionId.toString()
+        if (ship != null) { ret["ship_id"] = ship.id.toDouble() }
+
+        return ret
     }
 
     private fun getBlockAtVS(args: IArguments): Any {
@@ -59,7 +63,7 @@ class WorldScannerPeripheral(private val level: Level, private val pos: BlockPos
             val res = level.getBlockState(posOnShip.toBlockPos())
             if (res.isAir) { continue }
 
-            return makeResult(res)
+            return makeResult(res, worldShip)
         }
         if (noChunkloading && !level.isLoaded(pos.toBlockPos())) { return makeErrorReturn("Chunk is not loaded") }
         return makeResult(level.getBlockState((Vector3d(pos)).toBlockPos()))
