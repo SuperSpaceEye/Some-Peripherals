@@ -21,6 +21,8 @@ object SomePeripheralsCommonBlocks {
     @JvmField var DIGITIZER = BLOCKS.register("digitizer") {DigitizerBlock(BlockBehaviour.Properties.of(Material.METAL).strength(2.0f))}
     @JvmField var WORLD_SCANNER = BLOCKS.register("world_scanner") {Block(BlockBehaviour.Properties.of(Material.METAL).strength(2.0f))}
 
+    @JvmField var PERFECT_MIRROR = BLOCKS.register("perfect_mirror") {Block(BlockBehaviour.Properties.of(Material.METAL).strength(2.0f))}
+
     fun registerBaseBlocks() {
         BLOCKS.register()
     }

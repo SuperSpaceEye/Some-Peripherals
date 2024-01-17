@@ -14,6 +14,12 @@
     "facing=east": {
       "model": "some_peripherals:block/digitizer",
       "y": 90
+    },
+    "facing=up": {
+      "model": "some_peripherals:block/digitizer"
+    },
+    "facing=down": {
+      "model": "some_peripherals:block/digitizer"
     }
   }
 }
