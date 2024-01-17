@@ -12,8 +12,10 @@ import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.world.phys.AABB
 import net.spaceeye.acceleratedraycasting.api.API
+import net.spaceeye.someperipherals.LOG
 import net.spaceeye.someperipherals.SomePeripherals
 import net.spaceeye.someperipherals.SomePeripheralsConfig
+import net.spaceeye.someperipherals.blocks.SomePeripheralsCommonBlocks
 import net.spaceeye.someperipherals.stuff.BallisticFunctions.rad
 import net.spaceeye.someperipherals.stuff.utils.*
 import org.valkyrienskies.mod.common.getShipManagingPos
@@ -80,6 +82,8 @@ object RaycastFunctions {
     ): Pair<Pair<BlockPos, IBlockRes>, Double>? {
         val bpos = BlockPos(point.x, point.y, point.z)
 
+        LOG("BPOS ${bpos}")
+
         if (SomePeripherals.has_arc) {
             if (!API.getIsSolidState(level, bpos)) { return null }
             if (onlyDistance) {
@@ -131,15 +135,16 @@ object RaycastFunctions {
         entity_res: Pair<Entity, Double>?,
         unit_d: Vector3d,
         start: Vector3d,
-        cache: PosManager
+        cache: PosManager,
+        cummulative_dist: Double
     ): RaycastReturn {
         cache.cleanup()
         return if (world_res != null && entity_res != null) {
-            if (world_res.second < entity_res.second) {RaycastBlockReturn(start, world_res.first, world_res.second, unit_d*world_res.second+start)} else {RaycastEntityReturn(start, entity_res.first, entity_res.second, unit_d*entity_res.second+start)}
+            if (world_res.second < entity_res.second) {RaycastBlockReturn(start, world_res.first, world_res.second + cummulative_dist, unit_d*world_res.second+start)} else {RaycastEntityReturn(start, entity_res.first, entity_res.second, unit_d*entity_res.second+start)}
         } else if (world_res != null) {
-            RaycastBlockReturn(start, world_res.first, world_res.second, unit_d*world_res.second+start)
+            RaycastBlockReturn(start, world_res.first, world_res.second + cummulative_dist, unit_d*world_res.second+start)
         } else if (entity_res != null) {
-            RaycastEntityReturn(start, entity_res.first, entity_res.second, unit_d * entity_res.second+start)
+            RaycastEntityReturn(start, entity_res.first, entity_res.second + cummulative_dist, unit_d * entity_res.second+start)
         } else {
             throw AssertionError("makeResult was called but both entity_res and world_res are nil")
         }
@@ -147,14 +152,14 @@ object RaycastFunctions {
 
 
     open class RaycastObj(
-        val start: Vector3d, stop: Vector3d, val ignore_entity: Entity?,
-        val points_iter: RayIter, val check_for_blocks_in_world: Boolean,
+        var start: Vector3d, stop: Vector3d, val ignore_entity: Entity?,
+        var points_iter: RayIter, val check_for_blocks_in_world: Boolean,
         val onlyDistance: Boolean
     ): RaycastObjOrError {
-        val rd = stop - start
-        val d = (rd+eps).srdiv(1.0)
-        val ray_distance = rd.dist()
-        val unit_d = rd.normalize()
+        var rd = stop - start
+        var d = (rd+eps).srdiv(1.0)
+        var ray_distance = rd.dist()
+        var unit_d = rd.normalize()
 
         val check_for_entities = SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.check_for_intersection_with_entities
         val er = if (check_for_blocks_in_world) SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.entity_check_radius else SomePeripheralsConfig.SERVER.RAYCASTER_SETTINGS.entities_only_raycast_entity_check_radius
@@ -168,11 +173,13 @@ object RaycastFunctions {
 
         var entity_timeout_ms = SomePeripheralsConfig.SERVER.RAYCASTING_SETTINGS.max_entity_get_time_ms
 
+        var cummulative_distance = 0.0
+
         open fun iterate(point: Vector3d, level: ServerLevel): RaycastReturn? {
             try {
             //if ray hits entity and any block wasn't hit before another check, then previous intersected entity is the actual hit place
             if (check_for_entities && entity_step_counter % er == 0) {
-                if (entity_res != null) { return makeResult(null, entity_res, unit_d, start, cache) }
+                if (entity_res != null) { return makeResult(null, entity_res, unit_d, start, cache, cummulative_distance) }
 
                 // Pair of Entity, t
                 entity_res = checkForIntersectedEntity(start, point, level, d, ray_distance, er, ignore_entity, entity_timeout_ms)
@@ -182,9 +189,11 @@ object RaycastFunctions {
 
             if (check_for_blocks_in_world) {world_res = checkForBlockInWorld(start, point, d, ray_distance, level, cache, onlyDistance)}
 
+            world_res = tryReflectRay(world_res, this)
+
             //if the block and intersected entity are both hit, then we need to find out actual intersection as
             // checkForIntersectedEntity checks "er" block radius
-            if (world_res != null) {return makeResult(world_res, entity_res, unit_d, start, cache)}
+            if (world_res != null) {return makeResult(world_res, entity_res, unit_d, start, cache, cummulative_distance)}
 
             return null
             } catch (e: Exception) {
@@ -197,7 +206,52 @@ object RaycastFunctions {
 
         //is needed so that when raycasting ended but ray does intersect with some entity, it would return said entity.
         open fun postCheckForUnreturnedEntity(): RaycastReturn? {
-            if (entity_res != null && entity_res!!.second <= points_iter.up_to) { return makeResult(null, entity_res, unit_d, start, cache) }
+            if (entity_res != null && entity_res!!.second <= points_iter.up_to) { return makeResult(null, entity_res, unit_d, start, cache, cummulative_distance) }
+            return null
+        }
+
+        //https://www.reddit.com/r/raytracing/comments/yxaabc/ray_box_intersection_normal/
+        //https://www.shadertoy.com/view/wtSyRd
+        //https://asawicki.info/news_1301_reflect_and_refract_functions.html
+        open fun tryReflectRay(
+            world_res: Pair<Pair<BlockPos, IBlockRes>, Double>?,
+            raycast_obj: RaycastObj
+        ): Pair<Pair<BlockPos, IBlockRes>, Double>? {
+            if (world_res == null) { return world_res}
+            if (SomePeripherals.has_arc && raycast_obj.onlyDistance) { return world_res }
+            entity_res != null && entity_res!!.second <= points_iter.up_to
+
+            val state = world_res.first.second.state
+            if (SomePeripheralsCommonBlocks.PERFECT_MIRROR.get() != state.block) { return world_res }
+            if (entity_res != null && entity_res!!.second <= world_res.second) { entity_step_counter = 0; return world_res }
+
+            cummulative_distance += world_res.second
+
+            val bpos = world_res.first.first
+            val boxctr = Vector3d(bpos) + 0.5
+
+            val box_hit = boxctr - start + unit_d * world_res.second
+            val normal = box_hit / max(max(abs(box_hit.x), abs(box_hit.y)), abs(box_hit.z))
+
+            normal.sabs().sclamp(0.0, 1.0).smul(1.0000001).sfloor().snormalize()
+
+            val reflected_rd = unit_d - normal * (unit_d.dot(normal) * 2)
+
+            start = start + unit_d * world_res.second
+
+            rd = reflected_rd
+            d = (rd+eps).srdiv(1.0)
+            ray_distance = rd.dist()
+            unit_d = rd.normalize()
+
+            entity_res = null
+
+            val temp_cur_i = points_iter.cur_i
+            points_iter = DDAIter(start, start + unit_d * (points_iter.up_to - points_iter.cur_i), points_iter.up_to)
+            points_iter.cur_i = temp_cur_i
+
+            points_iter.next()
+
             return null
         }
     }
@@ -206,7 +260,11 @@ object RaycastFunctions {
     fun timedRaycast(raycastObj: RaycastObj, level: ServerLevel, timeout_ms: Long): Pair<RaycastReturn?, RaycastObj> {
         val start = getNowFast_ms()
 
-        for (point in raycastObj.points_iter) {
+        //points_iter can change while iterating
+        //TODO think of another way to do this maybe?
+        while (raycastObj.points_iter.hasNext()) {
+            val point = raycastObj.points_iter.next()
+
             val res = raycastObj.iterate(point, level)
             if (res != null) {return Pair(res, raycastObj)}
 

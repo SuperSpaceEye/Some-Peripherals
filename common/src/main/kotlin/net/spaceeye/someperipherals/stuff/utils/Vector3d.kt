@@ -2,6 +2,8 @@ package net.spaceeye.someperipherals.stuff.utils
 
 import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.Vec3
+import kotlin.math.max
+import kotlin.math.min
 
 typealias MCVector3d = com.mojang.math.Vector3d
 typealias MCVector3f = com.mojang.math.Vector3f
@@ -87,6 +89,16 @@ class Vector3d(x:Number, y:Number, z:Number) {
     inline fun normalize(): Vector3d {return normalize(1)}
     inline fun snormalize(): Vector3d {return snormalize(1)}
     inline fun normalize(dest: Vector3d): Vector3d {return normalize(1, dest)}
+
+    inline fun sclamp(min_: Double, max_: Double): Vector3d {
+        x = max(min(x, max_), min_)
+        y = max(min(y, max_), min_)
+        z = max(min(z, max_), min_)
+        return this
+    }
+
+    inline fun dot(x: Double, y: Double, z: Double): Double {return Math.fma(this.x, x, Math.fma(this.y, y, this.z * z)); }
+    inline fun dot(other: Vector3d): Double {return dot(other.x, other.y, other.z)}
 
     inline fun add(other: Vector3d, dest: Vector3d): Vector3d {
         dest.x = x + other.x
