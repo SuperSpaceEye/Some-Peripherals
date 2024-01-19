@@ -12,6 +12,7 @@ import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.world.phys.AABB
 import net.spaceeye.acceleratedraycasting.api.API
+import net.spaceeye.someperipherals.LOG
 import net.spaceeye.someperipherals.SomePeripherals
 import net.spaceeye.someperipherals.SomePeripheralsConfig
 import net.spaceeye.someperipherals.blocks.SomePeripheralsCommonBlocks
@@ -51,13 +52,13 @@ object RaycastFunctions {
     //https://gamedev.stackexchange.com/questions/18436/most-efficient-aabb-vs-ray-collision-algorithms
     //first t is time to in collision point, second t is time to out collision point
     @JvmStatic
-    fun rayIntersectsBox(box: AABB, or: Vector3d, d: Vector3d): RayIntersectBoxResult {
-        val t1: Double = (box.minX - or.x) * d.x
-        val t2: Double = (box.maxX - or.x) * d.x
-        val t3: Double = (box.minY - or.y) * d.y
-        val t4: Double = (box.maxY - or.y) * d.y
-        val t5: Double = (box.minZ - or.z) * d.z
-        val t6: Double = (box.maxZ - or.z) * d.z
+    fun rayIntersectsBox(box: AABB, ray_origin: Vector3d, d: Vector3d): RayIntersectBoxResult {
+        val t1: Double = (box.minX - ray_origin.x) * d.x
+        val t2: Double = (box.maxX - ray_origin.x) * d.x
+        val t3: Double = (box.minY - ray_origin.y) * d.y
+        val t4: Double = (box.maxY - ray_origin.y) * d.y
+        val t5: Double = (box.minZ - ray_origin.z) * d.z
+        val t6: Double = (box.maxZ - ray_origin.z) * d.z
 
         val tmin = max(max(min(t1, t2), min(t3, t4)), min(t5, t6))
         val tmax = min(min(max(t1, t2), max(t3, t4)), max(t5, t6))
@@ -91,6 +92,8 @@ object RaycastFunctions {
         constructor: (BlockPos, IBlockRes, Double) -> BaseRaycastBlockRes // this is fucking stupid i hate this
     ): BaseRaycastBlockRes? {
         val bpos = BlockPos(point.x, point.y, point.z)
+
+        LOG(bpos.toString())
 
         if (SomePeripherals.has_arc) {
             if (!API.getIsSolidState(level, bpos)) { return null }
@@ -227,7 +230,6 @@ object RaycastFunctions {
         ): BaseRaycastBlockRes? {
             if (world_res == null) { return world_res}
             if (SomePeripherals.has_arc && raycast_obj.onlyDistance) { return world_res }
-            entity_res != null && entity_res!!.second <= points_iter.up_to
 
             val state = world_res.res.state
             if (SomePeripheralsCommonBlocks.PERFECT_MIRROR.get() != state.block) { return world_res }
@@ -278,7 +280,7 @@ object RaycastFunctions {
             val res = raycastObj.iterate(point, level)
             if (res != null) {return Pair(res, raycastObj)}
 
-            if (getNowFast_ms() - start > timeout_ms) {return Pair(null, raycastObj)}
+//            if (getNowFast_ms() - start > timeout_ms) {return Pair(null, raycastObj)}
         }
         return Pair(raycastObj.postCheckForUnreturnedEntity() ?: RaycastNoResultReturn(raycastObj.points_iter.up_to.toDouble()), raycastObj)
     }

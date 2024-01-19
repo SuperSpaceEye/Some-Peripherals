@@ -4,7 +4,6 @@ local gpu = peripheral.find("tm_gpu")
 
 local euler_mode = false
 local depth_map = false
-local cache = false
 
 local width_roll_range = math.rad(45)
 local height_pitch_range = math.rad(45)
@@ -146,7 +145,7 @@ for x=1, width do
     local yr = y_axis[y]
     local xr = x_axis[x]
 
-    local item = rc.raycast(max_distance, {yr, xr, vector_fov}, euler_mode, true, cache)
+    local item = rc.raycast(max_distance, {yr, xr, vector_fov}, euler_mode, true)
     local r, g, b = table.unpack(depth_map and get_color_depthmap(item) or get_color_normal(item))
 
     img.setRGB(x-2, height - y-1, r, g, b)

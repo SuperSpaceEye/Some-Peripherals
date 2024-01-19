@@ -4,6 +4,8 @@ import net.minecraft.core.BlockPos
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.level.Level
+import net.minecraft.world.phys.AABB
+import net.spaceeye.someperipherals.SomePeripherals
 import net.spaceeye.someperipherals.stuff.raycasting.RaycastFunctions.checkForBlockInWorld
 import net.spaceeye.someperipherals.stuff.raycasting.RaycastFunctions.rayIntersectsBox
 import net.spaceeye.someperipherals.stuff.utils.Vector3d
@@ -24,6 +26,15 @@ class Ray(
 ) {
     var has_entered = false
     var can_iterate = true
+    init {
+        // check for collision of shipyard ray with ship's aabb
+        val saabb = ship.shipAABB!!
+        val res = rayIntersectsBox(
+            AABB(saabb.minX().toDouble(), saabb.minY().toDouble(), saabb.minZ().toDouble(), saabb.maxX().toDouble(), saabb.maxY().toDouble(), saabb.minZ().toDouble()),
+            iter.start, d)
+        if (!res.intersects) {can_iterate = false}
+    }
+
     operator fun hasNext() = iter.hasNext() && can_iterate
     operator fun iterator() = this
     operator fun next(): Vector3d {
@@ -49,7 +60,7 @@ class Ray(
     }
 }
 
-class VSRaycastBlockRes(bpos: BlockPos, res: IBlockRes, t_to_in: Double): BaseRaycastBlockRes(bpos, res, t_to_in)
+class VSRaycastBlockRes(bpos: BlockPos, res: IBlockRes, t_to_in: Double, @JvmField var ray: Ray): BaseRaycastBlockRes(bpos, res, t_to_in)
 
 object VSRaycastFunctions {
     @JvmStatic
@@ -180,12 +191,13 @@ object VSRaycastFunctions {
 
             // if ray has started from shipyard, then don't check starting pos (ray can clip into raycaster)
             if (ray.started_from_shipyard && point.floorCompare(shipyard_start)) {continue}
-            val world_res = checkForBlockInWorld(ray.iter.start, point, ray.d, ray.ray_distance, level, cache, onlyDistance) {bpos, res, dist -> VSRaycastBlockRes(bpos, res, dist)} ?: continue
+            val world_res = checkForBlockInWorld(ray.iter.start, point, ray.d, ray.ray_distance, level, cache, onlyDistance) {bpos, res, dist -> VSRaycastBlockRes(bpos, res, dist, ray)} ?: continue
             val distance_to = world_res.dist_to_in + ray.dist_to_ray_start
             hits.add(Pair(RaycastVSShipBlockReturn(start,
                 ray.ship, world_res.bpos, world_res.res, distance_to,
                 ray.world_unit_rd.normalize()*distance_to+start,
-                ray.d.rdiv(1.0).snormalize()*world_res.dist_to_in+ray.iter.start // norm_shipyard_rd * dist_to_shipyard_block
+                ray.d.rdiv(1.0).snormalize()*world_res.dist_to_in+ray.iter.start, // norm_shipyard_rd * dist_to_shipyard_block
+                ray
                 ), distance_to))
 
             i++
@@ -219,7 +231,7 @@ object VSRaycastFunctions {
 
         val future_ship_intersections = mutableListOf<Pair<Ship, Double>>()
         val ships_already_intersected = mutableListOf<Ship>()
-        val shipyard_rays = mutableListOf<Ray>()
+        var shipyard_rays = mutableListOf<Ray>()
 
         var ship_step_counter = 0
 
@@ -244,6 +256,12 @@ object VSRaycastFunctions {
 
             ship_hit_res = iterateShipRays(level, shipyard_rays, ships_already_intersected, start, shipyard_start, cache, onlyDistance)
 
+//            if (ship_hit_res.isNotEmpty()) {
+//                val res = ship_hit_res.minBy { it.second }.first as RaycastVSShipBlockReturn
+//                //TODO TODO TODO
+//                tryReflectRay(VSRaycastBlockRes(res.bpos, res.res, res.distance_to, res.ray), this)
+//            }
+
             //TODO double calculation of result but idfc
             if (res != null || ship_hit_res.isNotEmpty()) {return calculateReturn(world_res, entity_res, ship_hit_res, world_unit_rd, start, cache)}
 
@@ -259,19 +277,51 @@ object VSRaycastFunctions {
             world_res: BaseRaycastBlockRes?,
             raycast_obj: RaycastFunctions.RaycastObj
         ): BaseRaycastBlockRes? {
-//            if (world_res is VSRaycastBlockRes) {
-//
-//            }
+            return super.tryReflectRay(world_res, raycast_obj)
 
+            if (
+                world_res is VSRaycastBlockRes
+                && !(SomePeripherals.has_arc && raycast_obj.onlyDistance)
+                //TODO entities
+                ) {
+                val ray = world_res.ray
+                start = ray.iter.start
+                rd = ray.d.rdiv(1.0, Vector3d())
+                d = ray.d
+                ray_distance = ray.ray_distance
+                unit_d = rd.normalize()
+            }
 
             val res = super.tryReflectRay(world_res, raycast_obj)
+            // if res != world_res, then world_res was a mirror, and reflection happened
+            if (res == world_res) {return res}
 
-//            for (ray in shipyard_rays) {
+//            if (world_res is VSRaycastBlockRes
+//                && !(SomePeripherals.has_arc && raycast_obj.onlyDistance)) {
+//                val ship = world_res.ray.ship
+//                start = posShipToWorld(ship, start)
 //
+//                rd = Vector3d(ship.transform.transformDirectionNoScalingFromShipToWorld(rd.toJomlVector3d(), JVector3d()))
+//                d = rd.rdiv(1.0)
+//                unit_d = rd.normalize()
+//
+//                val temp_cur_i = points_iter.cur_i - 1
+//                points_iter = DDAIter(start, start + unit_d * (points_iter.up_to - temp_cur_i), points_iter.up_to)
+//                points_iter.cur_i = temp_cur_i
+//                points_iter.next()
 //            }
+
+            val replaced = mutableListOf<Ray>()
+//            for (ray in shipyard_rays) {
+//                val new_ray = makeShipyardRay(points_iter.cpos, d, points_iter.up_to, ray_distance, world_res!!.dist_to_in + cummulative_distance, ray.ship)
+//                if (!new_ray.hasNext()) {continue}
+//                replaced.add(new_ray)
+//            }
+            shipyard_rays = replaced
 
             future_ship_intersections.clear()
             ships_already_intersected.clear()
+            ship_hit_res.clear()
             ship_step_counter = 0
 
             return res
