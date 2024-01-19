@@ -12,7 +12,6 @@ import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.block.state.properties.BlockStateProperties
 import net.minecraft.world.phys.AABB
 import net.spaceeye.acceleratedraycasting.api.API
-import net.spaceeye.someperipherals.LOG
 import net.spaceeye.someperipherals.SomePeripherals
 import net.spaceeye.someperipherals.SomePeripheralsConfig
 import net.spaceeye.someperipherals.blocks.SomePeripheralsCommonBlocks
@@ -35,14 +34,24 @@ class PartialBlockRes: IBlockRes {
         get() = throw AssertionError("No state.")
 }
 
+open class BaseRaycastBlockRes(
+    @JvmField var bpos: BlockPos,
+    @JvmField var res: IBlockRes,
+    @JvmField var dist_to_in: Double
+)
+
+class WorldRaycastBlockRes(bpos: BlockPos, res: IBlockRes, t_to_in: Double): BaseRaycastBlockRes(bpos, res, t_to_in)
+
 object RaycastFunctions {
     const val eps  = 1e-200
     const val heps = 1/ eps
 
+    class RayIntersectBoxResult(@JvmField var intersects: Boolean, @JvmField var t_to_in: Double, @JvmField var t_to_out: Double)
+
     //https://gamedev.stackexchange.com/questions/18436/most-efficient-aabb-vs-ray-collision-algorithms
     //first t is time to in collision point, second t is time to out collision point
     @JvmStatic
-    fun rayIntersectsBox(box: AABB, or: Vector3d, d: Vector3d): Pair<Boolean, Pair<Double, Double>> {
+    fun rayIntersectsBox(box: AABB, or: Vector3d, d: Vector3d): RayIntersectBoxResult {
         val t1: Double = (box.minX - or.x) * d.x
         val t2: Double = (box.maxX - or.x) * d.x
         val t3: Double = (box.minY - or.y) * d.y
@@ -52,8 +61,8 @@ object RaycastFunctions {
 
         val tmin = max(max(min(t1, t2), min(t3, t4)), min(t5, t6))
         val tmax = min(min(max(t1, t2), max(t3, t4)), max(t5, t6))
-        if (tmax < 0 || tmin > tmax) {return Pair(false, Pair(tmax, tmin))}
-        return Pair(true, Pair(tmin, tmax))
+        if (tmax < 0 || tmin > tmax) {return RayIntersectBoxResult(false, tmax, tmin)}
+        return RayIntersectBoxResult(true, tmin, tmax)
     }
 
     // will check all AABBs for intersections, and if intersects more than one, will return the closest AABB with which ray intersects
@@ -63,8 +72,8 @@ object RaycastFunctions {
 
         val intersecting = mutableListOf<Double>()
         for (box in boxes) {
-            val (res, t) = rayIntersectsBox(box, r, d)
-            if (res) {intersecting.add(t.first)}
+            val res = rayIntersectsBox(box, r, d)
+            if (res.intersects) {intersecting.add(res.t_to_in)}
         }
         if (intersecting.isEmpty()) {return Pair(false, heps)}
         return Pair(true, intersecting.min())
@@ -78,18 +87,17 @@ object RaycastFunctions {
         ray_distance: Double,
         level: Level,
         manager: PosManager,
-        onlyDistance: Boolean
-    ): Pair<Pair<BlockPos, IBlockRes>, Double>? {
+        onlyDistance: Boolean,
+        constructor: (BlockPos, IBlockRes, Double) -> BaseRaycastBlockRes // this is fucking stupid i hate this
+    ): BaseRaycastBlockRes? {
         val bpos = BlockPos(point.x, point.y, point.z)
-
-        LOG("BPOS ${bpos}")
 
         if (SomePeripherals.has_arc) {
             if (!API.getIsSolidState(level, bpos)) { return null }
             if (onlyDistance) {
                 val (test_res, t) = rayIntersectsAABBs(start, bpos, d, listOf(AABB(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)))
                 if (!test_res) {return null}
-                return Pair(Pair(bpos, PartialBlockRes()), t * ray_distance)
+                return constructor(bpos, PartialBlockRes(), t * ray_distance)
             }
         }
 
@@ -98,7 +106,7 @@ object RaycastFunctions {
         if (!SomePeripherals.has_arc && res.isAir) {return null}
         val (test_res, t) = rayIntersectsAABBs(start, bpos, d, res.getShape(level, bpos).toAabbs())
         if (!test_res) {return null}
-        return Pair(Pair(bpos, FullBlockRes(res)), t * ray_distance)
+        return constructor(bpos, FullBlockRes(res), t * ray_distance)
     }
     @JvmStatic
     fun checkForIntersectedEntity(
@@ -120,9 +128,9 @@ object RaycastFunctions {
         val intersecting_entities = mutableListOf<Pair<Entity, Double>>()
         for (entity in entities) {
             if (entity == ignore_entity) {continue}
-            val (res, t) = rayIntersectsBox(entity.boundingBox, start, d)
-            if (!res) {continue}
-            intersecting_entities.add(Pair(entity, t.first * ray_distance))
+            val res = rayIntersectsBox(entity.boundingBox, start, d)
+            if (!res.intersects) {continue}
+            intersecting_entities.add(Pair(entity, res.t_to_in * ray_distance))
         }
 
         if (intersecting_entities.size == 0) {return null}
@@ -131,7 +139,7 @@ object RaycastFunctions {
     }
 
     fun makeResult(
-        world_res: Pair<Pair<BlockPos, IBlockRes>, Double>?,
+        wres: BaseRaycastBlockRes?,
         entity_res: Pair<Entity, Double>?,
         unit_d: Vector3d,
         start: Vector3d,
@@ -139,10 +147,10 @@ object RaycastFunctions {
         cummulative_dist: Double
     ): RaycastReturn {
         cache.cleanup()
-        return if (world_res != null && entity_res != null) {
-            if (world_res.second < entity_res.second) {RaycastBlockReturn(start, world_res.first, world_res.second + cummulative_dist, unit_d*world_res.second+start)} else {RaycastEntityReturn(start, entity_res.first, entity_res.second, unit_d*entity_res.second+start)}
-        } else if (world_res != null) {
-            RaycastBlockReturn(start, world_res.first, world_res.second + cummulative_dist, unit_d*world_res.second+start)
+        return if (wres != null && entity_res != null) {
+            if (wres.dist_to_in < entity_res.second) {RaycastBlockReturn(start, wres.bpos, wres.res, wres.dist_to_in + cummulative_dist, unit_d*wres.dist_to_in+start)} else {RaycastEntityReturn(start, entity_res.first, entity_res.second, unit_d*entity_res.second+start)}
+        } else if (wres != null) {
+            RaycastBlockReturn(start, wres.bpos, wres.res, wres.dist_to_in + cummulative_dist, unit_d*wres.dist_to_in+start)
         } else if (entity_res != null) {
             RaycastEntityReturn(start, entity_res.first, entity_res.second + cummulative_dist, unit_d * entity_res.second+start)
         } else {
@@ -167,7 +175,7 @@ object RaycastFunctions {
         var entity_res: Pair<Entity, Double>? = null
         var entity_step_counter = 0
 
-        var world_res: Pair<Pair<BlockPos, IBlockRes>, Double>? = null
+        var world_res: BaseRaycastBlockRes? = null
 
         var cache = PosManager()
 
@@ -187,7 +195,7 @@ object RaycastFunctions {
             }
             entity_step_counter++
 
-            if (check_for_blocks_in_world) {world_res = checkForBlockInWorld(start, point, d, ray_distance, level, cache, onlyDistance)}
+            if (check_for_blocks_in_world) {world_res = checkForBlockInWorld(start, point, d, ray_distance, level, cache, onlyDistance) { bpos, res, t -> WorldRaycastBlockRes(bpos, res, t) } }
 
             world_res = tryReflectRay(world_res, this)
 
@@ -214,30 +222,30 @@ object RaycastFunctions {
         //https://www.shadertoy.com/view/wtSyRd
         //https://asawicki.info/news_1301_reflect_and_refract_functions.html
         open fun tryReflectRay(
-            world_res: Pair<Pair<BlockPos, IBlockRes>, Double>?,
+            world_res: BaseRaycastBlockRes?,
             raycast_obj: RaycastObj
-        ): Pair<Pair<BlockPos, IBlockRes>, Double>? {
+        ): BaseRaycastBlockRes? {
             if (world_res == null) { return world_res}
             if (SomePeripherals.has_arc && raycast_obj.onlyDistance) { return world_res }
             entity_res != null && entity_res!!.second <= points_iter.up_to
 
-            val state = world_res.first.second.state
+            val state = world_res.res.state
             if (SomePeripheralsCommonBlocks.PERFECT_MIRROR.get() != state.block) { return world_res }
-            if (entity_res != null && entity_res!!.second <= world_res.second) { entity_step_counter = 0; return world_res }
+            if (entity_res != null && entity_res!!.second <= world_res.dist_to_in) { entity_step_counter = 0; return world_res }
 
-            cummulative_distance += world_res.second
+            cummulative_distance += world_res.dist_to_in
 
-            val bpos = world_res.first.first
+            val bpos = world_res.bpos
             val boxctr = Vector3d(bpos) + 0.5
 
-            val box_hit = boxctr - start + unit_d * world_res.second
+            val box_hit = boxctr - start + unit_d * world_res.dist_to_in
             val normal = box_hit / max(max(abs(box_hit.x), abs(box_hit.y)), abs(box_hit.z))
 
             normal.sabs().sclamp(0.0, 1.0).smul(1.0000001).sfloor().snormalize()
 
             val reflected_rd = unit_d - normal * (unit_d.dot(normal) * 2)
 
-            start = start + unit_d * world_res.second
+            start = start + unit_d * world_res.dist_to_in
 
             rd = reflected_rd
             d = (rd+eps).srdiv(1.0)
@@ -251,6 +259,8 @@ object RaycastFunctions {
             points_iter.cur_i = temp_cur_i
 
             points_iter.next()
+
+            entity_step_counter = 0
 
             return null
         }

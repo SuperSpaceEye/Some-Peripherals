@@ -8,8 +8,8 @@ private fun makeBlockReturn(
     ret: MutableMap<Any, Any>,
     rcc: SomePeripheralsConfig.Server.RaycasterSettings
 ) {
-    val pos = res.result.first
-    val bs  = res.result.second
+    val pos = res.bpos
+    val bs  = res.res
 
     ret["is_block"] = true
     if (rcc.return_abs_pos)  {ret["abs_pos"] = mutableListOf(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())}
@@ -41,8 +41,8 @@ private fun makeVSBlockReturn(
     ret: MutableMap<Any, Any>,
     rcc: SomePeripheralsConfig.Server.RaycasterSettings
 ) {
-    val pos = res.block.first
-    val bs  = res.block.second
+    val pos = res.bpos
+    val bs  = res.res
 
     ret["is_block"] = true
     if (rcc.return_abs_pos)  {ret["abs_pos"] = mutableListOf(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())}
