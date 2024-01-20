@@ -8,7 +8,9 @@ import net.minecraft.world.phys.AABB
 import net.spaceeye.someperipherals.SomePeripherals
 import net.spaceeye.someperipherals.stuff.raycasting.RaycastFunctions.checkForBlockInWorld
 import net.spaceeye.someperipherals.stuff.raycasting.RaycastFunctions.rayIntersectsBox
+import net.spaceeye.someperipherals.stuff.utils.JVector3d
 import net.spaceeye.someperipherals.stuff.utils.Vector3d
+import net.spaceeye.someperipherals.stuff.utils.posShipToWorld
 import org.valkyrienskies.core.api.ships.Ship
 import org.valkyrienskies.mod.common.getShipManagingPos
 import org.valkyrienskies.mod.common.transformToNearbyShipsAndWorld
@@ -28,11 +30,18 @@ class Ray(
     var can_iterate = true
     init {
         // check for collision of shipyard ray with ship's aabb
-        val saabb = ship.shipAABB!!
-        val res = rayIntersectsBox(
-            AABB(saabb.minX().toDouble(), saabb.minY().toDouble(), saabb.minZ().toDouble(), saabb.maxX().toDouble(), saabb.maxY().toDouble(), saabb.minZ().toDouble()),
-            iter.start, d)
-        if (!res.intersects) {can_iterate = false}
+        val aabb = ship.shipAABB!!
+        val cpos = iter.start
+        if (   cpos.x >= aabb.minX() && cpos.x <= aabb.maxX()
+            && cpos.y >= aabb.minY() && cpos.y <= aabb.maxY()
+            && cpos.z >= aabb.minZ() && cpos.z <= aabb.maxZ()) {
+            has_entered = true
+        } else {
+            val res = rayIntersectsBox(
+                AABB(aabb.minX().toDouble(), aabb.minY().toDouble(), aabb.minZ().toDouble(), aabb.maxX().toDouble(), aabb.maxY().toDouble(), aabb.minZ().toDouble()),
+                iter.start, d)
+            if (!res.intersects) {can_iterate = false}
+        }
     }
 
     operator fun hasNext() = iter.hasNext() && can_iterate
@@ -254,6 +263,7 @@ object VSRaycastFunctions {
             // why? idfk, but this fixes it, i think. Idk what will happen if ship touches another ship though.
             checkForShipIntersections(start, point+unit_d, ray_distance, d, rd, points_iter.up_to, future_ship_intersections, shipyard_rays)
 
+            //TODO because i immediately make ray at "point" and then run iterateShipRays, shipyard rays are 1 step farther than they should be, at least i think so.
             ship_hit_res = iterateShipRays(level, shipyard_rays, ships_already_intersected, start, shipyard_start, cache, onlyDistance)
 
             if (ship_hit_res.isNotEmpty()) {
@@ -293,29 +303,22 @@ object VSRaycastFunctions {
             // if res != world_res, then world_res was a mirror, and reflection happened
             if (res == world_res) {return res}
 
-//            if (world_res is VSRaycastBlockRes
-//                && !(SomePeripherals.has_arc && raycast_obj.onlyDistance)) {
-//                val ship = world_res.ray.ship
-//                start = posShipToWorld(ship, start)
-//
-//                rd = Vector3d(ship.transform.transformDirectionNoScalingFromShipToWorld(rd.toJomlVector3d(), JVector3d()))
-//                d = rd.rdiv(1.0)
-//                unit_d = rd.normalize()
-//
-//                val temp_cur_i = points_iter.cur_i - 1
-//                points_iter = DDAIter(start, start + unit_d * (points_iter.up_to - temp_cur_i), points_iter.up_to)
-//                points_iter.cur_i = temp_cur_i
-//                points_iter.next()
-//            }
+            if (world_res is VSRaycastBlockRes
+                && !(SomePeripherals.has_arc && onlyDistance)) {
+                val ship = world_res.ray.ship
+                start = posShipToWorld(ship, start)
 
-            val replaced = mutableListOf<Ray>()
-//            for (ray in shipyard_rays) {
-//                val new_ray = makeShipyardRay(points_iter.cpos, d, points_iter.up_to, ray_distance, world_res!!.dist_to_in + cummulative_distance, ray.ship)
-//                if (!new_ray.hasNext()) {continue}
-//                replaced.add(new_ray)
-//            }
-            shipyard_rays = replaced
+                rd = Vector3d(ship.transform.transformDirectionNoScalingFromShipToWorld(rd.toJomlVector3d(), JVector3d()))
+                d = rd.rdiv(1.0)
+                unit_d = rd.normalize()
 
+                val temp_cur_i = points_iter.cur_i - 1
+                points_iter = DDAIter(start, start + unit_d * (points_iter.up_to - temp_cur_i), points_iter.up_to)
+                points_iter.cur_i = temp_cur_i
+                points_iter.next()
+            }
+
+            shipyard_rays.clear()
             future_ship_intersections.clear()
             ships_already_intersected.clear()
             ship_hit_res.clear()
