@@ -256,11 +256,11 @@ object VSRaycastFunctions {
 
             ship_hit_res = iterateShipRays(level, shipyard_rays, ships_already_intersected, start, shipyard_start, cache, onlyDistance)
 
-//            if (ship_hit_res.isNotEmpty()) {
-//                val res = ship_hit_res.minBy { it.second }.first as RaycastVSShipBlockReturn
-//                //TODO TODO TODO
-//                tryReflectRay(VSRaycastBlockRes(res.bpos, res.res, res.distance_to, res.ray), this)
-//            }
+            if (ship_hit_res.isNotEmpty()) {
+                val res = ship_hit_res.minBy { it.second }.first as RaycastVSShipBlockReturn
+                //TODO TODO TODO
+                tryReflectRay(VSRaycastBlockRes(res.bpos, res.res, res.distance_to, res.ray), this)
+            }
 
             //TODO double calculation of result but idfc
             if (res != null || ship_hit_res.isNotEmpty()) {return calculateReturn(world_res, entity_res, ship_hit_res, world_unit_rd, start, cache)}
@@ -273,12 +273,14 @@ object VSRaycastFunctions {
             return null
         }
 
+        //TODO BUGS!!
+        // 1. if raycaster is in ship, it's hit pos is incorrect
+        // 2. reflection angle changes for some reason depending on how far away raycaster is from ship border
+
         override fun tryReflectRay(
             world_res: BaseRaycastBlockRes?,
             raycast_obj: RaycastFunctions.RaycastObj
         ): BaseRaycastBlockRes? {
-            return super.tryReflectRay(world_res, raycast_obj)
-
             if (
                 world_res is VSRaycastBlockRes
                 && !(SomePeripherals.has_arc && raycast_obj.onlyDistance)
