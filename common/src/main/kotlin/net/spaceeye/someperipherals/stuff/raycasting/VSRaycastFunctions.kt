@@ -125,7 +125,7 @@ object VSRaycastFunctions {
         val ray = Ray(
             DDAIter(sp_start, sp_end, max_iter_num),
             ship, sd, s_dir.dist(),
-            world_t * world_ray_distance,
+            max(world_t, 0.0) * world_ray_distance,
             world_t < 1e-60, // if ray started from shipyard, it's realworld position will start in ship hitbox
             d.rdiv(1.0).snormalize()
         )
@@ -274,8 +274,7 @@ object VSRaycastFunctions {
         }
 
         //TODO BUGS!!
-        // 1. if raycaster is in ship, it's hit pos is incorrect
-        // 2. reflection angle changes for some reason depending on how far away raycaster is from ship border
+        // 1. reflection angle changes for some reason depending on how far away raycaster is from ship border
 
         override fun tryReflectRay(
             world_res: BaseRaycastBlockRes?,
