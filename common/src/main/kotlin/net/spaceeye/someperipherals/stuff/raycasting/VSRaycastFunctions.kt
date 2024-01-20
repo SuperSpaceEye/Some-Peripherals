@@ -36,11 +36,6 @@ class Ray(
             && cpos.y >= aabb.minY() && cpos.y <= aabb.maxY()
             && cpos.z >= aabb.minZ() && cpos.z <= aabb.maxZ()) {
             has_entered = true
-        } else {
-            val res = rayIntersectsBox(
-                AABB(aabb.minX().toDouble(), aabb.minY().toDouble(), aabb.minZ().toDouble(), aabb.maxX().toDouble(), aabb.maxY().toDouble(), aabb.minZ().toDouble()),
-                iter.start, d)
-            if (!res.intersects) {can_iterate = false}
         }
     }
 
