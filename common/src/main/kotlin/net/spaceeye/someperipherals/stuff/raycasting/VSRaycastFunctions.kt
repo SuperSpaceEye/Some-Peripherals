@@ -192,7 +192,7 @@ object VSRaycastFunctions {
             // if ray has started from shipyard, then don't check starting pos (ray can clip into raycaster)
             if (ray.started_from_shipyard && point.floorCompare(shipyard_start)) {continue}
             val world_res = checkForBlockInWorld(ray.iter.start, point, ray.d, ray.ray_distance, level, cache, onlyDistance) {bpos, res, dist -> VSRaycastBlockRes(bpos, res, dist, ray)} ?: continue
-            val distance_to = world_res.dist_to_in + ray.dist_to_ray_start
+            val distance_to = world_res.dist_to_in //TODO what was i doing here? "+ ray.dist_to_ray_start"
             hits.add(Pair(RaycastVSShipBlockReturn(start,
                 ray.ship, world_res.bpos, world_res.res, distance_to,
                 ray.world_unit_rd.normalize()*distance_to+start,
@@ -259,7 +259,7 @@ object VSRaycastFunctions {
             if (ship_hit_res.isNotEmpty()) {
                 val res = ship_hit_res.minBy { it.second }.first as RaycastVSShipBlockReturn
                 //TODO TODO TODO
-                tryReflectRay(VSRaycastBlockRes(res.bpos, res.res, res.distance_to, res.ray), this)
+                tryReflectRay(VSRaycastBlockRes(res.bpos, res.res, res.distance_to, res.ray))
             }
 
             //TODO double calculation of result but idfc
@@ -273,16 +273,12 @@ object VSRaycastFunctions {
             return null
         }
 
-        //TODO BUGS!!
-        // 1. reflection angle changes for some reason depending on how far away raycaster is from ship border
-
         override fun tryReflectRay(
-            world_res: BaseRaycastBlockRes?,
-            raycast_obj: RaycastFunctions.RaycastObj
+            world_res: BaseRaycastBlockRes?
         ): BaseRaycastBlockRes? {
             if (
                 world_res is VSRaycastBlockRes
-                && !(SomePeripherals.has_arc && raycast_obj.onlyDistance)
+                && !(SomePeripherals.has_arc && onlyDistance)
                 //TODO entities
                 ) {
                 val ray = world_res.ray
@@ -293,7 +289,7 @@ object VSRaycastFunctions {
                 unit_d = rd.normalize()
             }
 
-            val res = super.tryReflectRay(world_res, raycast_obj)
+            val res = super.tryReflectRay(world_res)
             // if res != world_res, then world_res was a mirror, and reflection happened
             if (res == world_res) {return res}
 

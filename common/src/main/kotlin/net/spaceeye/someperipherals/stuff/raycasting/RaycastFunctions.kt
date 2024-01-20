@@ -200,7 +200,7 @@ object RaycastFunctions {
 
             if (check_for_blocks_in_world) {world_res = checkForBlockInWorld(start, point, d, ray_distance, level, cache, onlyDistance) { bpos, res, t -> WorldRaycastBlockRes(bpos, res, t) } }
 
-            world_res = tryReflectRay(world_res, this)
+            world_res = tryReflectRay(world_res)
 
             //if the block and intersected entity are both hit, then we need to find out actual intersection as
             // checkForIntersectedEntity checks "er" block radius
@@ -225,11 +225,10 @@ object RaycastFunctions {
         //https://www.shadertoy.com/view/wtSyRd
         //https://asawicki.info/news_1301_reflect_and_refract_functions.html
         open fun tryReflectRay(
-            world_res: BaseRaycastBlockRes?,
-            raycast_obj: RaycastObj
+            world_res: BaseRaycastBlockRes?
         ): BaseRaycastBlockRes? {
             if (world_res == null) { return world_res}
-            if (SomePeripherals.has_arc && raycast_obj.onlyDistance) { return world_res }
+            if (SomePeripherals.has_arc && onlyDistance) { return world_res }
 
             val state = world_res.res.state
             if (SomePeripheralsCommonBlocks.PERFECT_MIRROR.get() != state.block) { return world_res }
