@@ -186,6 +186,8 @@ object RaycastFunctions {
 
         var cummulative_distance = 0.0
 
+        var last_reflected_pos: BlockPos? = null
+
         open fun iterate(point: Vector3d, level: ServerLevel): RaycastReturn? {
             try {
             //if ray hits entity and any block wasn't hit before another check, then previous intersected entity is the actual hit place
@@ -233,11 +235,14 @@ object RaycastFunctions {
             val state = world_res.res.state
             if (SomePeripheralsCommonBlocks.PERFECT_MIRROR.get() != state.block) { return world_res }
             if (entity_res != null && entity_res!!.second <= world_res.dist_to_in) { entity_step_counter = 0; return world_res }
+            if (last_reflected_pos != null && last_reflected_pos == world_res.bpos) { return null }
 
             cummulative_distance += world_res.dist_to_in
 
             val bpos = world_res.bpos
             val boxctr = Vector3d(bpos) + 0.5
+
+            last_reflected_pos = bpos
 
             val box_hit = boxctr - start + unit_d * world_res.dist_to_in
             val normal = box_hit / max(max(abs(box_hit.x), abs(box_hit.y)), abs(box_hit.z))

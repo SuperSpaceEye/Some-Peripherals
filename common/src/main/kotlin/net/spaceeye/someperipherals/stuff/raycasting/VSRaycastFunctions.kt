@@ -281,6 +281,10 @@ object VSRaycastFunctions {
         override fun tryReflectRay(
             world_res: BaseRaycastBlockRes?
         ): BaseRaycastBlockRes? {
+            if (world_res != null && world_res.bpos == last_reflected_pos) {
+                ship_hit_res.clear()
+                return null
+            }
             if (
                 world_res is VSRaycastBlockRes
                 && !(SomePeripherals.has_arc && onlyDistance)
