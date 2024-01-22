@@ -19,7 +19,10 @@ fun <T> getEntitiesWithTimeout(
             if (getNowFast_ms() - now > timeout_ms) { throw TimeoutException() }
             entities.add(fn(it))
         }
-    } catch (_: TimeoutException) {}
+    } catch (_: TimeoutException) {
+    } catch (_: ConcurrentModificationException) {}
+    // ConcurrentModificationException is needed as if getEntitiesWithTimeout is called not from main thread, it can
+    // cause error
 
     return entities
 }
