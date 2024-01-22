@@ -93,7 +93,7 @@ object RaycastFunctions {
     ): BaseRaycastBlockRes? {
         val bpos = BlockPos(point.x, point.y, point.z)
 
-        LOG(bpos.toString())
+//        LOG(bpos.toString())
 
         if (SomePeripherals.has_arc) {
             if (!API.getIsSolidState(level, bpos)) { return null }
@@ -240,11 +240,12 @@ object RaycastFunctions {
             cummulative_distance += world_res.dist_to_in
 
             val bpos = world_res.bpos
-            val boxctr = Vector3d(bpos) + 0.5
 
             last_reflected_pos = bpos
 
-            val box_hit = boxctr - start + unit_d * world_res.dist_to_in
+            //TODO THIS WILL ONLY WORK ON GRID ALIGNED, FULL BLOCK HITBOX
+            //ray hit point where origin is center of the hitbox
+            val box_hit = (start + unit_d * world_res.dist_to_in) - (start + unit_d * world_res.dist_to_in).sfloor() - 0.5
             val normal = box_hit / max(max(abs(box_hit.x), abs(box_hit.y)), abs(box_hit.z))
 
             normal.sabs().sclamp(0.0, 1.0).smul(1.0000001).sfloor().snormalize()
